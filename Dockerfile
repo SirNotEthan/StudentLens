@@ -49,6 +49,9 @@ RUN npm ci --only=production && npm cache clean --force
 COPY --from=build --chown=nodejs:nodejs /app/backend/dist ./
 COPY --from=build --chown=nodejs:nodejs /app/dist ./public
 
+# Create logs directory with proper permissions
+RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
+
 # Switch to non-root user
 USER nodejs
 
