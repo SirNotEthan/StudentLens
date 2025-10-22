@@ -3,6 +3,8 @@ import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
+import RedisStore from 'connect-redis';
+import { createClient } from 'redis';
 import passport from '@/config/passport';
 import { appLogger } from '@/services/logger';
 import { checkAppwriteConnection } from '@/config/appwrite';
@@ -77,7 +79,7 @@ app.use(generalLimiter);
 
 app.use(cors(corsOptions));
 
-app.use(limitRequestSize(10 * 1024 * 1024)); // 10MB limit
+app.use(limitRequestSize(10 * 1024 * 1024)); 
 
 app.use(validateUserAgent);
 
@@ -93,15 +95,54 @@ app.use(express.urlencoded({
   parameterLimit: 1000
 }));
 
+const redisClient = createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries > 10) {
+        appLogger.error('Redis: Too many reconnection attempts, giving up');
+        return new Error('Too many retries');
+      }
+      const delay = Math.min(retries * 100, 3000);
+      appLogger.warn(`Redis: Reconnecting in ${delay}ms (attempt ${retries})`);
+      return delay;
+    }
+  }
+});
+
+redisClient.on('error', (err) => {
+  appLogger.error('Redis Client Error', err);
+});
+
+redisClient.on('connect', () => {
+  appLogger.info('Redis Client Connected');
+});
+
+redisClient.on('ready', () => {
+  appLogger.info('Redis Client Ready');
+});
+
+redisClient.on('reconnecting', () => {
+  appLogger.warn('Redis Client Reconnecting');
+});
+
+const redisStore = new RedisStore({
+  client: redisClient,
+  prefix: 'sess:',
+  ttl: 86400
+});
+
 app.use(session({
+  store: redisStore,
   secret: process.env.SESSION_SECRET!,
   resave: false,
   saveUninitialized: false,
-  name: 'sessionId', // Don't use default session name
+  rolling: true, 
+  name: 'sessionId',
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, 
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   },
   genid: () => {
@@ -135,8 +176,8 @@ app.get('/api/health', async (req, res): Promise<void> => {
   res.json(healthCheck);
 });
 
-app.use('/api/auth', googleAuthRoutes); // Mount Google auth routes on /api/auth (public routes)
-app.use('/api/auth', authRoutes);        // Regular auth routes (some require auth)
+app.use('/api/auth', googleAuthRoutes); 
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/posts', postRoutes);
@@ -196,9 +237,14 @@ const PORT = parseInt(process.env.PORT || '5000', 10);
 
 const startServer = async (): Promise<void> => {
   try {
+    // Connect to Redis
+    await redisClient.connect();
+    appLogger.info('Connected to Redis successfully');
+
     const appwriteConnected = await checkAppwriteConnection();
     if (!appwriteConnected) {
       appLogger.error('Failed to connect to Appwrite. Server will not start.');
+      await redisClient.quit();
       process.exit(1);
     }
 
@@ -215,23 +261,32 @@ const startServer = async (): Promise<void> => {
         nodeEnv: process.env.NODE_ENV,
         appwriteEndpoint: process.env.APPWRITE_ENDPOINT,
         clientUrl: process.env.CLIENT_URL,
+        redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
         logLevel: process.env.LOG_LEVEL || 'info'
       });
     });
 
-    const gracefulShutdown = (signal: string) => {
+    const gracefulShutdown = async (signal: string) => {
       appLogger.info(`Received ${signal}. Starting graceful shutdown...`);
 
       server.close(() => {
         appLogger.info('HTTP server closed');
-
-        process.exit(0);
       });
+
+      // Close Redis connection
+      try {
+        await redisClient.quit();
+        appLogger.info('Redis connection closed');
+      } catch (error) {
+        appLogger.error('Error closing Redis connection', error);
+      }
 
       setTimeout(() => {
         appLogger.error('Could not close connections in time, forcefully shutting down');
         process.exit(1);
       }, 30000);
+
+      process.exit(0);
     };
 
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
@@ -239,6 +294,12 @@ const startServer = async (): Promise<void> => {
 
   } catch (error: any) {
     appLogger.error('Failed to start server', error);
+    // Ensure Redis connection is closed on error
+    try {
+      await redisClient.quit();
+    } catch (redisError) {
+      appLogger.error('Error closing Redis connection during startup failure', redisError);
+    }
     process.exit(1);
   }
 };
