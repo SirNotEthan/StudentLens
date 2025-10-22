@@ -12,6 +12,7 @@ export class Post implements IPost {
   excerpt: string;
   authorId: string;
   authorName: string;
+  authorUsername?: string;
   category: string;
   tags: string[];
   status: PostStatus;
@@ -36,6 +37,7 @@ export class Post implements IPost {
     this.excerpt = data.excerpt;
     this.authorId = data.authorId;
     this.authorName = data.authorName;
+    this.authorUsername = data.authorUsername;
     this.category = data.category;
     this.tags = Array.isArray(data.tags) ? data.tags : (data.tags ? (typeof data.tags === 'string' ? data.tags.split(',') : []) : []);
     this.status = data.status || 'draft';
@@ -61,7 +63,7 @@ export class Post implements IPost {
       .replace(/(^-|-$)/g, '');
   }
 
-  static async create(postData: CreatePostRequest, authorId: string, authorName: string): Promise<Post> {
+  static async create(postData: CreatePostRequest, authorId: string, authorName: string, authorUsername?: string): Promise<Post> {
     const startTime = Date.now();
 
     try {
@@ -76,6 +78,7 @@ export class Post implements IPost {
         excerpt: postData.excerpt || postData.content.substring(0, 150) + '...',
         authorId,
         authorName,
+        authorUsername: authorUsername || '',
         category: postData.category,
         tags: Array.isArray(postData.tags) ? postData.tags : [],
         status: postData.status || 'draft',
@@ -312,18 +315,53 @@ export class Post implements IPost {
     }
   }
 
-  async toggleLike(userId: string): Promise<void> {
+  async toggleLike(userId: string): Promise<{ isLiked: boolean; likeCount: number }> {
+    const startTime = Date.now();
+
     try {
-      const newLikes = Math.max(0, this.likes + (Math.random() > 0.5 ? 1 : -1));
+      appLogger.debug('Toggling post like', { postId: this.id, userId, currentLikes: this.likes });
+
+      const currentDoc = await databases.getDocument(DATABASE_ID, POSTS_COLLECTION_ID, this.id);
+      const likedUsers = currentDoc.likedUsers || [];
+
+      const userIndex = likedUsers.indexOf(userId);
+      let newLikedUsers: string[];
+      let newLikes: number;
+      let isLiked: boolean;
+
+      if (userIndex === -1) {
+        newLikedUsers = [...likedUsers, userId];
+        newLikes = this.likes + 1;
+        isLiked = true;
+        appLogger.debug('Adding like', { postId: this.id, userId, newLikes });
+      } else {
+        newLikedUsers = likedUsers.filter((id: string) => id !== userId);
+        newLikes = Math.max(0, this.likes - 1);
+        isLiked = false;
+        appLogger.debug('Removing like', { postId: this.id, userId, newLikes });
+      }
+
       await databases.updateDocument(
         DATABASE_ID,
         POSTS_COLLECTION_ID,
         this.id,
-        { likes: newLikes }
+        {
+          likes: newLikes,
+          likedUsers: newLikedUsers
+        }
       );
+
       this.likes = newLikes;
+
+      const duration = Date.now() - startTime;
+      appLogger.logPerformance('Post.toggleLike', duration, { postId: this.id, isLiked });
+
+      return { isLiked, likeCount: newLikes };
     } catch (error: any) {
-      appLogger.error('Failed to toggle like', error, { id: this.id, userId });
+      const duration = Date.now() - startTime;
+      appLogger.logDatabase('toggleLike', 'posts', { id: this.id }, error);
+      appLogger.logPerformance('Post.toggleLike', duration, { postId: this.id, error: true });
+      throw AppError.internal(`Failed to toggle post like: ${error.message}`);
     }
   }
 

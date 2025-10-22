@@ -2,6 +2,7 @@ import { Response, Request } from 'express';
 const { validationResult } = require('express-validator');
 import { Post } from '@/models/Post';
 import { Bookmark } from '@/models/Bookmark';
+import { databases, DATABASE_ID } from '@/config/appwrite';
 import {
   AuthenticatedRequest,
   ApiResponse,
@@ -14,6 +15,8 @@ import {
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 import { catchAsync } from '@/middleware/errorHandler';
+
+const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
 
 export const createPost = catchAsync(async (
   req: AuthenticatedRequest,
@@ -40,7 +43,7 @@ export const createPost = catchAsync(async (
       category: postData.category
     });
 
-    const post = await Post.create(postData, req.user.id, `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.username);
+    const post = await Post.create(postData, req.user.id, `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.username, req.user.username);
 
     const response: PostResponse = {
       success: true,
@@ -336,15 +339,21 @@ export const toggleLike = catchAsync(async (
       throw AppError.notFound('Post not found');
     }
 
-    await post.toggleLike(req.user.id);
+    const likeResult = await post.toggleLike(req.user.id);
+    const postJson = post.toJSON();
 
-    const response: PostResponse = {
+    const response: ApiResponse = {
       success: true,
-      post: post.toJSON()
+      message: likeResult.isLiked ? 'Post liked successfully' : 'Post unliked successfully',
+      data: {
+        postId: post.id,
+        isLiked: likeResult.isLiked,
+        likeCount: likeResult.likeCount || postJson.likes || 0
+      }
     };
 
     const duration = Date.now() - startTime;
-    appLogger.logPerformance('toggleLike', duration, { postId: post.id });
+    appLogger.logPerformance('toggleLike', duration, { postId: post.id, isLiked: likeResult.isLiked });
 
     res.json(response);
   } catch (error: any) {
@@ -980,6 +989,51 @@ export const getPublicPost = catchAsync(async (
   } catch (error: any) {
     const duration = Date.now() - startTime;
     appLogger.logPerformance('getPublicPost', duration, { error: true });
+    throw error;
+  }
+});
+
+export const getPostInteractions = catchAsync(async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const startTime = Date.now();
+
+  try {
+    const { id } = req.params;
+
+    appLogger.debug('Getting post interactions', { postId: id, userId: req.user.id });
+
+    const post = await Post.findById(id);
+    if (!post) {
+      throw AppError.notFound('Post not found');
+    }
+
+    const currentDoc = await databases.getDocument(DATABASE_ID, POSTS_COLLECTION_ID, id);
+    const likedUsers = currentDoc.likedUsers || [];
+    const isLiked = likedUsers.includes(req.user.id);
+    const isBookmarked = await Bookmark.findByUserAndPost(req.user.id, id) !== null;
+    const bookmarkCount = await Bookmark.getPostBookmarkCount(id);
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Post interactions retrieved successfully',
+      data: {
+        postId: id,
+        isLiked,
+        isBookmarked,
+        likeCount: post.likes || 0,
+        bookmarkCount
+      }
+    };
+
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('getPostInteractions', duration, { postId: id });
+
+    res.json(response);
+  } catch (error: any) {
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('getPostInteractions', duration, { error: true });
     throw error;
   }
 });

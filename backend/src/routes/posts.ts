@@ -19,7 +19,8 @@ import {
   getFeaturedPosts,
   searchPosts,
   toggleBookmark,
-  getUserBookmarks
+  getUserBookmarks,
+  getPostInteractions
 } from '@/controllers/postController';
 import { authenticate, authorizePermission } from '@/middleware/auth';
 import {
@@ -69,6 +70,11 @@ router.get('/',
 router.get('/my',
   validate(validatePostQuery),
   getMyPosts
+);
+
+router.get('/:id/interactions',
+  validate(validatePostId),
+  getPostInteractions
 );
 
 router.get('/:id',

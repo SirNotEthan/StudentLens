@@ -1,48 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import PostList from '../components/PostList';
 import PostCreator from '../components/PostCreator';
+import AuthorLink from '../components/AuthorLink';
 import axios from 'axios';
 import '../styles/MainPage.css';
 
 const MainPage = () => {
-  const { user, logout, hasPermission, hasRole, getUserDisplayName, getUserFullName: _getUserFullName, getUserInitials: _getUserInitials, isAccountComplete: _isAccountComplete, loading: _authLoading } = useAuth();
+  const { user, logout, hasPermission, hasRole, getUserDisplayName } = useAuth();
   const navigate = useNavigate();
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [_showPostCreator, _setShowPostCreator] = useState(false);
+  const [showPostCreator, setShowPostCreator] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [_isSearching, _setIsSearching] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [error, setError] = useState(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
     fetchFeaturedPosts();
     fetchRecentPosts();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserDropdown && !event.target.closest('.user-dropdown-menu') && !event.target.closest('.user-icon-btn')) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
+
   const fetchFeaturedPosts = async () => {
     try {
+      setError(null);
       const response = await axios.get('/posts/featured?limit=3');
       if (response.data.success) {
-        setFeaturedPosts(response.data.posts);
+        setFeaturedPosts(response.data.data?.posts || response.data.posts || []);
       }
     } catch (error) {
       console.error('Error fetching featured posts:', error);
+      setError('Failed to load featured articles');
     }
   };
 
   const fetchRecentPosts = async () => {
     try {
-      const response = await axios.get('/posts/public?limit=16');
+      setError(null);
+      const response = await axios.get('/posts/public?limit=20');
       if (response.data.success) {
-        setRecentPosts(response.data.posts);
+        setRecentPosts(response.data.data?.posts || response.data.posts || []);
       }
     } catch (error) {
       console.error('Error fetching recent posts:', error);
+      setError('Failed to load articles');
     } finally {
       setLoading(false);
     }
@@ -84,11 +103,11 @@ const MainPage = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      ACADEMIC: 'blue',
-      SPORTS: 'green',
-      EVENTS: 'orange',
-      CLUBS: 'purple',
-      ANNOUNCEMENTS: 'red',
+      ACADEMIC: 'academic',
+      SPORTS: 'sports',
+      EVENTS: 'events',
+      CLUBS: 'clubs',
+      ANNOUNCEMENTS: 'announcements',
       NEWS: 'gray',
       STUDENT_LIFE: 'pink',
       TECHNOLOGY: 'teal',
@@ -98,6 +117,18 @@ const MainPage = () => {
     return colors[category] || 'gray';
   };
 
+  const getCategoryButtonStyle = (category) => {
+    const styles = {
+      ALL: { backgroundImage: 'linear-gradient(135deg, rgb(45, 90, 77), rgb(58, 107, 92))', color: 'white' },
+      ACADEMIC: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
+      SPORTS: { backgroundColor: '#ffc107', color: 'white', backgroundImage: 'none' },
+      EVENTS: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
+      CLUBS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
+      ANNOUNCEMENTS: { backgroundImage: 'linear-gradient(135deg, rgb(45, 90, 77), rgb(58, 107, 92))', color: 'white' }
+    };
+    return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -105,9 +136,14 @@ const MainPage = () => {
     });
   };
 
-  const _handlePostCreated = (newPost) => {
-    setRecentPosts(prev => [newPost, ...prev.slice(0, 15)]);
-    _setShowPostCreator(false);
+  const handlePostCreated = (newPost) => {
+    if (newPost) {
+      // Add new post to the beginning of recent posts
+      setRecentPosts(prev => [newPost, ...prev]);
+      // Refresh featured posts in case it should be featured
+      fetchFeaturedPosts();
+    }
+    setShowPostCreator(false);
   };
 
   const handleSearch = async (query) => {
@@ -121,12 +157,13 @@ const MainPage = () => {
     try {
       const response = await axios.get(`/posts/search?search=${encodeURIComponent(query)}&limit=20`);
       if (response.data.success) {
-        setSearchResults(response.data.posts);
+        setSearchResults(response.data.data?.posts || response.data.posts || []);
         setShowSearchResults(true);
       }
     } catch (error) {
       console.error('Error searching posts:', error);
       setSearchResults([]);
+      setShowSearchResults(true);
     } finally {
       setIsSearching(false);
     }
@@ -167,17 +204,24 @@ const MainPage = () => {
             )}
           </div>
 
-          <div className="date-section">
-            <span className="date-text">{getCurrentDate()}</span>
-          </div>
+          <h1 className="main-title">STUDENT LENS</h1>
 
-          <div className="user-menu">
-            <div className="user-dropdown">
-              <button className="home-button">
-                <span className="home-icon">🏠</span>
-                <span>HOME</span>
-              </button>
-              <div className="dropdown-content">
+          <div className="header-right">
+            <button className="home-icon-btn" onClick={() => window.location.href = '/main'}>
+              <span className="icon-house">🏠</span>
+              <span className="icon-label">HOME</span>
+            </button>
+            <button className="user-icon-btn" onClick={() => setShowUserDropdown(!showUserDropdown)}>
+              <span className="icon-user">👤</span>
+              <span className="icon-label">USER</span>
+            </button>
+            {showUserDropdown && (
+              <div className="user-dropdown-menu show">
+                <div className="dropdown-header">
+                  <span className="dropdown-title">ACCOUNT SETTINGS</span>
+                  <button className="dropdown-close" onClick={() => setShowUserDropdown(false)}>×</button>
+                </div>
+                <div className="dropdown-divider"></div>
                 {user && (
                   <div className="user-info-header">
                     <span className="user-name">{getUserDisplayName()}</span>
@@ -189,23 +233,23 @@ const MainPage = () => {
                     </span>
                   </div>
                 )}
-                <a href="#profile" onClick={(e) => { e.preventDefault(); navigate('/profile'); }}>PROFILE</a>
-                <a href="#analytics" onClick={(e) => { e.preventDefault(); navigate('/analytics'); }}>ANALYTICS</a>
+                <button className="dropdown-link" onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}>PROFILE</button>
+                <button className="dropdown-link" onClick={() => { navigate('/analytics'); setShowUserDropdown(false); }}>ANALYTICS</button>
                 {hasPermission('manage_users') && (
-                  <a href="#admin" onClick={(e) => { e.preventDefault(); navigate('/admin'); }}>ADMIN PANEL</a>
+                  <button className="dropdown-link" onClick={() => { navigate('/admin'); setShowUserDropdown(false); }}>ADMIN PANEL</button>
                 )}
                 {hasPermission('write_articles') && (
-                  <a href="#write" onClick={(e) => { e.preventDefault(); navigate('/write'); }}>WRITE ARTICLE</a>
+                  <button className="dropdown-link" onClick={() => { navigate('/write'); setShowUserDropdown(false); }}>WRITE ARTICLE</button>
                 )}
-                <a href="#account-settings" onClick={(e) => { e.preventDefault(); navigate('/account-settings'); }}>ACCOUNT SETTINGS</a>
-                <a href="#logout" onClick={(e) => { e.preventDefault(); handleLogout(); }}>LOG OUT</a>
+                <div className="dropdown-divider"></div>
+                <button className="dropdown-link logout-link" onClick={() => { handleLogout(); }}>LOG OUT</button>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
-        <div className="header-main">
-          <h1 className="main-title">STUDENT LENS</h1>
+        <div className="header-date">
+          <span className="date-text">{getCurrentDate()}</span>
         </div>
       </header>
 
@@ -255,18 +299,22 @@ const MainPage = () => {
                 {searchResults.length > 0 && <span className="results-count">({searchResults.length} found)</span>}
                 <button className="close-search" onClick={clearSearch}>Close</button>
               </div>
-              {searchResults.length > 0 ? (
+              {isSearching ? (
+                <div className="loading-articles">
+                  <p>Searching...</p>
+                </div>
+              ) : searchResults.length > 0 ? (
                 <div className="search-results-grid">
                   {searchResults.map(post => (
                     <article key={post.id} className="search-result-item" onClick={() => navigate(`/post/${post.id}`)}>
                       <div className="search-result-content">
                         <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                          {post.category.replace(/_/g, ' ')}
+                          {post.category?.replace(/_/g, ' ') || 'NEWS'}
                         </span>
                         <h3 className="search-result-title">{post.title}</h3>
-                        <p className="search-result-excerpt">{post.excerpt}</p>
+                        <p className="search-result-excerpt">{post.excerpt || post.content?.substring(0, 150) + '...' || 'No preview available'}</p>
                         <div className="search-result-meta">
-                          <span className="search-result-author">{post.authorName}</span>
+                          <span className="search-result-author">{post.authorName || 'Anonymous'}</span>
                           <span className="search-result-date">{formatDate(post.publishedAt || post.createdAt)}</span>
                         </div>
                       </div>
@@ -283,6 +331,12 @@ const MainPage = () => {
 
           <section className="latest-news">
             <h2 className="section-title">LATEST NEWS</h2>
+            {error && (
+              <div className="error-banner">
+                <p>{error}</p>
+                <button onClick={() => { fetchFeaturedPosts(); fetchRecentPosts(); }}>Retry</button>
+              </div>
+            )}
             <div className="news-articles">
               {loading ? (
                 <div className="loading-articles">
@@ -290,54 +344,34 @@ const MainPage = () => {
                 </div>
               ) : (
                 <>
-                  {featuredPosts.length > 0 ? (
-                    <>
-                      <div className="featured-row">
-                        <article className="featured-main" onClick={() => navigate(`/post/${featuredPosts[0].id}`)}>
-                          <div className="article-image">
-                            {featuredPosts[0].imageUrl ? (
-                              <img src={featuredPosts[0].imageUrl} alt={featuredPosts[0].title} />
+                  {featuredPosts.length > 0 || recentPosts.length > 0 ? (
+                    <div className="articles-grid">
+                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post, index) => (
+                        <article key={post.id} className={`article-card ${index === 0 ? 'large' : 'small'}`} onClick={() => navigate(`/post/${post.id}`)}>
+                          <div className="article-card-image">
+                            {post.imageUrl ? (
+                              <img src={post.imageUrl} alt={post.title} />
                             ) : (
                               <div className="placeholder-image"></div>
                             )}
                           </div>
+                          <div className="article-card-content">
+                            <span className={`category-tag ${getCategoryColor(post.category)}`}>
+                              {post.category?.replace(/_/g, ' ') || 'NEWS'}
+                            </span>
+                            <h3 className="article-card-title">{post.title}</h3>
+                            <p className="article-card-author">
+                              <AuthorLink
+                                authorName={post.authorName}
+                                authorId={post.authorId}
+                                username={post.authorUsername}
+                              />
+                            </p>
+                            <p className="article-card-date">{formatDate(post.publishedAt || post.createdAt)}</p>
+                          </div>
                         </article>
-
-                        <div className="featured-side">
-                          {featuredPosts.slice(1, 3).map(post => (
-                            <article key={post.id} className="side-article" onClick={() => navigate(`/post/${post.id}`)}>
-                              <div className="article-image">
-                                {post.imageUrl ? (
-                                  <img src={post.imageUrl} alt={post.title} />
-                                ) : (
-                                  <div className="placeholder-image"></div>
-                                )}
-                              </div>
-                              <div className="article-content">
-                                <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                                  CATEGORY
-                                </span>
-                                <h4 className="article-title">{post.title}</h4>
-                                <p className="article-author">JOHN DOE</p>
-                                <p className="article-date">{formatDate(post.publishedAt || post.createdAt)}</p>
-                              </div>
-                            </article>
-                          ))}
-                        </div>
-                      </div>
-
-                      {hasPermission('write_articles') && (
-                        <article className="featured-bottom">
-                          <div className="article-image feature-image"></div>
-                          <button
-                            className="enter-text-button"
-                            onClick={() => setShowPostCreator(true)}
-                          >
-                            ENTER TEXT HERE
-                          </button>
-                        </article>
-                      )}
-                    </>
+                      ))}
+                    </div>
                   ) : (
                     <article className="featured-main">
                       <div className="article-image placeholder-image"></div>
@@ -349,6 +383,18 @@ const MainPage = () => {
                       </div>
                     </article>
                   )}
+
+                  {hasPermission('write_articles') && (
+                    <article className="featured-bottom">
+                      <div className="article-image feature-image"></div>
+                      <button
+                        className="enter-text-button"
+                        onClick={() => setShowPostCreator(true)}
+                      >
+                        ENTER TEXT HERE
+                      </button>
+                    </article>
+                  )}
                 </>
               )}
             </div>
@@ -358,19 +404,19 @@ const MainPage = () => {
         <aside className="right-sidebar">
           <section className="info-section">
             <h3 className="sidebar-section-title">INFO</h3>
-            <div className="streak-info">
+
+            <div className="info-box streak-info">
               <h4>STREAK</h4>
               <div className="streak-counter">
                 <span className="streak-number">{user?.streak || 5}</span>
                 <span className="streak-label">DAYS<br />NEW STREAK!</span>
               </div>
             </div>
-            <div className="student-lens-info">
+
+            <div className="info-box student-lens-info">
               <h4>STUDENT LENS</h4>
-              <a href="#" className="info-link">ABOUT US</a>
-              {hasRole('Student') && (
-                <button className="writer-button">BECOME A WRITER</button>
-              )}
+              <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
+              <button className="writer-button" onClick={() => navigate('/write')}>BECOME A WRITER</button>
               <p className="contact-info">
                 FOR ANY INQUIRIES,<br />
                 CONTACT US VIA EMAIL OR<br />
@@ -382,44 +428,52 @@ const MainPage = () => {
       </div>
 
       <section className="news-grid">
-        <h2 className="section-title">NEWS</h2>
-        <div className="category-tags">
-          <span
-            className={`tag red ${selectedCategory === 'ALL' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('ALL')}
-          >
-            ALL
-          </span>
-          <span
-            className={`tag blue ${selectedCategory === 'ACADEMIC' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('ACADEMIC')}
-          >
-            CATEGORY
-          </span>
-          <span
-            className={`tag green ${selectedCategory === 'SPORTS' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('SPORTS')}
-          >
-            CATEGORY
-          </span>
-          <span
-            className={`tag orange ${selectedCategory === 'EVENTS' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('EVENTS')}
-          >
-            CATEGORY
-          </span>
-          <span
-            className={`tag green ${selectedCategory === 'CLUBS' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('CLUBS')}
-          >
-            CATEGORY
-          </span>
-          <span
-            className={`tag yellow ${selectedCategory === 'ANNOUNCEMENTS' ? 'active' : ''}`}
-            onClick={() => setSelectedCategory('ANNOUNCEMENTS')}
-          >
-            CATEGORY
-          </span>
+        <div className="news-header">
+          <h2 className="section-title">NEWS</h2>
+          <div className="category-tags">
+            <span
+              className={`tag tag-all ${selectedCategory === 'ALL' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('ALL')}
+              onClick={() => setSelectedCategory('ALL')}
+            >
+              ALL
+            </span>
+            <span
+              className={`tag tag-academic ${selectedCategory === 'ACADEMIC' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('ACADEMIC')}
+              onClick={() => setSelectedCategory('ACADEMIC')}
+            >
+              ACADEMIC
+            </span>
+            <span
+              className={`tag tag-sports ${selectedCategory === 'SPORTS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('SPORTS')}
+              onClick={() => setSelectedCategory('SPORTS')}
+            >
+              SPORTS
+            </span>
+            <span
+              className={`tag tag-events ${selectedCategory === 'EVENTS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('EVENTS')}
+              onClick={() => setSelectedCategory('EVENTS')}
+            >
+              EVENTS
+            </span>
+            <span
+              className={`tag tag-clubs ${selectedCategory === 'CLUBS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('CLUBS')}
+              onClick={() => setSelectedCategory('CLUBS')}
+            >
+              CLUBS
+            </span>
+            <span
+              className={`tag tag-announcements ${selectedCategory === 'ANNOUNCEMENTS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('ANNOUNCEMENTS')}
+              onClick={() => setSelectedCategory('ANNOUNCEMENTS')}
+            >
+              ANNOUNCEMENTS
+            </span>
+          </div>
         </div>
         <div className="news-grid-container">
           {recentPosts
@@ -440,10 +494,16 @@ const MainPage = () => {
                 </div>
                 <div className="news-card-content">
                   <span className={`news-category-tag ${getCategoryColor(post.category)}`}>
-                    CATEGORY
+                    {post.category?.replace(/_/g, ' ') || 'NEWS'}
                   </span>
                   <h3 className="news-card-title">{post.title}</h3>
-                  <p className="news-card-author">JOHN DOE</p>
+                  <p className="news-card-author">
+                    <AuthorLink
+                      authorName={post.authorName}
+                      authorId={post.authorId}
+                      username={post.authorUsername}
+                    />
+                  </p>
                   <p className="news-card-date">{formatDate(post.publishedAt || post.createdAt)}</p>
                 </div>
               </article>
@@ -454,10 +514,21 @@ const MainPage = () => {
       <footer className="footer">
         <span className="footer-title">THE STUDENT LENS</span>
         <div className="footer-links">
-          <a href="#about">ABOUT US</a>
-          <a href="#contact">CONTACT US</a>
+          <a href="#about" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
+          <a href="#contact" onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>CONTACT US</a>
         </div>
       </footer>
+
+      {showPostCreator && (
+        <div className="modal-overlay" onClick={() => setShowPostCreator(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <PostCreator
+              onPostCreated={handlePostCreated}
+              onCancel={() => setShowPostCreator(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

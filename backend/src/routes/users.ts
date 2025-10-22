@@ -9,7 +9,8 @@ import {
   updateUserRole,
   updateUserStreak,
   getProfile,
-  updateProfile
+  updateProfile,
+  getPublicProfile
 } from '@/controllers/userController';
 import {
   authenticate,
@@ -38,6 +39,8 @@ router.put('/profile',
   validate(validateProfileUpdate),
   updateProfile
 );
+
+router.get('/profile/:username', getPublicProfile);
 
 router.get('/',
   authorize('manage_users'),

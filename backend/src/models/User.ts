@@ -451,11 +451,46 @@ export class User implements IUser {
 
   async updateLastLogin(): Promise<this> {
     try {
-      const now = new Date().toISOString();
-      await this.updatePrefs({ lastLogin: now });
-      this.lastLogin = now;
+      const now = new Date();
+      const nowISO = now.toISOString();
 
-      appLogger.logAuth('login', this.id, { timestamp: now });
+      // Calculate streak
+      let newStreak = this.streak || 0;
+      if (this.lastLogin) {
+        const lastLoginDate = new Date(this.lastLogin);
+        const daysDifference = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysDifference === 0) {
+          // Same day login, keep streak
+          newStreak = this.streak || 1;
+        } else if (daysDifference === 1) {
+          // Consecutive day login, increment streak
+          newStreak = (this.streak || 0) + 1;
+          appLogger.info('Login streak increased', { userId: this.id, newStreak, previousStreak: this.streak });
+        } else {
+          // Streak broken, reset to 1
+          if (this.streak && this.streak > 1) {
+            appLogger.info('Login streak broken', { userId: this.id, previousStreak: this.streak, daysMissed: daysDifference });
+          }
+          newStreak = 1;
+        }
+      } else {
+        // First login, start streak
+        newStreak = 1;
+        appLogger.info('Login streak started', { userId: this.id });
+      }
+
+      await this.updatePrefs({
+        lastLogin: nowISO,
+        streak: newStreak
+      });
+      this.lastLogin = nowISO;
+      this.streak = newStreak;
+
+      appLogger.logAuth('login', this.id, {
+        timestamp: nowISO,
+        streak: newStreak
+      });
       return this;
     } catch (error: any) {
       appLogger.error('Failed to update last login', error, { userId: this.id });

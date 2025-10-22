@@ -13,6 +13,8 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [contentSearchQuery, setContentSearchQuery] = useState('');
 
   useEffect(() => {
     if (!hasPermission('manage_users')) {
@@ -151,6 +153,18 @@ const AdminPanel = () => {
               <h2>User Management</h2>
               <p>Manage user roles and permissions</p>
             </div>
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search users by name, email, or role..."
+                value={userSearchQuery}
+                onChange={(e) => setUserSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {userSearchQuery && (
+                <button className="clear-search" onClick={() => setUserSearchQuery('')}>✕</button>
+              )}
+            </div>
 
             <div className="users-table-container">
               <table className="users-table">
@@ -165,7 +179,19 @@ const AdminPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map(user => (
+                  {users
+                    .filter(user => {
+                      if (!userSearchQuery) return true;
+                      const query = userSearchQuery.toLowerCase();
+                      return (
+                        user.username?.toLowerCase().includes(query) ||
+                        user.email?.toLowerCase().includes(query) ||
+                        user.firstName?.toLowerCase().includes(query) ||
+                        user.lastName?.toLowerCase().includes(query) ||
+                        user.role?.toLowerCase().includes(query)
+                      );
+                    })
+                    .map(user => (
                     <tr key={user.id} className={!user.isActive ? 'inactive-user' : ''}>
                       <td>
                         <div className="user-info">
@@ -226,9 +252,32 @@ const AdminPanel = () => {
               <h2>Content Management</h2>
               <p>Manage published posts and articles</p>
             </div>
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search posts by title, author, or category..."
+                value={contentSearchQuery}
+                onChange={(e) => setContentSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {contentSearchQuery && (
+                <button className="clear-search" onClick={() => setContentSearchQuery('')}>✕</button>
+              )}
+            </div>
 
             <div className="posts-grid">
-              {posts.map(post => (
+              {posts
+                .filter(post => {
+                  if (!contentSearchQuery) return true;
+                  const query = contentSearchQuery.toLowerCase();
+                  return (
+                    post.title?.toLowerCase().includes(query) ||
+                    post.authorName?.toLowerCase().includes(query) ||
+                    post.category?.toLowerCase().includes(query) ||
+                    post.excerpt?.toLowerCase().includes(query)
+                  );
+                })
+                .map(post => (
                 <div key={post.id} className="post-card">
                   <div className="post-header">
                     <span className={`category-tag ${post.category.toLowerCase()}`}>

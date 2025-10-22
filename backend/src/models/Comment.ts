@@ -157,8 +157,7 @@ export class Comment implements IComment {
         COMMENTS_COLLECTION_ID,
         this.id,
         {
-          content: updateData.content,
-          updatedAt: new Date().toISOString()
+          content: updateData.content
         }
       );
 
@@ -184,20 +183,19 @@ export class Comment implements IComment {
     try {
       appLogger.debug('Deleting comment', { commentId: this.id });
 
-      await databases.updateDocument(
+      const updatedDoc = await databases.updateDocument(
         DATABASE_ID,
         COMMENTS_COLLECTION_ID,
         this.id,
         {
           isDeleted: true,
-          content: '[Comment deleted]',
-          updatedAt: new Date().toISOString()
+          content: '[Comment deleted]'
         }
       );
 
       this.isDeleted = true;
       this.content = '[Comment deleted]';
-      this.updatedAt = new Date().toISOString();
+      this.updatedAt = updatedDoc.$updatedAt;
 
       const duration = Date.now() - startTime;
       appLogger.logPerformance('Comment.delete', duration, { commentId: this.id });

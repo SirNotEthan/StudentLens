@@ -7,6 +7,7 @@ const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
 const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
 const USERS_COLLECTION_ID = process.env.APPWRITE_USERS_COLLECTION_ID || 'users';
 const COMMENTS_COLLECTION_ID = process.env.APPWRITE_COMMENTS_COLLECTION_ID || 'comments';
+const BOOKMARKS_COLLECTION_ID = process.env.APPWRITE_BOOKMARKS_COLLECTION_ID || 'bookmarks';
 const APPLICATIONS_COLLECTION_ID = process.env.APPWRITE_APPLICATIONS_COLLECTION_ID || 'writer_applications';
 
 async function setupDatabase() {
@@ -30,6 +31,8 @@ async function setupDatabase() {
 
     await setupCommentsCollection();
 
+    await setupBookmarksCollection();
+
     await setupUsersCollection();
 
     await setupApplicationsCollection();
@@ -38,6 +41,7 @@ async function setupDatabase() {
     console.log('\n📝 Summary:');
     console.log(`   - Posts Collection: ${POSTS_COLLECTION_ID}`);
     console.log(`   - Comments Collection: ${COMMENTS_COLLECTION_ID}`);
+    console.log(`   - Bookmarks Collection: ${BOOKMARKS_COLLECTION_ID}`);
     console.log(`   - Users Collection: ${USERS_COLLECTION_ID}`);
     console.log(`   - Applications Collection: ${APPLICATIONS_COLLECTION_ID}`);
 
@@ -51,22 +55,25 @@ async function setupPostsCollection() {
   try {
     console.log(`\n📝 Setting up Posts collection (${POSTS_COLLECTION_ID})...`);
 
+    let collectionExists = false;
     try {
       await databases.getCollection(DATABASE_ID, POSTS_COLLECTION_ID);
-      console.log('✅ Posts collection already exists');
-      return;
+      console.log('✅ Posts collection already exists - checking attributes');
+      collectionExists = true;
     } catch (error: any) {
       if (error.code !== 404) throw error;
     }
 
-    const collection = await databases.createCollection(
+    if (!collectionExists) {
+      const collection = await databases.createCollection(
       DATABASE_ID,
       POSTS_COLLECTION_ID,
       'Posts',
       ['read("any")', 'write("users")'] // Read public, write for logged-in users
-    );
+      );
 
-    console.log('✅ Posts collection created');
+      console.log('✅ Posts collection created');
+    }
 
     const stringAttributes = [
       { key: 'title', size: 255, required: true },
@@ -82,7 +89,8 @@ async function setupPostsCollection() {
       { key: 'editorId', size: 50, required: false },
       { key: 'editorName', size: 100, required: false },
       { key: 'reviewerId', size: 50, required: false },
-      { key: 'reviewerName', size: 100, required: false }
+      { key: 'reviewerName', size: 100, required: false },
+      { key: 'likedUsers', size: 50, required: false, array: true }
     ];
 
     const integerAttributes = [
@@ -338,6 +346,85 @@ async function setupCommentsCollection() {
 
   } catch (error: any) {
     console.error('❌ Failed to setup Comments collection:', error.message);
+    throw error;
+  }
+}
+
+async function setupBookmarksCollection() {
+  try {
+    console.log(`\n🔖 Setting up Bookmarks collection (${BOOKMARKS_COLLECTION_ID})...`);
+
+    let collectionExists = false;
+    try {
+      await databases.getCollection(DATABASE_ID, BOOKMARKS_COLLECTION_ID);
+      console.log('✅ Bookmarks collection already exists - checking attributes');
+      collectionExists = true;
+    } catch (error: any) {
+      if (error.code !== 404) throw error;
+    }
+
+    if (!collectionExists) {
+      const collection = await databases.createCollection(
+        DATABASE_ID,
+        BOOKMARKS_COLLECTION_ID,
+        'Bookmarks',
+        ['read("users")', 'write("users")'] // Only logged-in users can read/write their bookmarks
+      );
+
+      console.log('✅ Bookmarks collection created');
+    }
+
+    const stringAttributes = [
+      { key: 'userId', size: 50, required: true },
+      { key: 'postId', size: 50, required: true }
+    ];
+
+    for (const attr of stringAttributes) {
+      try {
+        await databases.createStringAttribute(
+          DATABASE_ID,
+          BOOKMARKS_COLLECTION_ID,
+          attr.key,
+          attr.size,
+          attr.required
+        );
+        console.log(`  ✅ Created string attribute: ${attr.key}`);
+      } catch (error: any) {
+        if (error.code === 409) {
+          console.log(`  ℹ️  Attribute already exists: ${attr.key}`);
+        } else {
+          console.error(`  ❌ Failed to create attribute ${attr.key}:`, error.message);
+        }
+      }
+    }
+
+    const indexes = [
+      { key: 'userId', type: 'key', attributes: ['userId'] },
+      { key: 'postId', type: 'key', attributes: ['postId'] },
+      { key: 'userPost', type: 'unique', attributes: ['userId', 'postId'] }
+    ];
+
+    for (const index of indexes) {
+      try {
+        await databases.createIndex(
+          DATABASE_ID,
+          BOOKMARKS_COLLECTION_ID,
+          index.key,
+          index.type as any,
+          index.attributes
+        );
+        console.log(`  ✅ Created index: ${index.key}`);
+      } catch (error: any) {
+        if (error.code === 409) {
+          console.log(`  ℹ️  Index already exists: ${index.key}`);
+        } else {
+          console.error(`  ❌ Failed to create index ${index.key}:`, error.message);
+        }
+      }
+    }
+
+  } catch (error: any) {
+    console.error('❌ Failed to setup Bookmarks collection:', error.message);
     throw error;
   }
 }

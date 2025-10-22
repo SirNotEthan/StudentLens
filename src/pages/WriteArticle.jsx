@@ -23,6 +23,7 @@ const WriteArticle = () => {
   const [saveStatus, setSaveStatus] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
+  const [showPreview, setShowPreview] = useState(true);
 
   const categories = [
     'ACADEMIC',
@@ -206,6 +207,72 @@ const WriteArticle = () => {
     return colors[category] || '#6c757d';
   };
 
+  const formatTextWithMarkup = (text) => {
+    if (!text) return text;
+
+    const parts = [];
+    let currentIndex = 0;
+    let key = 0;
+
+    const patterns = [
+      { regex: /\[([^\]]+)\]/g, type: 'math' },           
+      { regex: /\*\*([^*]+)\*\*/g, type: 'bold' },        
+      { regex: /\*([^*]+)\*/g, type: 'italic' },          
+      { regex: /_([^_]+)_/g, type: 'italic' },            
+      { regex: /`([^`]+)`/g, type: 'code' },              
+      { regex: /~~([^~]+)~~/g, type: 'strikethrough' },  
+    ];
+
+    const allMatches = [];
+    patterns.forEach(({ regex, type }) => {
+      const matches = [...text.matchAll(regex)];
+      matches.forEach(match => {
+        allMatches.push({
+          type,
+          match: match[0],
+          content: match[1],
+          index: match.index,
+          length: match[0].length
+        });
+      });
+    });
+
+    allMatches.sort((a, b) => a.index - b.index);
+
+    allMatches.forEach(({ type, match, content, index, length }) => {
+      if (index < currentIndex) return;
+      if (index > currentIndex) {
+        parts.push(text.substring(currentIndex, index));
+      }
+
+      switch (type) {
+        case 'math':
+          parts.push(<span key={key++} className="preview-math">{content}</span>);
+          break;
+        case 'bold':
+          parts.push(<strong key={key++} className="preview-bold">{content}</strong>);
+          break;
+        case 'italic':
+          parts.push(<em key={key++} className="preview-italic">{content}</em>);
+          break;
+        case 'code':
+          parts.push(<code key={key++} className="preview-code">{content}</code>);
+          break;
+        case 'strikethrough':
+          parts.push(<span key={key++} className="preview-strikethrough">{content}</span>);
+          break;
+      }
+
+      currentIndex = index + length;
+    });
+
+    if (currentIndex < text.length) {
+      parts.push(text.substring(currentIndex));
+    }
+
+    return parts.length > 0 ? parts : text;
+  };
+
   if (loading && isEditing) {
     return (
       <div className="write-loading">
@@ -230,6 +297,12 @@ const WriteArticle = () => {
             {saveStatus && <span className="status-message">{saveStatus}</span>}
           </div>
           <div className="action-buttons">
+            <button
+              className="preview-toggle-btn"
+              onClick={() => setShowPreview(!showPreview)}
+            >
+              {showPreview ? 'Hide Preview' : 'Show Preview'}
+            </button>
             <button
               className="save-draft-btn"
               onClick={() => handleSave('draft')}
@@ -259,7 +332,7 @@ const WriteArticle = () => {
         </div>
       </div>
 
-      <div className="write-content">
+      <div className={`write-content ${showPreview ? 'with-preview' : ''}`}>
         <div className="main-editor">
           <div className="article-meta">
             <div className="meta-row">
@@ -308,7 +381,7 @@ const WriteArticle = () => {
                 name="imageUrl"
                 value={article.imageUrl}
                 onChange={handleInputChange}
-                placeholder="https:
+                placeholder="https://example.com/image.jpg"
                 className="image-input"
               />
               {article.imageUrl && (
@@ -369,6 +442,75 @@ const WriteArticle = () => {
           </div>
         </div>
 
+        {showPreview && (
+          <div className="preview-panel">
+            <div className="preview-header">
+              <h3>Article Preview</h3>
+              <p className="preview-subtitle">See how your article will appear to readers</p>
+            </div>
+            <div className="preview-content">
+              {article.imageUrl && (
+                <div className="preview-image-container">
+                  <img
+                    src={article.imageUrl}
+                    alt="Article preview"
+                    className="preview-featured-image"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
+              )}
+
+              <div className="preview-meta">
+                <span
+                  className="preview-category"
+                  style={{ backgroundColor: getCategoryColor(article.category) }}
+                >
+                  {article.category.replace(/_/g, ' ')}
+                </span>
+                {article.tags && (
+                  <div className="preview-tags">
+                    {article.tags.split(',').map((tag, index) => (
+                      tag.trim() && (
+                        <span key={index} className="preview-tag">
+                          {tag.trim()}
+                        </span>
+                      )
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <h1 className="preview-title">
+                {article.title || 'Your Article Title'}
+              </h1>
+
+              {article.excerpt && (
+                <p className="preview-excerpt">{article.excerpt}</p>
+              )}
+
+              <div className="preview-body">
+                {article.content ? (
+                  article.content.split('\n').map((paragraph, index) => (
+                    paragraph.trim() ? (
+                      <p key={index} className="preview-paragraph">{formatTextWithMarkup(paragraph)}</p>
+                    ) : (
+                      <br key={index} />
+                    )
+                  ))
+                ) : (
+                  <p className="preview-placeholder">Your article content will appear here...</p>
+                )}
+              </div>
+
+              <div className="preview-footer">
+                <div className="preview-read-time">
+                  {Math.ceil(wordCount / 200) || 1} min read
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="sidebar">
           <div className="sidebar-section">
             <h3>📝 Writing Tips</h3>
@@ -380,6 +522,34 @@ const WriteArticle = () => {
               <li>Add relevant tags for discoverability</li>
               <li>Proofread before publishing</li>
             </ul>
+          </div>
+
+          <div className="sidebar-section">
+            <h3>✨ Text Formatting</h3>
+            <div className="formatting-guide">
+              <div className="format-examples">
+                <div className="format-item">
+                  <code>[formula]</code>
+                  <span>Math</span>
+                </div>
+                <div className="format-item">
+                  <code>**bold**</code>
+                  <span>Bold</span>
+                </div>
+                <div className="format-item">
+                  <code>*italic*</code>
+                  <span>Italic</span>
+                </div>
+                <div className="format-item">
+                  <code>`code`</code>
+                  <span>Code</span>
+                </div>
+                <div className="format-item">
+                  <code>~~strike~~</code>
+                  <span>Strike</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="sidebar-section">

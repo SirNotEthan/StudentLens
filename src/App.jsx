@@ -4,6 +4,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import MainPage from './pages/MainPage'
 import Profile from './pages/Profile'
+import UserProfile from './pages/UserProfile'
 import AccountSettings from './pages/AccountSettings'
 import AuthCallback from './pages/AuthCallback'
 import AccountSetup from './pages/AccountSetup'
@@ -83,6 +84,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PostDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/user/:username"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
               </ProtectedRoute>
             }
           />

@@ -187,7 +187,7 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
               name="imageUrl"
               value={formData.imageUrl}
               onChange={handleInputChange}
-              placeholder="https:
+              placeholder="https://example.com/image.jpg"
             />
           </div>
         </div>

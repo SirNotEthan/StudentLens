@@ -111,12 +111,20 @@ const Comments = ({ postId }) => {
     }
   };
 
-  const deleteComment = async (commentId) => {
+  const deleteComment = async (commentId, isReply = false) => {
     if (!window.confirm('Are you sure you want to delete this comment?')) return;
 
     try {
       await axios.delete(`/comments/${commentId}`);
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
+
+      if (isReply) {
+        setComments(prev => prev.map(comment => ({
+          ...comment,
+          replies: comment.replies ? comment.replies.filter(reply => reply.id !== commentId) : []
+        })));
+      } else {
+        setComments(prev => prev.filter(comment => comment.id !== commentId));
+      }
     } catch (error) {
       console.error('Error deleting comment:', error);
       setError('Failed to delete comment');
@@ -205,7 +213,7 @@ const Comments = ({ postId }) => {
         {isAuthenticated && user?.id === comment.authorId && (
           <button
             className="comment-delete-btn"
-            onClick={() => deleteComment(comment.id)}
+            onClick={() => deleteComment(comment.id, isReply)}
           >
             Delete
           </button>

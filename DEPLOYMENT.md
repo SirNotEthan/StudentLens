@@ -62,29 +62,382 @@ docker-compose down
    # Deploy the 'dist' folder to your Node.js host
    ```
 
-### Option 4: VPS/Server Deployment
+### Option 4: VPS/Server Deployment (Detailed Guide)
+
+#### Prerequisites
+- VPS with Ubuntu 20.04+ (DigitalOcean, AWS EC2, Linode, Vultr, etc.)
+- At least 1GB RAM, 1 CPU core, 25GB storage
+- Root or sudo access
+- Domain name (optional but recommended)
+
+#### Step 1: Initial VPS Setup
 
 ```bash
-# Install Node.js, nginx, and pm2
-sudo apt update
-sudo apt install nodejs npm nginx
-sudo npm install -g pm2
+# SSH into your VPS
+ssh root@your_vps_ip
 
-# Clone and build
-git clone <your-repo>
+# Create a deploy user (recommended)
+adduser deploy
+usermod -aG sudo deploy
+su - deploy
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+```
+
+#### Step 2: Install Docker & Docker Compose
+
+```bash
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Verify installation
+docker --version
+docker-compose --version
+
+# Log out and back in for group changes to take effect
+exit
+su - deploy
+```
+
+#### Step 3: Clone Your Repository
+
+```bash
+# Install git
+sudo apt install git -y
+
+# Clone repository (replace with your GitHub URL)
+cd ~
+git clone https://github.com/YOUR_USERNAME/StudentLens.git
 cd StudentLens
-npm install && npm run build
-cd backend && npm install && npm run build
+```
 
-# Start with PM2
-pm2 start backend/dist/server.js --name studentlens
-pm2 startup
-pm2 save
+#### Step 4: Configure Environment Variables
 
-# Configure nginx (copy nginx.conf)
-sudo cp nginx.conf /etc/nginx/sites-available/studentlens
-sudo ln -s /etc/nginx/sites-available/studentlens /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+```bash
+# Edit backend environment file
+nano backend/.env
+```
+
+Update with production values:
+```env
+PORT=5000
+NODE_ENV=production
+
+# Appwrite Configuration
+APPWRITE_ENDPOINT="https://fra.cloud.appwrite.io/v1"
+APPWRITE_PROJECT_ID="68d57fc30010b8c4f2f1"
+APPWRITE_API_KEY="your_api_key_here"
+APPWRITE_DATABASE_ID="68e0023400197e1cf89a"
+APPWRITE_USERS_COLLECTION_ID="users"
+APPWRITE_POSTS_COLLECTION_ID="posts"
+APPWRITE_COMMENTS_COLLECTION_ID="comments"
+APPWRITE_APPLICATIONS_COLLECTION_ID="writer_applications"
+
+# Security - CHANGE THESE!
+JWT_SECRET=CHANGE_TO_RANDOM_32_CHAR_STRING
+JWT_EXPIRE=7d
+SESSION_SECRET=CHANGE_TO_RANDOM_32_CHAR_STRING
+
+# Google OAuth - Update callback URL
+GOOGLE_CLIENT_ID="your_client_id"
+GOOGLE_CLIENT_SECRET="your_client_secret"
+GOOGLE_CALLBACK_URL="https://yourdomain.com/api/auth/google/callback"
+
+# Frontend URL - Update to your domain or IP
+CLIENT_URL="https://yourdomain.com"
+```
+
+```bash
+# Edit frontend environment file
+nano .env
+```
+
+Update with your domain or VPS IP:
+```env
+VITE_API_BASE_URL=https://yourdomain.com/api
+VITE_BACKEND_URL=https://yourdomain.com
+
+# Or if using IP without domain:
+# VITE_API_BASE_URL=http://123.45.67.89/api
+# VITE_BACKEND_URL=http://123.45.67.89
+```
+
+#### Step 5: Update Nginx Configuration
+
+```bash
+nano nginx.conf
+```
+
+Change line 52 from `server_name localhost;` to:
+```nginx
+server_name yourdomain.com www.yourdomain.com;
+# Or use your VPS IP: server_name 123.45.67.89;
+```
+
+#### Step 6: Configure Firewall
+
+```bash
+# Allow SSH, HTTP, and HTTPS
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+sudo ufw status
+```
+
+#### Step 7: Deploy Application
+
+```bash
+# Build and start in production mode
+docker-compose --profile production up -d --build
+
+# Check if containers are running
+docker-compose ps
+
+# View logs
+docker-compose logs -f app
+```
+
+Your app should now be accessible at:
+- With domain: `http://yourdomain.com`
+- Without domain: `http://your_vps_ip`
+
+#### Step 8: Setup SSL/HTTPS (Highly Recommended)
+
+**Option A: Using Certbot (with domain)**
+
+```bash
+# Stop nginx container temporarily
+docker-compose stop nginx
+
+# Install Certbot
+sudo apt install certbot -y
+
+# Get SSL certificate
+sudo certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
+
+# Create ssl directory in your project
+mkdir -p ssl
+
+# Copy certificates
+sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ssl/
+sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ssl/
+sudo chmod 644 ssl/*.pem
+```
+
+Update `nginx.conf` to add HTTPS (add before the existing server block):
+```nginx
+# HTTP to HTTPS redirect
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+    return 301 https://$server_name$request_uri;
+}
+
+# HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name yourdomain.com www.yourdomain.com;
+
+    ssl_certificate /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+
+    # Continue with the rest of your existing configuration...
+    # (copy all the location blocks from your existing server block)
+}
+```
+
+```bash
+# Restart with HTTPS
+docker-compose --profile production up -d
+
+# Setup auto-renewal
+sudo certbot renew --dry-run
+```
+
+**Option B: Without SSL (HTTP only - not recommended for production)**
+
+Your app will run on HTTP. Skip this step if you prefer HTTPS.
+
+#### Step 9: Configure DNS (If Using Domain)
+
+In your domain registrar (GoDaddy, Namecheap, etc.):
+
+1. **Add A Record:**
+   - Type: `A`
+   - Host: `@`
+   - Value: `your_vps_ip`
+   - TTL: `3600`
+
+2. **Add WWW Record:**
+   - Type: `A`
+   - Host: `www`
+   - Value: `your_vps_ip`
+   - TTL: `3600`
+
+DNS propagation takes 1-48 hours (usually 1-4 hours).
+
+#### Step 10: Verify Deployment
+
+```bash
+# Check application health
+curl http://localhost/health
+
+# Check all services
+docker-compose ps
+
+# View real-time logs
+docker-compose logs -f
+```
+
+Visit your domain or IP in a browser to verify!
+
+#### Maintenance Commands
+
+```bash
+# View logs
+docker-compose logs -f app
+docker-compose logs -f nginx
+
+# Restart services
+docker-compose restart
+
+# Stop services
+docker-compose down
+
+# Update application (after git push)
+git pull
+docker-compose --profile production up -d --build
+
+# Check resource usage
+docker stats
+
+# Backup database (handled by Appwrite)
+# Backup your .env files regularly!
+```
+
+#### Troubleshooting
+
+**Can't access the application:**
+```bash
+# Check if containers are running
+docker-compose ps
+
+# Check firewall
+sudo ufw status
+
+# Check nginx logs
+docker-compose logs nginx
+
+# Check app logs
+docker-compose logs app
+```
+
+**Port already in use:**
+```bash
+# Check what's using port 80
+sudo netstat -tulpn | grep :80
+
+# Kill the process or change ports in docker-compose.yml
+```
+
+**SSL certificate errors:**
+```bash
+# Renew certificate
+sudo certbot renew
+
+# Copy new certificates
+sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ssl/
+sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ssl/
+
+# Restart nginx
+docker-compose restart nginx
+```
+
+#### Cost Estimate
+
+**VPS Providers:**
+- DigitalOcean: $6/month (1GB RAM droplet)
+- Linode: $5/month (1GB RAM)
+- Vultr: $6/month (1GB RAM)
+- AWS EC2 t2.micro: Free tier for 1 year, then ~$10/month
+- Hetzner: €4.50/month (~$5)
+
+**Domain:** ~$12/year (optional)
+
+**Total: $5-10/month + domain**
+
+#### Quick Deploy Script
+
+Save as `vps-deploy.sh` and run with `bash vps-deploy.sh`:
+
+```bash
+#!/bin/bash
+echo "=== StudentLens VPS Deployment ==="
+
+# Install Docker
+echo "Installing Docker..."
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+echo "Installing Docker Compose..."
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Configure firewall
+echo "Configuring firewall..."
+sudo ufw allow OpenSSH
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+echo "y" | sudo ufw enable
+
+# Get domain or IP
+read -p "Enter your domain (or press Enter to use VPS IP): " DOMAIN
+if [ -z "$DOMAIN" ]; then
+    DOMAIN=$(curl -s ifconfig.me)
+    PROTOCOL="http"
+else
+    PROTOCOL="https"
+fi
+
+# Update environment files
+echo "Updating environment variables..."
+echo "VITE_API_BASE_URL=$PROTOCOL://$DOMAIN/api" > .env
+echo "VITE_BACKEND_URL=$PROTOCOL://$DOMAIN" >> .env
+
+# Update nginx config
+sed -i "s/server_name localhost;/server_name $DOMAIN;/" nginx.conf
+
+# Build and start
+echo "Building and starting application..."
+docker-compose --profile production up -d --build
+
+echo ""
+echo "=== Deployment Complete! ==="
+echo "Your app is accessible at: $PROTOCOL://$DOMAIN"
+echo ""
+echo "Next steps:"
+echo "1. Configure backend/.env with your Appwrite credentials"
+echo "2. Update JWT_SECRET and SESSION_SECRET"
+echo "3. If using a domain, setup SSL with: sudo certbot certonly --standalone -d $DOMAIN"
+echo "4. Test your application"
+echo ""
+echo "Useful commands:"
+echo "  docker-compose logs -f       # View logs"
+echo "  docker-compose ps            # Check status"
+echo "  docker-compose restart       # Restart services"
 ```
 
 ## 🔧 Environment Configuration
