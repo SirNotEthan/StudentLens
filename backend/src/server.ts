@@ -54,7 +54,10 @@ const app: Application = express();
 app.set('trust proxy', 1);
 
 app.use(securityHeaders);
-app.use(helmet({
+
+// Configure helmet based on environment and protocol
+const isProduction = process.env.NODE_ENV === 'production';
+const helmetConfig: any = {
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -67,8 +70,14 @@ app.use(helmet({
       frameAncestors: ["'none'"]
     }
   },
-  crossOriginEmbedderPolicy: false
-}));
+  crossOriginEmbedderPolicy: false,
+  // Disable COOP and COEP for HTTP, as they're only meant for HTTPS
+  crossOriginOpenerPolicy: false,
+  // Only enable origin agent cluster for HTTPS
+  originAgentCluster: false
+};
+
+app.use(helmet(helmetConfig));
 
 app.use(requestLogger);
 
