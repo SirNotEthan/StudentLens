@@ -104,42 +104,46 @@ app.use(express.urlencoded({
   parameterLimit: 1000
 }));
 
-const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
-  socket: {
-    reconnectStrategy: (retries) => {
-      if (retries > 10) {
-        appLogger.error('Redis: Too many reconnection attempts, giving up');
-        return new Error('Too many retries');
+// Redis setup with fallback to in-memory sessions
+let redisClient: ReturnType<typeof createClient> | null = null;
+let sessionStore: any = null;
+
+try {
+  redisClient = createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    socket: {
+      connectTimeout: 5000,
+      reconnectStrategy: (retries) => {
+        if (retries > 10) {
+          appLogger.error('Redis: Too many reconnection attempts, giving up');
+          return new Error('Too many retries');
+        }
+        const delay = Math.min(retries * 100, 3000);
+        appLogger.warn(`Redis: Reconnecting in ${delay}ms (attempt ${retries})`);
+        return delay;
       }
-      const delay = Math.min(retries * 100, 3000);
-      appLogger.warn(`Redis: Reconnecting in ${delay}ms (attempt ${retries})`);
-      return delay;
     }
-  }
-});
+  });
 
-redisClient.on('error', (err) => {
-  appLogger.error('Redis Client Error', err);
-});
+  redisClient.on('error', (err) => {
+    appLogger.warn('Redis Client Error (non-fatal)', err);
+  });
 
-redisClient.on('connect', () => {
-  appLogger.info('Redis Client Connected');
-});
+  redisClient.on('connect', () => {
+    appLogger.info('Redis Client Connected');
+  });
 
-redisClient.on('ready', () => {
-  appLogger.info('Redis Client Ready');
-});
+  redisClient.on('ready', () => {
+    appLogger.info('Redis Client Ready');
+  });
 
-redisClient.on('reconnecting', () => {
-  appLogger.warn('Redis Client Reconnecting');
-});
-
-const redisStore = new RedisStore({
-  client: redisClient,
-  prefix: 'sess:',
-  ttl: 86400
-});
+  redisClient.on('reconnecting', () => {
+    appLogger.warn('Redis Client Reconnecting');
+  });
+} catch (error) {
+  appLogger.warn('Redis client initialization failed, will use memory store', error);
+  redisClient = null;
+}
 
 // Determine if secure cookies should be used (HTTPS)
 // In production, use HTTPS (secure cookies) unless explicitly disabled
@@ -147,8 +151,8 @@ const useSecureCookies = process.env.SECURE_COOKIES === 'false'
   ? false
   : (process.env.NODE_ENV === 'production' || process.env.SECURE_COOKIES === 'true');
 
-app.use(session({
-  store: redisStore,
+// Session configuration (will be set up after Redis connection attempt)
+const sessionConfig: any = {
   secret: process.env.SESSION_SECRET!,
   resave: false,
   saveUninitialized: false,
@@ -163,10 +167,9 @@ app.use(session({
   genid: () => {
     return require('crypto').randomBytes(32).toString('hex');
   }
-}));
+};
 
-app.use(passport.initialize());
-app.use(passport.session());
+// Passport and session middleware will be added in startServer after Redis connection
 
 app.get('/api/health', async (req, res): Promise<void> => {
   const healthCheck = {
@@ -252,24 +255,60 @@ const PORT = parseInt(process.env.PORT || '5000', 10);
 
 const startServer = async (): Promise<void> => {
   try {
-    // Connect to Redis
-    await redisClient.connect();
-    appLogger.info('Connected to Redis successfully');
-
-    const appwriteConnected = await checkAppwriteConnection();
-    if (!appwriteConnected) {
-      appLogger.error('Failed to connect to Appwrite. Server will not start.');
-      await redisClient.quit();
-      process.exit(1);
+    // Try to connect to Redis with timeout
+    let redisConnected = false;
+    if (redisClient) {
+      try {
+        appLogger.info('Attempting to connect to Redis...');
+        await Promise.race([
+          redisClient.connect(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 10000))
+        ]);
+        redisConnected = true;
+        sessionStore = new RedisStore({
+          client: redisClient,
+          prefix: 'sess:',
+          ttl: 86400
+        });
+        appLogger.info('Connected to Redis successfully - using Redis for sessions');
+      } catch (error) {
+        appLogger.warn('Failed to connect to Redis, falling back to memory store for sessions', error);
+        redisClient = null;
+        redisConnected = false;
+      }
     }
 
-    // const server = app.listen(PORT, () => {
+    // If Redis failed or not available, use memory store
+    if (!redisConnected) {
+      appLogger.warn('Using in-memory session store (sessions will not persist across restarts)');
+      sessionConfig.store = undefined; // Use default MemoryStore
+    } else {
+      sessionConfig.store = sessionStore;
+    }
+
+    // Add session middleware now
+    app.use(session(sessionConfig));
+    app.use(passport.initialize());
+    app.use(passport.session());
+
+    // Check Appwrite connection (non-fatal)
+    const appwriteConnected = await checkAppwriteConnection();
+    if (!appwriteConnected) {
+      appLogger.warn('Warning: Failed to connect to Appwrite. Some features may not work correctly.');
+      appLogger.warn('Server will start anyway. Check your Appwrite configuration.');
+    } else {
+      appLogger.info('Connected to Appwrite successfully');
+    }
+
+    // Start the server
     const server = app.listen(PORT, '0.0.0.0', () => {
       appLogger.info('Server started successfully', {
         port: PORT,
         environment: process.env.NODE_ENV,
         nodeVersion: process.version,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        redis: redisConnected ? 'connected' : 'not available (using memory store)',
+        appwrite: appwriteConnected ? 'connected' : 'connection failed (check config)'
       });
 
       appLogger.info('Environment Configuration', {
@@ -288,12 +327,14 @@ const startServer = async (): Promise<void> => {
         appLogger.info('HTTP server closed');
       });
 
-      // Close Redis connection
-      try {
-        await redisClient.quit();
-        appLogger.info('Redis connection closed');
-      } catch (error) {
-        appLogger.error('Error closing Redis connection', error);
+      // Close Redis connection if it exists
+      if (redisClient && redisConnected) {
+        try {
+          await redisClient.quit();
+          appLogger.info('Redis connection closed');
+        } catch (error) {
+          appLogger.error('Error closing Redis connection', error);
+        }
       }
 
       setTimeout(() => {
@@ -310,10 +351,12 @@ const startServer = async (): Promise<void> => {
   } catch (error: any) {
     appLogger.error('Failed to start server', error);
     // Ensure Redis connection is closed on error
-    try {
-      await redisClient.quit();
-    } catch (redisError) {
-      appLogger.error('Error closing Redis connection during startup failure', redisError);
+    if (redisClient) {
+      try {
+        await redisClient.quit();
+      } catch (redisError) {
+        appLogger.error('Error closing Redis connection during startup failure', redisError);
+      }
     }
     process.exit(1);
   }
