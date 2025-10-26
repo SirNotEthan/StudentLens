@@ -232,6 +232,7 @@ try {
 console.log('INIT: ✅ All middleware initialized successfully');
 appLogger.info('Session and Passport middleware initialized (will attempt Redis connection on startup)');
 
+console.log('INIT: Setting up health check route...');
 app.get('/api/health', async (req, res): Promise<void> => {
   const appwriteConnected = await checkAppwriteConnection();
 
@@ -251,13 +252,21 @@ app.get('/api/health', async (req, res): Promise<void> => {
   // Report service status but don't fail the health check
   res.json(healthCheck);
 });
+console.log('INIT: ✅ Health check route configured');
 
-app.use('/api/auth', googleAuthRoutes); 
+console.log('INIT: Setting up API routes...');
+app.use('/api/auth', googleAuthRoutes);
+console.log('INIT: - Google auth routes added');
 app.use('/api/auth', authRoutes);
+console.log('INIT: - Auth routes added');
 app.use('/api/users', userRoutes);
+console.log('INIT: - User routes added');
 app.use('/api/applications', applicationRoutes);
+console.log('INIT: - Application routes added');
 app.use('/api/posts', postRoutes);
+console.log('INIT: - Post routes added');
 app.use('/api/comments', commentRoutes);
+console.log('INIT: ✅ All API routes configured');
 
 app.get('/api/docs', (req, res): void => {
   res.json({
@@ -304,10 +313,13 @@ app.get('/api/docs', (req, res): void => {
     }
   });
 });
+console.log('INIT: ✅ API docs route configured');
 
+console.log('INIT: Setting up static file serving...');
 // Serve static frontend files (for production builds)
 // In production, the frontend dist is copied to the public directory
 const publicPath = path.join(__dirname, 'public');
+console.log(`INIT: Public path: ${publicPath}`);
 appLogger.info('Static files directory', { publicPath });
 
 // Serve static files
@@ -316,7 +328,9 @@ app.use(express.static(publicPath, {
   etag: true,
   lastModified: true
 }));
+console.log('INIT: ✅ Static file middleware added');
 
+console.log('INIT: Setting up SPA fallback route...');
 // SPA fallback - serve index.html for any non-API route
 app.get('*', (req, res, next) => {
   // Skip if it's an API route
@@ -333,12 +347,18 @@ app.get('*', (req, res, next) => {
     }
   });
 });
+console.log('INIT: ✅ SPA fallback route configured');
 
+console.log('INIT: Setting up error handlers...');
 app.use(notFoundHandler);
+console.log('INIT: - Not found handler added');
 
 app.use(errorHandler);
+console.log('INIT: ✅ Error handlers configured');
 
+console.log('INIT: Configuring PORT...');
 const PORT = parseInt(process.env.PORT || '5000', 10);
+console.log(`INIT: PORT = ${PORT}`);
 
 // Log port configuration for debugging
 appLogger.info('Port Configuration', {
@@ -346,6 +366,12 @@ appLogger.info('Port Configuration', {
   parsedPort: PORT,
   portSource: process.env.PORT ? 'environment variable' : 'default (5000)'
 });
+console.log('INIT: ✅ PORT configured');
+
+console.log('='.repeat(50));
+console.log('INIT: All initialization complete!');
+console.log('INIT: App is fully configured and ready to start');
+console.log('='.repeat(50));
 
 const startServer = async (): Promise<void> => {
   try {
