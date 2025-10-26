@@ -1,14 +1,31 @@
+console.log('='.repeat(50));
+console.log('LOADING: server.ts is being loaded');
+console.log('='.repeat(50));
+
 import 'dotenv/config';
+console.log('LOADING: dotenv loaded');
+
 import express, { Application } from 'express';
+console.log('LOADING: express loaded');
+
 import cors from 'cors';
 import helmet from 'helmet';
 import session from 'express-session';
 import RedisStore from 'connect-redis';
 import { createClient } from 'redis';
+console.log('LOADING: middleware packages loaded');
+
 import passport from '@/config/passport';
+console.log('LOADING: passport loaded');
+
 import { appLogger } from '@/services/logger';
+console.log('LOADING: logger loaded');
+
 import { checkAppwriteConnection } from '@/config/appwrite';
+console.log('LOADING: appwrite config loaded');
+
 import path from 'path';
+console.log('LOADING: path loaded');
 
 import {
   errorHandler,
@@ -16,6 +33,7 @@ import {
   handleUncaughtException,
   handleUnhandledRejection
 } from '@/middleware/errorHandler';
+console.log('LOADING: error handlers loaded');
 import {
   generalLimiter,
   securityHeaders,
@@ -26,6 +44,7 @@ import {
   limitRequestSize,
   validateUserAgent
 } from '@/middleware/security';
+console.log('LOADING: security middleware loaded');
 
 import authRoutes from '@/routes/auth';
 import userRoutes from '@/routes/users';
@@ -33,26 +52,38 @@ import googleAuthRoutes from '@/routes/googleAuth';
 import applicationRoutes from '@/routes/applications';
 import postRoutes from '@/routes/posts';
 import commentRoutes from '@/routes/comments';
+console.log('LOADING: all routes loaded');
 
 import { EnvironmentVariables } from '@/types';
+console.log('LOADING: types loaded');
+
+console.log('LOADING: All imports complete!');
+console.log('='.repeat(50));
 
 handleUncaughtException();
 handleUnhandledRejection();
+console.log('INIT: Exception handlers registered');
 
 const requiredEnvVars: (keyof EnvironmentVariables)[] = [
   'JWT_SECRET',
   'SESSION_SECRET'
 ];
 
+console.log('INIT: Checking required environment variables...');
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingVars.length > 0) {
+  console.error(`INIT: ❌ Missing required environment variables: ${missingVars.join(', ')}`);
   appLogger.error('Missing required environment variables', new Error(`Missing: ${missingVars.join(', ')}`));
   process.exit(1);
 }
+console.log('INIT: ✅ All required environment variables present');
 
+console.log('INIT: Creating Express application...');
 const app: Application = express();
+console.log('INIT: ✅ Express app created');
 
 app.set('trust proxy', 1);
+console.log('INIT: Trust proxy configured');
 
 app.use(securityHeaders);
 
@@ -170,7 +201,13 @@ const sessionConfig: any = {
   }
 };
 
-// Passport and session middleware will be added in startServer after Redis connection
+// Initialize session with memory store by default
+// This will be updated in startServer if Redis is available
+app.use(session(sessionConfig));
+app.use(passport.initialize());
+app.use(passport.session());
+
+appLogger.info('Session and Passport middleware initialized (will attempt Redis connection on startup)');
 
 app.get('/api/health', async (req, res): Promise<void> => {
   const appwriteConnected = await checkAppwriteConnection();
@@ -289,9 +326,24 @@ appLogger.info('Port Configuration', {
 
 const startServer = async (): Promise<void> => {
   try {
+    console.log('\n' + '='.repeat(50));
+    console.log('STARTUP: Beginning server initialization');
+    console.log('='.repeat(50));
+
+    appLogger.info('Starting server initialization...', {
+      nodeVersion: process.version,
+      platform: process.platform,
+      cwd: process.cwd(),
+      environment: process.env.NODE_ENV
+    });
+
+    console.log('STARTUP: Logger initialized');
+
     // Try to connect to Redis with timeout
     let redisConnected = false;
+    console.log('STARTUP: Checking Redis client...');
     if (redisClient) {
+      console.log('STARTUP: Redis client exists, attempting connection...');
       try {
         appLogger.info('Attempting to connect to Redis...');
         await Promise.race([
@@ -305,28 +357,30 @@ const startServer = async (): Promise<void> => {
           ttl: 86400
         });
         appLogger.info('Connected to Redis successfully - using Redis for sessions');
+        console.log('STARTUP: Redis connection successful');
       } catch (error) {
         appLogger.warn('Failed to connect to Redis, falling back to memory store for sessions', error);
+        console.log('STARTUP: Redis connection failed (using memory store)');
         redisClient = null;
         redisConnected = false;
       }
+    } else {
+      console.log('STARTUP: No Redis client configured');
     }
 
-    // If Redis failed or not available, use memory store
+    // Log session store status
     if (!redisConnected) {
       appLogger.warn('Using in-memory session store (sessions will not persist across restarts)');
-      sessionConfig.store = undefined; // Use default MemoryStore
+      console.log('STARTUP: Using memory-based sessions');
     } else {
-      sessionConfig.store = sessionStore;
+      appLogger.warn('Redis connected but session middleware already initialized with memory store');
+      console.log('STARTUP: Redis available but using memory store (middleware already initialized)');
     }
 
-    // Add session middleware now
-    app.use(session(sessionConfig));
-    app.use(passport.initialize());
-    app.use(passport.session());
-
     // Check Appwrite connection (non-fatal)
+    console.log('STARTUP: Checking Appwrite connection...');
     const appwriteConnected = await checkAppwriteConnection();
+    console.log(`STARTUP: Appwrite connection ${appwriteConnected ? 'successful' : 'failed'}`);
     if (!appwriteConnected) {
       appLogger.warn('Warning: Failed to connect to Appwrite. Some features may not work correctly.');
       appLogger.warn('Server will start anyway. Check your Appwrite configuration.');
@@ -335,9 +389,20 @@ const startServer = async (): Promise<void> => {
     }
 
     // Start the server
+    console.log('STARTUP: Preparing to start HTTP server...');
+    console.log(`STARTUP: Port = ${PORT}, Host = 0.0.0.0`);
+
+    appLogger.info('Attempting to start HTTP server...', {
+      port: PORT,
+      host: '0.0.0.0'
+    });
+
+    console.log('STARTUP: Calling app.listen()...');
     const server = app.listen(PORT, '0.0.0.0', () => {
-      appLogger.info('Server started successfully', {
+      console.log('STARTUP: HTTP server listen callback triggered');
+      appLogger.info('✅ Server started successfully', {
         port: PORT,
+        host: '0.0.0.0',
         environment: process.env.NODE_ENV,
         nodeVersion: process.version,
         timestamp: new Date().toISOString(),
@@ -352,6 +417,28 @@ const startServer = async (): Promise<void> => {
         redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
         logLevel: process.env.LOG_LEVEL || 'info'
       });
+
+      console.log('\n==========================================');
+      console.log('🚀 SERVER IS RUNNING');
+      console.log('==========================================');
+      console.log(`Port: ${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV}`);
+      console.log(`Health Check: http://localhost:${PORT}/api/health`);
+      console.log('==========================================\n');
+    });
+
+    server.on('error', (error: any) => {
+      if (error.code === 'EADDRINUSE') {
+        appLogger.error(`❌ Port ${PORT} is already in use!`, error);
+        console.error(`\n❌ ERROR: Port ${PORT} is already in use!`);
+        console.error('This should not happen in App Platform.');
+        console.error('Check your configuration.\n');
+        process.exit(1);
+      } else {
+        appLogger.error('❌ Server error:', error);
+        console.error('\n❌ SERVER ERROR:', error);
+        process.exit(1);
+      }
     });
 
     const gracefulShutdown = async (signal: string) => {
@@ -383,19 +470,45 @@ const startServer = async (): Promise<void> => {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
   } catch (error: any) {
-    appLogger.error('Failed to start server', error);
+    console.error('\n==========================================');
+    console.error('❌ FATAL ERROR: Failed to start server');
+    console.error('==========================================');
+    console.error('Error:', error);
+    console.error('Stack:', error.stack);
+    console.error('==========================================\n');
+
+    appLogger.error('Fatal error during server startup', {
+      error: error.message,
+      stack: error.stack,
+      code: error.code,
+      errno: error.errno
+    });
+
     // Ensure Redis connection is closed on error
     if (redisClient) {
       try {
         await redisClient.quit();
+        appLogger.info('Redis connection closed after error');
       } catch (redisError) {
         appLogger.error('Error closing Redis connection during startup failure', redisError);
       }
     }
+
+    console.error('Exiting with code 1...\n');
     process.exit(1);
   }
 };
 
-startServer();
+console.log('\n' + '='.repeat(50));
+console.log('MAIN: Calling startServer()...');
+console.log('='.repeat(50) + '\n');
+
+startServer().catch((error) => {
+  console.error('\n' + '='.repeat(50));
+  console.error('MAIN: startServer() threw an error');
+  console.error('='.repeat(50));
+  console.error(error);
+  process.exit(1);
+});
 
 export default app;
