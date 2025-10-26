@@ -13,21 +13,10 @@ services:
     source_dir: /
 
     # Build configuration - builds both frontend and backend
-    build_command: |
-      echo "Building frontend..."
-      npm install
-      npm run build
-      echo "Building backend..."
-      cd backend
-      npm install
-      npm run build
-      echo "Copying frontend to backend public directory..."
-      mkdir -p dist/public
-      cp -r ../dist/* dist/public/
-      echo "Build complete!"
+    build_command: bash build.sh
 
     # Start command - runs the backend server which also serves frontend
-    run_command: cd backend && npm start
+    run_command: cd backend && npm run start:prod
 
     # Environment
     environment_slug: node-js

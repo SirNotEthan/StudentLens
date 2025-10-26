@@ -280,6 +280,13 @@ app.use(errorHandler);
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
+// Log port configuration for debugging
+appLogger.info('Port Configuration', {
+  envPort: process.env.PORT,
+  parsedPort: PORT,
+  portSource: process.env.PORT ? 'environment variable' : 'default (5000)'
+});
+
 const startServer = async (): Promise<void> => {
   try {
     // Try to connect to Redis with timeout
