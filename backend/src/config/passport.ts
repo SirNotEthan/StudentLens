@@ -4,11 +4,14 @@ import { User } from '@/models/User';
 import { appLogger } from '@/services/logger';
 import { UserRole } from '@/types';
 
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID!,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL!
-}, async (accessToken: string, refreshToken: string, profile: Profile, done: any) => {
+// Only configure Google OAuth if credentials are provided
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
+  console.log('PASSPORT: Configuring Google OAuth strategy');
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL
+  }, async (accessToken: string, refreshToken: string, profile: Profile, done: any) => {
   try {
     appLogger.info('Google OAuth profile received', {
       googleId: profile.id,
@@ -103,13 +106,21 @@ passport.use(new GoogleStrategy({
     appLogger.error('Google OAuth error', error);
     return done(error, null);
   }
-}));
+  }));
+
+  appLogger.info('Google OAuth strategy configured');
+} else {
+  console.log('PASSPORT: Google OAuth not configured (missing credentials)');
+  appLogger.warn('Google OAuth is not configured - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, or GOOGLE_CALLBACK_URL not provided');
+}
 
 passport.serializeUser((user: any, done) => {
+  console.log('PASSPORT: serializeUser called');
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id: string, done) => {
+  console.log('PASSPORT: deserializeUser called');
   try {
     const user = await User.findById(id);
     done(null, user);
@@ -117,5 +128,7 @@ passport.deserializeUser(async (id: string, done) => {
     done(error, null);
   }
 });
+
+console.log('PASSPORT: Configuration complete');
 
 export default passport;

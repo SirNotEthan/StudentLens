@@ -203,10 +203,33 @@ const sessionConfig: any = {
 
 // Initialize session with memory store by default
 // This will be updated in startServer if Redis is available
-app.use(session(sessionConfig));
-app.use(passport.initialize());
-app.use(passport.session());
+console.log('INIT: Setting up session middleware...');
+try {
+  app.use(session(sessionConfig));
+  console.log('INIT: ✅ Session middleware added');
+} catch (error) {
+  console.error('INIT: ❌ Session middleware failed:', error);
+  throw error;
+}
 
+console.log('INIT: Setting up Passport middleware...');
+try {
+  app.use(passport.initialize());
+  console.log('INIT: ✅ Passport initialized');
+} catch (error) {
+  console.error('INIT: ❌ Passport initialize failed:', error);
+  throw error;
+}
+
+try {
+  app.use(passport.session());
+  console.log('INIT: ✅ Passport session added');
+} catch (error) {
+  console.error('INIT: ❌ Passport session failed:', error);
+  throw error;
+}
+
+console.log('INIT: ✅ All middleware initialized successfully');
 appLogger.info('Session and Passport middleware initialized (will attempt Redis connection on startup)');
 
 app.get('/api/health', async (req, res): Promise<void> => {
