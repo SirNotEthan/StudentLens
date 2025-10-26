@@ -8,6 +8,7 @@ import { createClient } from 'redis';
 import passport from '@/config/passport';
 import { appLogger } from '@/services/logger';
 import { checkAppwriteConnection } from '@/config/appwrite';
+import path from 'path';
 
 import {
   errorHandler,
@@ -243,6 +244,35 @@ app.get('/api/docs', (req, res): void => {
       logging: ['Request logging', 'Performance monitoring', 'Security events', 'Error tracking'],
       validation: ['Comprehensive input validation', 'Business rule validation', 'Type safety'],
       auth: ['JWT tokens', 'Role-based access', 'Permission-based access', 'Token refresh']
+    }
+  });
+});
+
+// Serve static frontend files (for production builds)
+// In production, the frontend dist is copied to the public directory
+const publicPath = path.join(__dirname, 'public');
+appLogger.info('Static files directory', { publicPath });
+
+// Serve static files
+app.use(express.static(publicPath, {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true
+}));
+
+// SPA fallback - serve index.html for any non-API route
+app.get('*', (req, res, next) => {
+  // Skip if it's an API route
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+
+  // Serve index.html for all other routes (SPA routing)
+  const indexPath = path.join(publicPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
+      next(); // Fall through to 404 handler
     }
   });
 });
