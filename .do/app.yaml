@@ -43,8 +43,8 @@ services:
       success_threshold: 1
       failure_threshold: 3
 
-    # Port (App Platform will set PORT automatically, usually 8080)
-    http_port: 8080
+    # Port - App Platform sets $PORT automatically (don't hardcode this)
+    # The app will use process.env.PORT from the environment
 
     # Environment variables
     envs:

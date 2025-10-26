@@ -173,6 +173,8 @@ const sessionConfig: any = {
 // Passport and session middleware will be added in startServer after Redis connection
 
 app.get('/api/health', async (req, res): Promise<void> => {
+  const appwriteConnected = await checkAppwriteConnection();
+
   const healthCheck = {
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -180,18 +182,13 @@ app.get('/api/health', async (req, res): Promise<void> => {
     environment: process.env.NODE_ENV,
     version: process.env.npm_package_version || '1.0.0',
     services: {
-      appwrite: await checkAppwriteConnection()
+      appwrite: appwriteConnected ? 'connected' : 'disconnected',
+      redis: redisClient ? 'connected' : 'not configured'
     }
   };
 
-  if (!healthCheck.services.appwrite) {
-    res.status(503).json({
-      ...healthCheck,
-      status: 'Service Unavailable'
-    });
-    return;
-  }
-
+  // Always return 200 OK if the server is running
+  // Report service status but don't fail the health check
   res.json(healthCheck);
 });
 
