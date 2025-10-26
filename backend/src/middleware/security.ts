@@ -125,10 +125,22 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
 };
 
 const blacklistedIPs = new Set<string>();
-const whitelistedIPs = new Set<string>([
-  '127.0.0.1',
-  '::1'
-]);
+
+// Initialize whitelisted IPs from environment variable or use defaults for development
+const getWhitelistedIPs = (): Set<string> => {
+  const defaultIPs = ['127.0.0.1', '::1'];
+  const envIPs = process.env.ADMIN_WHITELIST_IPS;
+
+  if (envIPs) {
+    // Parse comma-separated IPs from environment variable
+    const ips = envIPs.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
+    return new Set([...defaultIPs, ...ips]);
+  }
+
+  return new Set(defaultIPs);
+};
+
+const whitelistedIPs = getWhitelistedIPs();
 
 export const ipFilter = (req: Request, res: Response, next: NextFunction): void => {
   const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
@@ -143,7 +155,10 @@ export const ipFilter = (req: Request, res: Response, next: NextFunction): void 
     throw AppError.forbidden('Access denied');
   }
 
-  if (req.originalUrl.includes('/admin/') && !whitelistedIPs.has(clientIp)) {
+  // Only enforce IP whitelist for admin routes if ADMIN_IP_WHITELIST_ENABLED is true
+  const ipWhitelistEnabled = process.env.ADMIN_IP_WHITELIST_ENABLED === 'true';
+
+  if (ipWhitelistEnabled && req.originalUrl.includes('/admin/') && !whitelistedIPs.has(clientIp)) {
     appLogger.logSecurityEvent('non_whitelisted_admin_access', {
       ip: clientIp,
       endpoint: req.originalUrl,

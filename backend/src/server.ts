@@ -141,18 +141,24 @@ const redisStore = new RedisStore({
   ttl: 86400
 });
 
+// Determine if secure cookies should be used (HTTPS)
+// In production, use HTTPS (secure cookies) unless explicitly disabled
+const useSecureCookies = process.env.SECURE_COOKIES === 'false'
+  ? false
+  : (process.env.NODE_ENV === 'production' || process.env.SECURE_COOKIES === 'true');
+
 app.use(session({
   store: redisStore,
   secret: process.env.SESSION_SECRET!,
   resave: false,
   saveUninitialized: false,
-  rolling: true, 
+  rolling: true,
   name: 'sessionId',
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: useSecureCookies,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, 
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: useSecureCookies ? 'strict' : 'lax'
   },
   genid: () => {
     return require('crypto').randomBytes(32).toString('hex');

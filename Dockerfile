@@ -41,13 +41,13 @@ RUN adduser -S nodejs -u 1001
 # Set working directory
 WORKDIR /app
 
-# Copy package files and install only production dependencies
-COPY backend/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy built application
+# Copy built application first
 COPY --from=build --chown=nodejs:nodejs /app/backend/dist ./
 COPY --from=build --chown=nodejs:nodejs /app/dist ./public
+
+# Copy package files and install only production dependencies
+COPY --chown=nodejs:nodejs backend/package*.json ./
+RUN npm ci --only=production && npm cache clean --force
 
 # Create logs directory with proper permissions
 RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
