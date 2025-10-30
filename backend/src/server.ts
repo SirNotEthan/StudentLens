@@ -220,13 +220,7 @@ app.use(express.static(publicPath, {
 console.log('INIT: ✅ Static file middleware added');
 
 console.log('INIT: SPA fallback route will be configured in startServer() after API routes');
-
-console.log('INIT: Setting up error handlers...');
-app.use(notFoundHandler);
-console.log('INIT: - Not found handler added');
-
-app.use(errorHandler);
-console.log('INIT: ✅ Error handlers configured');
+console.log('INIT: Error handlers will be configured in startServer() after all routes');
 
 console.log('INIT: Configuring PORT...');
 const PORT = parseInt(process.env.PORT || '5000', 10);
@@ -435,6 +429,13 @@ const startServer = async (): Promise<void> => {
       });
     });
     console.log('STARTUP: ✅ SPA fallback route configured');
+
+    // Set up error handlers (must be LAST, after all routes)
+    console.log('STARTUP: Setting up error handlers...');
+    app.use(notFoundHandler);
+    console.log('STARTUP: - Not found handler added');
+    app.use(errorHandler);
+    console.log('STARTUP: ✅ Error handlers configured');
 
     // Check Appwrite connection (non-fatal)
     console.log('STARTUP: Checking Appwrite connection...');
