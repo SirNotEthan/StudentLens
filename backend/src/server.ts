@@ -414,17 +414,25 @@ const startServer = async (): Promise<void> => {
         return next();
       }
 
-      // Only handle GET requests for SPA routing
-      if (req.method !== 'GET') {
+      // Only handle GET and HEAD requests for SPA routing
+      if (req.method !== 'GET' && req.method !== 'HEAD') {
+        return next();
+      }
+
+      // Skip if response already sent
+      if (res.headersSent) {
         return next();
       }
 
       // Serve index.html for all other routes (SPA routing)
       const indexPath = path.join(publicPath, 'index.html');
+
       res.sendFile(indexPath, (err) => {
         if (err) {
           appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
-          next(); // Fall through to 404 handler
+          if (!res.headersSent) {
+            next(); // Fall through to 404 handler
+          }
         }
       });
     });
@@ -450,19 +458,17 @@ const startServer = async (): Promise<void> => {
 
     // Start the server
     console.log('STARTUP: Preparing to start HTTP server...');
-    console.log(`STARTUP: Port = ${PORT}, Host = 0.0.0.0`);
+    console.log(`STARTUP: Port = ${PORT}`);
 
     appLogger.info('Attempting to start HTTP server...', {
-      port: PORT,
-      host: '0.0.0.0'
+      port: PORT
     });
 
     console.log('STARTUP: Calling app.listen()...');
-    const server = app.listen(PORT, '0.0.0.0', () => {
+    const server = app.listen(PORT, () => {
       console.log('STARTUP: HTTP server listen callback triggered');
       appLogger.info('✅ Server started successfully', {
         port: PORT,
-        host: '0.0.0.0',
         environment: process.env.NODE_ENV,
         nodeVersion: process.version,
         timestamp: new Date().toISOString(),
