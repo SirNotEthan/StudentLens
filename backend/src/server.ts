@@ -116,6 +116,54 @@ const helmetConfig: any = {
 
 app.use(helmet(helmetConfig));
 
+// Serve static files EARLY - before security middleware
+// This prevents security middleware from interfering with asset serving
+console.log('INIT: Setting up static file serving (early)...');
+const publicPath = path.join(__dirname, 'public');
+console.log(`INIT: Public path: ${publicPath}`);
+console.log(`INIT: __dirname: ${__dirname}`);
+console.log(`INIT: process.cwd(): ${process.cwd()}`);
+
+// Check if public directory exists
+const fs = require('fs');
+const publicExists = fs.existsSync(publicPath);
+console.log(`INIT: Public directory exists: ${publicExists}`);
+
+if (publicExists) {
+  try {
+    const files = fs.readdirSync(publicPath);
+    console.log(`INIT: Files in public directory: ${files.join(', ')}`);
+
+    const indexExists = fs.existsSync(path.join(publicPath, 'index.html'));
+    console.log(`INIT: index.html exists: ${indexExists}`);
+
+    // Check assets directory
+    const assetsPath = path.join(publicPath, 'assets');
+    const assetsExists = fs.existsSync(assetsPath);
+    console.log(`INIT: Assets directory exists: ${assetsExists}`);
+
+    if (assetsExists) {
+      const assetFiles = fs.readdirSync(assetsPath);
+      console.log(`INIT: Files in assets directory: ${assetFiles.join(', ')}`);
+    }
+  } catch (err: any) {
+    console.error(`INIT: Error reading public directory: ${err.message}`);
+  }
+} else {
+  console.error(`INIT: ⚠️ WARNING: Public directory does not exist at ${publicPath}`);
+}
+
+appLogger.info('Static files directory', { publicPath, exists: publicExists });
+
+// Serve static files with aggressive caching
+app.use(express.static(publicPath, {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+  index: false  // Don't serve index.html here - let SPA fallback handle it
+}));
+console.log('INIT: ✅ Static file middleware added (early in chain)');
+
 app.use(requestLogger);
 
 app.use(ipFilter);
@@ -125,7 +173,7 @@ app.use(generalLimiter);
 
 app.use(cors(corsOptions));
 
-app.use(limitRequestSize(10 * 1024 * 1024)); 
+app.use(limitRequestSize(10 * 1024 * 1024));
 
 app.use(validateUserAgent);
 
@@ -203,53 +251,6 @@ app.get('/api/docs', (req, res): void => {
   });
 });
 console.log('INIT: ✅ API docs route configured');
-
-console.log('INIT: Setting up static file serving...');
-// Serve static frontend files (for production builds)
-// In production, the frontend dist is copied to the public directory
-const publicPath = path.join(__dirname, 'public');
-console.log(`INIT: Public path: ${publicPath}`);
-console.log(`INIT: __dirname: ${__dirname}`);
-console.log(`INIT: process.cwd(): ${process.cwd()}`);
-
-// Check if public directory exists
-const fs = require('fs');
-const publicExists = fs.existsSync(publicPath);
-console.log(`INIT: Public directory exists: ${publicExists}`);
-
-if (publicExists) {
-  try {
-    const files = fs.readdirSync(publicPath);
-    console.log(`INIT: Files in public directory: ${files.join(', ')}`);
-
-    const indexExists = fs.existsSync(path.join(publicPath, 'index.html'));
-    console.log(`INIT: index.html exists: ${indexExists}`);
-
-    // Check assets directory
-    const assetsPath = path.join(publicPath, 'assets');
-    const assetsExists = fs.existsSync(assetsPath);
-    console.log(`INIT: Assets directory exists: ${assetsExists}`);
-
-    if (assetsExists) {
-      const assetFiles = fs.readdirSync(assetsPath);
-      console.log(`INIT: Files in assets directory: ${assetFiles.join(', ')}`);
-    }
-  } catch (err: any) {
-    console.error(`INIT: Error reading public directory: ${err.message}`);
-  }
-} else {
-  console.error(`INIT: ⚠️ WARNING: Public directory does not exist at ${publicPath}`);
-}
-
-appLogger.info('Static files directory', { publicPath, exists: publicExists });
-
-// Serve static files
-app.use(express.static(publicPath, {
-  maxAge: '1d',
-  etag: true,
-  lastModified: true
-}));
-console.log('INIT: ✅ Static file middleware added');
 
 console.log('INIT: SPA fallback route will be configured in startServer() after API routes');
 console.log('INIT: Error handlers will be configured in startServer() after all routes');
