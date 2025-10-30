@@ -414,6 +414,14 @@ const startServer = async (): Promise<void> => {
         return next();
       }
 
+      // Skip static files (anything with a file extension in the last path segment)
+      const pathParts = req.path.split('/');
+      const lastSegment = pathParts[pathParts.length - 1];
+      if (lastSegment.includes('.')) {
+        // This looks like a file request (e.g., .js, .css, .png, etc.)
+        return next();
+      }
+
       // Only handle GET and HEAD requests for SPA routing
       if (req.method !== 'GET' && req.method !== 'HEAD') {
         return next();
