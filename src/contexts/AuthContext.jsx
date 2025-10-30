@@ -247,11 +247,15 @@ export const AuthProvider = ({ children }) => {
 
   const googleSignup = () => {
     const baseUrl = getOAuthRedirectBase();
+    console.log('🔵 OAuth Signup - Base URL:', baseUrl);
+    console.log('🔵 OAuth Signup - Full URL:', `${baseUrl}/api/auth/google/signup`);
     window.location.href = `${baseUrl}/api/auth/google/signup`;
   };
 
   const googleLogin = () => {
     const baseUrl = getOAuthRedirectBase();
+    console.log('🔵 OAuth Login - Base URL:', baseUrl);
+    console.log('🔵 OAuth Login - Full URL:', `${baseUrl}/api/auth/google/signin`);
     window.location.href = `${baseUrl}/api/auth/google/signin`;
   };
 
