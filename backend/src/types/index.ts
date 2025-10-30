@@ -306,6 +306,7 @@ export interface EnvironmentVariables {
   GOOGLE_CALLBACK_URL: string;
   SESSION_SECRET: string;
   CLIENT_URL: string;
+  REDIS_URL: string;
 }
 
 export interface AppError extends Error {
