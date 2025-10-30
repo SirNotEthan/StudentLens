@@ -219,29 +219,7 @@ app.use(express.static(publicPath, {
 }));
 console.log('INIT: ✅ Static file middleware added');
 
-console.log('INIT: Setting up SPA fallback route...');
-try {
-  // SPA fallback - serve index.html for any non-API route
-  app.get('*', (req, res, next) => {
-    // Skip if it's an API route
-    if (req.path.startsWith('/api')) {
-      return next();
-    }
-
-    // Serve index.html for all other routes (SPA routing)
-    const indexPath = path.join(publicPath, 'index.html');
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
-        next(); // Fall through to 404 handler
-      }
-    });
-  });
-  console.log('INIT: ✅ SPA fallback route configured');
-} catch (error) {
-  console.error('INIT: ❌ Failed to set up SPA fallback route:', error);
-  throw error;
-}
+console.log('INIT: SPA fallback route will be configured in startServer() after API routes');
 
 console.log('INIT: Setting up error handlers...');
 app.use(notFoundHandler);
@@ -432,6 +410,26 @@ const startServer = async (): Promise<void> => {
     console.log('STARTUP: - Post routes added');
     app.use('/api/comments', commentRoutes);
     console.log('STARTUP: ✅ All API routes configured');
+
+    // Set up SPA fallback route (must be after all API routes)
+    console.log('STARTUP: Setting up SPA fallback route...');
+    // Express 5 compatible: use /* instead of *
+    app.get('/*', (req, res, next) => {
+      // Skip if it's an API route
+      if (req.path.startsWith('/api')) {
+        return next();
+      }
+
+      // Serve index.html for all other routes (SPA routing)
+      const indexPath = path.join(publicPath, 'index.html');
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
+          next(); // Fall through to 404 handler
+        }
+      });
+    });
+    console.log('STARTUP: ✅ SPA fallback route configured');
 
     // Check Appwrite connection (non-fatal)
     console.log('STARTUP: Checking Appwrite connection...');
