@@ -209,7 +209,29 @@ console.log('INIT: Setting up static file serving...');
 // In production, the frontend dist is copied to the public directory
 const publicPath = path.join(__dirname, 'public');
 console.log(`INIT: Public path: ${publicPath}`);
-appLogger.info('Static files directory', { publicPath });
+console.log(`INIT: __dirname: ${__dirname}`);
+console.log(`INIT: process.cwd(): ${process.cwd()}`);
+
+// Check if public directory exists
+const fs = require('fs');
+const publicExists = fs.existsSync(publicPath);
+console.log(`INIT: Public directory exists: ${publicExists}`);
+
+if (publicExists) {
+  try {
+    const files = fs.readdirSync(publicPath);
+    console.log(`INIT: Files in public directory: ${files.join(', ')}`);
+
+    const indexExists = fs.existsSync(path.join(publicPath, 'index.html'));
+    console.log(`INIT: index.html exists: ${indexExists}`);
+  } catch (err: any) {
+    console.error(`INIT: Error reading public directory: ${err.message}`);
+  }
+} else {
+  console.error(`INIT: ⚠️ WARNING: Public directory does not exist at ${publicPath}`);
+}
+
+appLogger.info('Static files directory', { publicPath, exists: publicExists });
 
 // Serve static files
 app.use(express.static(publicPath, {
