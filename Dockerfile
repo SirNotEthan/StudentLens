@@ -32,7 +32,7 @@ RUN cd backend && npm run build
 FROM node:20-alpine AS production
 
 # Install dumb-init and curl for proper signal handling and health checks
-RUN apk add --no-cache dumb-init curl
+RUN apk add --no-cache dumb-init curl bash
 
 # Create app user
 RUN addgroup -g 1001 -S nodejs
@@ -40,6 +40,9 @@ RUN adduser -S nodejs -u 1001
 
 # Set working directory
 WORKDIR /app
+
+# Set NODE_ENV to production
+ENV NODE_ENV=production
 
 # Copy built application first
 COPY --from=build --chown=nodejs:nodejs /app/backend/dist ./
@@ -55,12 +58,13 @@ RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs
 # Switch to non-root user
 USER nodejs
 
-# Expose port
+# Expose port (DigitalOcean will use PORT env var if provided)
 EXPOSE 5000
+ENV PORT=5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:5000/api/health || exit 1
+# Health check - increased timeouts for external service connections (Redis, Appwrite)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/api/health || exit 1
 
 # Start application
 ENTRYPOINT ["dumb-init", "--"]

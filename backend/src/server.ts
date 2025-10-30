@@ -69,6 +69,11 @@ const requiredEnvVars: (keyof EnvironmentVariables)[] = [
   'SESSION_SECRET'
 ];
 
+// In production, Redis is required for session persistence
+if (process.env.NODE_ENV === 'production') {
+  requiredEnvVars.push('REDIS_URL');
+}
+
 console.log('INIT: Checking required environment variables...');
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 if (missingVars.length > 0) {
@@ -136,46 +141,9 @@ app.use(express.urlencoded({
   parameterLimit: 1000
 }));
 
-// Redis setup with fallback to in-memory sessions
+// Redis setup - client will be created and connected in startServer
 let redisClient: ReturnType<typeof createClient> | null = null;
 let sessionStore: any = null;
-
-try {
-  redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
-    socket: {
-      connectTimeout: 5000,
-      reconnectStrategy: (retries) => {
-        if (retries > 10) {
-          appLogger.error('Redis: Too many reconnection attempts, giving up');
-          return new Error('Too many retries');
-        }
-        const delay = Math.min(retries * 100, 3000);
-        appLogger.warn(`Redis: Reconnecting in ${delay}ms (attempt ${retries})`);
-        return delay;
-      }
-    }
-  });
-
-  redisClient.on('error', (err) => {
-    appLogger.warn('Redis Client Error (non-fatal)', err);
-  });
-
-  redisClient.on('connect', () => {
-    appLogger.info('Redis Client Connected');
-  });
-
-  redisClient.on('ready', () => {
-    appLogger.info('Redis Client Ready');
-  });
-
-  redisClient.on('reconnecting', () => {
-    appLogger.warn('Redis Client Reconnecting');
-  });
-} catch (error) {
-  appLogger.warn('Redis client initialization failed, will use memory store', error);
-  redisClient = null;
-}
 
 // Determine if secure cookies should be used (HTTPS)
 // In production, use HTTPS (secure cookies) unless explicitly disabled
@@ -183,90 +151,11 @@ const useSecureCookies = process.env.SECURE_COOKIES === 'false'
   ? false
   : (process.env.NODE_ENV === 'production' || process.env.SECURE_COOKIES === 'true');
 
-// Session configuration (will be set up after Redis connection attempt)
-const sessionConfig: any = {
-  secret: process.env.SESSION_SECRET!,
-  resave: false,
-  saveUninitialized: false,
-  rolling: true,
-  name: 'sessionId',
-  cookie: {
-    secure: useSecureCookies,
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: useSecureCookies ? 'strict' : 'lax'
-  },
-  genid: () => {
-    return require('crypto').randomBytes(32).toString('hex');
-  }
-};
+console.log('INIT: Note - Session and Passport middleware will be initialized after Redis connection attempt');
+console.log('INIT: This ensures Redis store is used if available');
+appLogger.info('Session middleware initialization deferred until Redis connection attempt');
 
-// Initialize session with memory store by default
-// This will be updated in startServer if Redis is available
-console.log('INIT: Setting up session middleware...');
-try {
-  app.use(session(sessionConfig));
-  console.log('INIT: ✅ Session middleware added');
-} catch (error) {
-  console.error('INIT: ❌ Session middleware failed:', error);
-  throw error;
-}
-
-console.log('INIT: Setting up Passport middleware...');
-try {
-  app.use(passport.initialize());
-  console.log('INIT: ✅ Passport initialized');
-} catch (error) {
-  console.error('INIT: ❌ Passport initialize failed:', error);
-  throw error;
-}
-
-try {
-  app.use(passport.session());
-  console.log('INIT: ✅ Passport session added');
-} catch (error) {
-  console.error('INIT: ❌ Passport session failed:', error);
-  throw error;
-}
-
-console.log('INIT: ✅ All middleware initialized successfully');
-appLogger.info('Session and Passport middleware initialized (will attempt Redis connection on startup)');
-
-console.log('INIT: Setting up health check route...');
-app.get('/api/health', async (req, res): Promise<void> => {
-  const appwriteConnected = await checkAppwriteConnection();
-
-  const healthCheck = {
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
-    version: process.env.npm_package_version || '1.0.0',
-    services: {
-      appwrite: appwriteConnected ? 'connected' : 'disconnected',
-      redis: redisClient ? 'connected' : 'not configured'
-    }
-  };
-
-  // Always return 200 OK if the server is running
-  // Report service status but don't fail the health check
-  res.json(healthCheck);
-});
-console.log('INIT: ✅ Health check route configured');
-
-console.log('INIT: Setting up API routes...');
-app.use('/api/auth', googleAuthRoutes);
-console.log('INIT: - Google auth routes added');
-app.use('/api/auth', authRoutes);
-console.log('INIT: - Auth routes added');
-app.use('/api/users', userRoutes);
-console.log('INIT: - User routes added');
-app.use('/api/applications', applicationRoutes);
-console.log('INIT: - Application routes added');
-app.use('/api/posts', postRoutes);
-console.log('INIT: - Post routes added');
-app.use('/api/comments', commentRoutes);
-console.log('INIT: ✅ All API routes configured');
+console.log('INIT: Routes will be configured after session middleware is initialized in startServer()');
 
 app.get('/api/docs', (req, res): void => {
   res.json({
@@ -331,23 +220,28 @@ app.use(express.static(publicPath, {
 console.log('INIT: ✅ Static file middleware added');
 
 console.log('INIT: Setting up SPA fallback route...');
-// SPA fallback - serve index.html for any non-API route
-app.get('*', (req, res, next) => {
-  // Skip if it's an API route
-  if (req.path.startsWith('/api')) {
-    return next();
-  }
-
-  // Serve index.html for all other routes (SPA routing)
-  const indexPath = path.join(publicPath, 'index.html');
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
-      next(); // Fall through to 404 handler
+try {
+  // SPA fallback - serve index.html for any non-API route
+  app.get('*', (req, res, next) => {
+    // Skip if it's an API route
+    if (req.path.startsWith('/api')) {
+      return next();
     }
+
+    // Serve index.html for all other routes (SPA routing)
+    const indexPath = path.join(publicPath, 'index.html');
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
+        next(); // Fall through to 404 handler
+      }
+    });
   });
-});
-console.log('INIT: ✅ SPA fallback route configured');
+  console.log('INIT: ✅ SPA fallback route configured');
+} catch (error) {
+  console.error('INIT: ❌ Failed to set up SPA fallback route:', error);
+  throw error;
+}
 
 console.log('INIT: Setting up error handlers...');
 app.use(notFoundHandler);
@@ -390,41 +284,154 @@ const startServer = async (): Promise<void> => {
 
     // Try to connect to Redis with timeout
     let redisConnected = false;
-    console.log('STARTUP: Checking Redis client...');
-    if (redisClient) {
-      console.log('STARTUP: Redis client exists, attempting connection...');
-      try {
-        appLogger.info('Attempting to connect to Redis...');
-        await Promise.race([
-          redisClient.connect(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 10000))
-        ]);
-        redisConnected = true;
-        sessionStore = new RedisStore({
-          client: redisClient,
-          prefix: 'sess:',
-          ttl: 86400
-        });
-        appLogger.info('Connected to Redis successfully - using Redis for sessions');
-        console.log('STARTUP: Redis connection successful');
-      } catch (error) {
-        appLogger.warn('Failed to connect to Redis, falling back to memory store for sessions', error);
-        console.log('STARTUP: Redis connection failed (using memory store)');
-        redisClient = null;
-        redisConnected = false;
+    console.log('STARTUP: Attempting Redis connection...');
+
+    try {
+      redisClient = createClient({
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
+        socket: {
+          connectTimeout: 5000,
+          reconnectStrategy: (retries) => {
+            if (retries > 10) {
+              appLogger.error('Redis: Too many reconnection attempts, giving up');
+              return new Error('Too many retries');
+            }
+            const delay = Math.min(retries * 100, 3000);
+            appLogger.warn(`Redis: Reconnecting in ${delay}ms (attempt ${retries})`);
+            return delay;
+          }
+        }
+      });
+
+      redisClient.on('error', (err) => {
+        appLogger.warn('Redis Client Error (non-fatal)', err);
+      });
+
+      redisClient.on('connect', () => {
+        appLogger.info('Redis Client Connected');
+      });
+
+      redisClient.on('ready', () => {
+        appLogger.info('Redis Client Ready');
+      });
+
+      redisClient.on('reconnecting', () => {
+        appLogger.warn('Redis Client Reconnecting');
+      });
+
+      console.log('STARTUP: Redis client created, attempting connection...');
+      appLogger.info('Attempting to connect to Redis...');
+
+      await Promise.race([
+        redisClient.connect(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Redis connection timeout')), 10000))
+      ]);
+
+      redisConnected = true;
+      sessionStore = new RedisStore({
+        client: redisClient,
+        prefix: 'sess:',
+        ttl: 86400
+      });
+      appLogger.info('Connected to Redis successfully - using Redis for sessions');
+      console.log('STARTUP: ✅ Redis connection successful');
+    } catch (error) {
+      // In production, Redis is required
+      if (process.env.NODE_ENV === 'production') {
+        appLogger.error('❌ CRITICAL: Redis connection failed in production environment', error);
+        console.error('STARTUP: ❌ Redis connection failed in PRODUCTION');
+        console.error('STARTUP: Redis is required for production deployments');
+        console.error('STARTUP: Please ensure REDIS_URL is correctly configured');
+        throw error; // This will be caught by the outer try-catch and exit
       }
-    } else {
-      console.log('STARTUP: No Redis client configured');
+
+      appLogger.warn('Failed to connect to Redis, falling back to memory store for sessions', error);
+      console.log('STARTUP: ⚠️ Redis connection failed, using in-memory session store (development only)');
+      redisClient = null;
+      redisConnected = false;
+      sessionStore = null;
     }
 
-    // Log session store status
-    if (!redisConnected) {
-      appLogger.warn('Using in-memory session store (sessions will not persist across restarts)');
-      console.log('STARTUP: Using memory-based sessions');
+    // Initialize session middleware with appropriate store
+    console.log('STARTUP: Configuring session middleware...');
+    const sessionConfig: any = {
+      secret: process.env.SESSION_SECRET!,
+      resave: false,
+      saveUninitialized: false,
+      rolling: true,
+      name: 'sessionId',
+      cookie: {
+        secure: useSecureCookies,
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000,
+        sameSite: useSecureCookies ? 'strict' : 'lax'
+      },
+      genid: () => {
+        return require('crypto').randomBytes(32).toString('hex');
+      }
+    };
+
+    // Add Redis store if available
+    if (sessionStore) {
+      sessionConfig.store = sessionStore;
+      appLogger.info('Session middleware configured with Redis store');
+      console.log('STARTUP: ✅ Session configured with Redis store');
     } else {
-      appLogger.warn('Redis connected but session middleware already initialized with memory store');
-      console.log('STARTUP: Redis available but using memory store (middleware already initialized)');
+      appLogger.warn('⚠️ PRODUCTION WARNING: Using in-memory session store (sessions will not persist across restarts or scale across instances)');
+      console.log('STARTUP: ⚠️ Session configured with memory store (NOT suitable for production)');
     }
+
+    // Initialize session middleware
+    app.use(session(sessionConfig));
+    console.log('STARTUP: ✅ Session middleware initialized');
+
+    // Initialize Passport middleware
+    console.log('STARTUP: Setting up Passport middleware...');
+    app.use(passport.initialize());
+    console.log('STARTUP: ✅ Passport initialized');
+
+    app.use(passport.session());
+    console.log('STARTUP: ✅ Passport session configured');
+
+    appLogger.info('Session and Passport middleware initialized successfully');
+
+    // Set up health check route
+    console.log('STARTUP: Setting up health check route...');
+    app.get('/api/health', async (req, res): Promise<void> => {
+      const appwriteConnected = await checkAppwriteConnection();
+
+      const healthCheck = {
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV,
+        version: process.env.npm_package_version || '1.0.0',
+        services: {
+          appwrite: appwriteConnected ? 'connected' : 'disconnected',
+          redis: redisConnected ? 'connected' : 'not configured'
+        }
+      };
+
+      // Always return 200 OK if the server is running
+      // Report service status but don't fail the health check
+      res.json(healthCheck);
+    });
+    console.log('STARTUP: ✅ Health check route configured');
+
+    // Set up API routes (must be after session/passport initialization)
+    console.log('STARTUP: Setting up API routes...');
+    app.use('/api/auth', googleAuthRoutes);
+    console.log('STARTUP: - Google auth routes added');
+    app.use('/api/auth', authRoutes);
+    console.log('STARTUP: - Auth routes added');
+    app.use('/api/users', userRoutes);
+    console.log('STARTUP: - User routes added');
+    app.use('/api/applications', applicationRoutes);
+    console.log('STARTUP: - Application routes added');
+    app.use('/api/posts', postRoutes);
+    console.log('STARTUP: - Post routes added');
+    app.use('/api/comments', commentRoutes);
+    console.log('STARTUP: ✅ All API routes configured');
 
     // Check Appwrite connection (non-fatal)
     console.log('STARTUP: Checking Appwrite connection...');
