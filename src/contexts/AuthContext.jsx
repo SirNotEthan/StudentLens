@@ -3,7 +3,19 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+// For API calls, use relative path (works with same-origin deployment)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
+// For OAuth redirects, we need the full URL
+// In production, the frontend and backend are on the same domain, so use window.location.origin
+const getOAuthRedirectBase = () => {
+  // If we have a backend URL env var, use it
+  if (import.meta.env.VITE_BACKEND_URL) {
+    return import.meta.env.VITE_BACKEND_URL;
+  }
+  // Otherwise, use current origin (works when frontend and backend are same domain)
+  return window.location.origin;
+};
 
 axios.defaults.baseURL = API_BASE_URL;
 
@@ -232,13 +244,15 @@ export const AuthProvider = ({ children }) => {
 
   const clearError = () => setError(null);
 
-  
+
   const googleSignup = () => {
-    window.location.href = `${API_BASE_URL}/auth/google/signup`;
+    const baseUrl = getOAuthRedirectBase();
+    window.location.href = `${baseUrl}/api/auth/google/signup`;
   };
 
   const googleLogin = () => {
-    window.location.href = `${API_BASE_URL}/auth/google/signin`;
+    const baseUrl = getOAuthRedirectBase();
+    window.location.href = `${baseUrl}/api/auth/google/signin`;
   };
 
   
