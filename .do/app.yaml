@@ -88,7 +88,7 @@ services:
         type: SECRET
 
       - key: GOOGLE_CALLBACK_URL
-        value: ${APP_URL}/api/auth/google/callback
+        value: ${app.PUBLIC_URL}/api/auth/google/callback
 
       # Frontend URL for CORS configuration
       # Since frontend and backend are served from same domain, use APP_URL
