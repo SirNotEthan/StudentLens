@@ -413,10 +413,15 @@ const startServer = async (): Promise<void> => {
 
     // Set up SPA fallback route (must be after all API routes)
     console.log('STARTUP: Setting up SPA fallback route...');
-    // Express 5 compatible: use /* instead of *
-    app.get('/*', (req, res, next) => {
+    // Express 5 compatible: use middleware without wildcards
+    app.use((req, res, next) => {
       // Skip if it's an API route
       if (req.path.startsWith('/api')) {
+        return next();
+      }
+
+      // Only handle GET requests for SPA routing
+      if (req.method !== 'GET') {
         return next();
       }
 
