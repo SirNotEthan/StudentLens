@@ -224,6 +224,16 @@ if (publicExists) {
 
     const indexExists = fs.existsSync(path.join(publicPath, 'index.html'));
     console.log(`INIT: index.html exists: ${indexExists}`);
+
+    // Check assets directory
+    const assetsPath = path.join(publicPath, 'assets');
+    const assetsExists = fs.existsSync(assetsPath);
+    console.log(`INIT: Assets directory exists: ${assetsExists}`);
+
+    if (assetsExists) {
+      const assetFiles = fs.readdirSync(assetsPath);
+      console.log(`INIT: Files in assets directory: ${assetFiles.join(', ')}`);
+    }
   } catch (err: any) {
     console.error(`INIT: Error reading public directory: ${err.message}`);
   }
