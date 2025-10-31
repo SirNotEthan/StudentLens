@@ -8,7 +8,7 @@ import { ApiResponse, JWTPayload } from '@/types';
 
 const router = Router();
 
-router.get('/google/signup', catchAsync(async (req: Request, res: Response): Promise<void> => {
+router.get('/google/signup', (req: Request, res: Response, next: any): void => {
   appLogger.info('Google OAuth signup initiated', {
     ip: req.ip,
     callbackUrl: process.env.GOOGLE_CALLBACK_URL,
@@ -23,11 +23,11 @@ router.get('/google/signup', catchAsync(async (req: Request, res: Response): Pro
 
   passport.authenticate('google', {
     scope: ['profile', 'email'],
-    prompt: 'select_account' // Force account selection for signup
-  })(req, res);
-}));
+    prompt: 'select_account'
+  })(req, res, next);
+});
 
-router.get('/google/signin', catchAsync(async (req: Request, res: Response): Promise<void> => {
+router.get('/google/signin', (req: Request, res: Response, next: any): void => {
   appLogger.info('Google OAuth signin initiated', {
     ip: req.ip,
     callbackUrl: process.env.GOOGLE_CALLBACK_URL,
@@ -42,8 +42,8 @@ router.get('/google/signin', catchAsync(async (req: Request, res: Response): Pro
 
   passport.authenticate('google', {
     scope: ['profile', 'email']
-  })(req, res);
-}));
+  })(req, res, next);
+});
 
 router.get('/google/callback',
   (req: Request, res: Response, next: any) => {

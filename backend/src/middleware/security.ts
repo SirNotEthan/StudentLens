@@ -268,12 +268,17 @@ setInterval(() => {
 
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    const allowedOrigins = [
-      process.env.CLIENT_URL || 'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:5173'
-    ];
+    // In production, only allow the production client URL
+    // In development, allow localhost origins
+    const allowedOrigins = process.env.NODE_ENV === 'production'
+      ? [process.env.CLIENT_URL].filter(Boolean)
+      : [
+          'http://localhost:3000',
+          'http://localhost:5173',
+          process.env.CLIENT_URL
+        ].filter(Boolean);
 
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -281,7 +286,8 @@ export const corsOptions = {
     } else {
       appLogger.logSecurityEvent('cors_violation', {
         origin,
-        allowedOrigins
+        allowedOrigins,
+        environment: process.env.NODE_ENV
       });
       callback(new Error('Not allowed by CORS'), false);
     }
