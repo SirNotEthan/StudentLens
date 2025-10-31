@@ -8,42 +8,54 @@ import { ApiResponse, JWTPayload } from '@/types';
 
 const router = Router();
 
-router.get('/google/signup', (req: Request, res: Response, next: any): void => {
-  appLogger.info('Google OAuth signup initiated', {
-    ip: req.ip,
-    callbackUrl: process.env.GOOGLE_CALLBACK_URL,
-    clientUrl: process.env.CLIENT_URL
-  });
+router.get('/google/signup',
+  (req: Request, res: Response, next: any) => {
+    appLogger.info('Google OAuth signup initiated', {
+      ip: req.ip,
+      callbackUrl: process.env.GOOGLE_CALLBACK_URL,
+      clientUrl: process.env.CLIENT_URL
+    });
 
-  console.log('GOOGLE_AUTH: Signup route hit');
-  console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
-  console.log('GOOGLE_AUTH: Full request URL =', req.protocol + '://' + req.get('host') + req.originalUrl);
+    console.log('GOOGLE_AUTH: Signup route hit');
+    console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
 
-  (req.session as any).oauthIntent = 'signup';
-
+    (req.session as any).oauthIntent = 'signup';
+    next();
+  },
   passport.authenticate('google', {
-    scope: ['profile', 'email'],
-    prompt: 'select_account'
-  })(req, res, next);
-});
+    scope: [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'openid'
+    ],
+    prompt: 'select_account',
+    accessType: 'offline'
+  })
+);
 
-router.get('/google/signin', (req: Request, res: Response, next: any): void => {
-  appLogger.info('Google OAuth signin initiated', {
-    ip: req.ip,
-    callbackUrl: process.env.GOOGLE_CALLBACK_URL,
-    clientUrl: process.env.CLIENT_URL
-  });
+router.get('/google/signin',
+  (req: Request, res: Response, next: any) => {
+    appLogger.info('Google OAuth signin initiated', {
+      ip: req.ip,
+      callbackUrl: process.env.GOOGLE_CALLBACK_URL,
+      clientUrl: process.env.CLIENT_URL
+    });
 
-  console.log('GOOGLE_AUTH: Signin route hit');
-  console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
-  console.log('GOOGLE_AUTH: Full request URL =', req.protocol + '://' + req.get('host') + req.originalUrl);
+    console.log('GOOGLE_AUTH: Signin route hit');
+    console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
 
-  (req.session as any).oauthIntent = 'signin';
-
+    (req.session as any).oauthIntent = 'signin';
+    next();
+  },
   passport.authenticate('google', {
-    scope: ['profile', 'email']
-  })(req, res, next);
-});
+    scope: [
+      'https://www.googleapis.com/auth/userinfo.profile',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'openid'
+    ],
+    accessType: 'offline'
+  })
+);
 
 router.get('/google/callback',
   (req: Request, res: Response, next: any) => {
