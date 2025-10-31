@@ -7,6 +7,17 @@ import { UserRole } from '@/types';
 // Only configure Google OAuth if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
   console.log('PASSPORT: Configuring Google OAuth strategy');
+  console.log('PASSPORT: Google Client ID:', process.env.GOOGLE_CLIENT_ID);
+  console.log('PASSPORT: Callback URL:', process.env.GOOGLE_CALLBACK_URL);
+  console.log('PASSPORT: Callback URL length:', process.env.GOOGLE_CALLBACK_URL.length);
+  console.log('PASSPORT: Callback URL (encoded):', encodeURI(process.env.GOOGLE_CALLBACK_URL));
+
+  appLogger.info('Configuring Google OAuth Strategy', {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    callbackUrl: process.env.GOOGLE_CALLBACK_URL,
+    callbackUrlLength: process.env.GOOGLE_CALLBACK_URL.length
+  });
+
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,

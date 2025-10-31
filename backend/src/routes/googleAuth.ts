@@ -9,7 +9,15 @@ import { ApiResponse, JWTPayload } from '@/types';
 const router = Router();
 
 router.get('/google/signup', catchAsync(async (req: Request, res: Response): Promise<void> => {
-  appLogger.info('Google OAuth signup initiated', { ip: req.ip });
+  appLogger.info('Google OAuth signup initiated', {
+    ip: req.ip,
+    callbackUrl: process.env.GOOGLE_CALLBACK_URL,
+    clientUrl: process.env.CLIENT_URL
+  });
+
+  console.log('GOOGLE_AUTH: Signup route hit');
+  console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
+  console.log('GOOGLE_AUTH: Full request URL =', req.protocol + '://' + req.get('host') + req.originalUrl);
 
   (req.session as any).oauthIntent = 'signup';
 
@@ -20,7 +28,15 @@ router.get('/google/signup', catchAsync(async (req: Request, res: Response): Pro
 }));
 
 router.get('/google/signin', catchAsync(async (req: Request, res: Response): Promise<void> => {
-  appLogger.info('Google OAuth signin initiated', { ip: req.ip });
+  appLogger.info('Google OAuth signin initiated', {
+    ip: req.ip,
+    callbackUrl: process.env.GOOGLE_CALLBACK_URL,
+    clientUrl: process.env.CLIENT_URL
+  });
+
+  console.log('GOOGLE_AUTH: Signin route hit');
+  console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
+  console.log('GOOGLE_AUTH: Full request URL =', req.protocol + '://' + req.get('host') + req.originalUrl);
 
   (req.session as any).oauthIntent = 'signin';
 
@@ -30,11 +46,25 @@ router.get('/google/signin', catchAsync(async (req: Request, res: Response): Pro
 }));
 
 router.get('/google/callback',
+  (req: Request, res: Response, next: any) => {
+    console.log('GOOGLE_AUTH: Callback route hit');
+    console.log('GOOGLE_AUTH: Query params:', req.query);
+    console.log('GOOGLE_AUTH: Full callback URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+
+    appLogger.info('Google OAuth callback received', {
+      query: req.query,
+      fullUrl: req.protocol + '://' + req.get('host') + req.originalUrl
+    });
+
+    next();
+  },
   passport.authenticate('google', { session: false }),
   catchAsync(async (req: Request, res: Response): Promise<void> => {
     const user = req.user as any;
     const requestedIntent = (req.session as any)?.oauthIntent || 'signin';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+    console.log('GOOGLE_AUTH: Authentication complete, user:', user ? user.id : 'none');
 
     if (!user) {
       appLogger.error('Google OAuth callback: No user returned');
