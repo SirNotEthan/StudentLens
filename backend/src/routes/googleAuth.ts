@@ -8,6 +8,65 @@ import { ApiResponse, JWTPayload } from '@/types';
 
 const router = Router();
 
+// Debug endpoint to check OAuth configuration
+router.get('/google/debug', (req: Request, res: Response): void => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
+  const clientUrl = process.env.CLIENT_URL;
+
+  // Manually construct OAuth URL to test
+  const scopes = [
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'openid'
+  ];
+
+  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${encodeURIComponent(clientId || '')}` +
+    `&redirect_uri=${encodeURIComponent(callbackUrl || '')}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scopes.join(' '))}` +
+    `&access_type=offline` +
+    `&prompt=select_account`;
+
+  res.json({
+    configured: !!(clientId && callbackUrl),
+    clientId: clientId ? `${clientId.substring(0, 20)}...` : 'NOT SET',
+    callbackUrl: callbackUrl || 'NOT SET',
+    clientUrl: clientUrl || 'NOT SET',
+    scopes: scopes,
+    manualOAuthUrl: oauthUrl,
+    message: 'Try the manualOAuthUrl in your browser to test OAuth directly'
+  });
+});
+
+// Manual OAuth test (bypasses Passport entirely)
+router.get('/google/test-manual', (req: Request, res: Response): void => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
+
+  if (!clientId || !callbackUrl) {
+    res.status(500).json({ error: 'OAuth not configured' });
+    return;
+  }
+
+  const scopes = [
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+    'openid'
+  ].join(' ');
+
+  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scopes)}` +
+    `&access_type=offline`;
+
+  console.log('MANUAL OAUTH: Redirecting to:', oauthUrl);
+  res.redirect(oauthUrl);
+});
+
 router.get('/google/signup',
   (req: Request, res: Response, next: any) => {
     appLogger.info('Google OAuth signup initiated', {
@@ -23,11 +82,7 @@ router.get('/google/signup',
     next();
   },
   passport.authenticate('google', {
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-      'openid'
-    ],
+    scope: ['profile', 'email'],
     prompt: 'select_account',
     accessType: 'offline'
   })
@@ -48,11 +103,7 @@ router.get('/google/signin',
     next();
   },
   passport.authenticate('google', {
-    scope: [
-      'https://www.googleapis.com/auth/userinfo.profile',
-      'https://www.googleapis.com/auth/userinfo.email',
-      'openid'
-    ],
+    scope: ['profile', 'email'],
     accessType: 'offline'
   })
 );
