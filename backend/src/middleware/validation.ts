@@ -394,8 +394,8 @@ export const validateCreatePost: ValidationChain[] = [
 
   body('status')
     .optional()
-    .isIn(['draft', 'review', 'published', 'archived'])
-    .withMessage('Status must be one of: draft, review, published, archived'),
+    .isIn(['draft', 'pending_editor', 'pending_reviewer', 'published', 'archived'])
+    .withMessage('Status must be one of: draft, pending_editor, pending_reviewer, published, archived'),
 
   body('featuredImage')
     .optional()
@@ -459,8 +459,8 @@ export const validateUpdatePost: ValidationChain[] = [
 
   body('status')
     .optional()
-    .isIn(['draft', 'review', 'published', 'archived'])
-    .withMessage('Status must be one of: draft, review, published, archived'),
+    .isIn(['draft', 'pending_editor', 'pending_reviewer', 'published', 'archived'])
+    .withMessage('Status must be one of: draft, pending_editor, pending_reviewer, published, archived'),
 
   body('featuredImage')
     .optional()
@@ -509,8 +509,8 @@ export const validatePostQuery: ValidationChain[] = [
 
   query('status')
     .optional()
-    .isIn(['draft', 'review', 'published', 'archived'])
-    .withMessage('Status must be one of: draft, review, published, archived'),
+    .isIn(['draft', 'pending_editor', 'pending_reviewer', 'published', 'archived'])
+    .withMessage('Status must be one of: draft, pending_editor, pending_reviewer, published, archived'),
 
   query('category')
     .optional()
