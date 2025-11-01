@@ -43,23 +43,35 @@ const AdminPanel = () => {
 
   const handleRoleChange = async (userId, newRole) => {
     try {
-      await axios.patch(`/users/${userId}/role`, { role: newRole });
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      const response = await axios.put(`/users/${userId}/role`, { role: newRole });
+      // Update the user in the list with the response data
+      if (response.data.success && response.data.data?.user) {
+        setUsers(users.map(u => u.id === userId ? response.data.data.user : u));
+      } else {
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      }
       setShowRoleModal(false);
       setSelectedUser(null);
     } catch (error) {
       console.error('Error updating user role:', error);
-      alert('Failed to update user role');
+      const errorMessage = error.response?.data?.message || 'Failed to update user role';
+      alert(errorMessage);
     }
   };
 
   const handleUserToggle = async (userId, isActive) => {
     try {
-      await axios.patch(`/users/${userId}/status`, { isActive: !isActive });
-      setUsers(users.map(u => u.id === userId ? { ...u, isActive: !isActive } : u));
+      const response = await axios.put(`/users/${userId}`, { isActive: !isActive });
+      // Update the user in the list with the response data
+      if (response.data.success && response.data.data?.user) {
+        setUsers(users.map(u => u.id === userId ? response.data.data.user : u));
+      } else {
+        setUsers(users.map(u => u.id === userId ? { ...u, isActive: !isActive } : u));
+      }
     } catch (error) {
       console.error('Error updating user status:', error);
-      alert('Failed to update user status');
+      const errorMessage = error.response?.data?.message || 'Failed to update user status';
+      alert(errorMessage);
     }
   };
 

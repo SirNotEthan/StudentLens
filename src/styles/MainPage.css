@@ -247,19 +247,21 @@ body {
 
 /* Main Content Layout */
 .main-content {
-  display: grid;
-  grid-template-columns: 140px 1fr 250px;
-  gap: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
   padding: 1.5rem 2rem;
-  max-width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   background-color: #ffffff;
 }
 
 /* Left Sidebar - Games */
 .left-sidebar {
   background-color: transparent;
-  padding: 0 1.5rem 0 0;
-  border-right: 1px solid #e0e0e0;
+  padding: 0;
+  border: none;
+  width: 100%;
 }
 
 .games-section {
@@ -280,9 +282,10 @@ body {
 }
 
 .games-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 1rem;
+  max-width: 800px;
 }
 
 .game-item {
@@ -361,8 +364,9 @@ body {
 /* Center Content */
 .center-content {
   background-color: transparent;
-  padding: 0 1.5rem;
-  border-right: 1px solid #e0e0e0;
+  padding: 0;
+  border: none;
+  width: 100%;
 }
 
 .section-title {
@@ -603,18 +607,22 @@ body {
 /* Right Sidebar - Info */
 .right-sidebar {
   background-color: transparent;
-  padding: 0 0 0 1.5rem;
-  border-left: 1px solid #e0e0e0;
+  padding: 0;
+  border: none;
+  width: 100%;
 }
 
 .info-section {
   background-color: transparent;
   border: none;
   padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
 }
 
 .sidebar-section-title {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
@@ -624,30 +632,29 @@ body {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   background-color: transparent;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid #1a1a1a;
+  grid-column: 1 / -1;
 }
 
 .info-box {
   margin: 0;
-  background-color: transparent;
-  border-bottom: 1px solid #e0e0e0;
-  padding: 1.25rem 0;
-}
-
-.info-box:last-child {
-  border-bottom: none;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .info-box h4 {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 1rem 0;
+  margin: 0 0 1.25rem 0;
   text-transform: uppercase;
   font-family: 'Arial', sans-serif;
   letter-spacing: 0.5px;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #1a1a1a;
 }
 
 .streak-counter {
@@ -738,10 +745,13 @@ body {
 
 /* News Grid Section */
 .news-grid {
-  padding: 2rem 3rem 3rem 3rem;
+  padding: 2rem 2rem 3rem 2rem;
   background-color: #f5f0eb;
   border-top: 1px solid #d4cdc3;
   margin-top: 2rem;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .news-header {
@@ -1115,25 +1125,17 @@ body {
 /* Responsive Design */
 @media (max-width: 1200px) {
   .main-content {
-    grid-template-columns: 150px 1fr 240px;
-    gap: 1.5rem;
-    padding: 2rem;
+    padding: 1.5rem;
   }
 
   .main-title {
-    font-size: 3.5rem;
+    font-size: 2.2rem;
   }
 }
 
 @media (max-width: 1024px) {
   .main-content {
-    grid-template-columns: 1fr;
     gap: 2rem;
-  }
-
-  .left-sidebar,
-  .right-sidebar {
-    display: none;
   }
 
   .featured-row {
@@ -1141,7 +1143,7 @@ body {
   }
 
   .main-title {
-    font-size: 3rem;
+    font-size: 2rem;
   }
 }
 
