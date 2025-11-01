@@ -281,12 +281,6 @@ const MainPage = () => {
                 </div>
                 <span className="game-name">Strands</span>
               </div>
-              <div className="game-item strands-alt">
-                <div className="game-icon">
-                  <span className="strands-icon">🎯</span>
-                </div>
-                <span className="game-name">Strands</span>
-              </div>
             </div>
           </div>
         </aside>
@@ -381,18 +375,6 @@ const MainPage = () => {
                         <p className="article-author">Student Lens Team</p>
                         <p className="article-date">{getCurrentDate()}</p>
                       </div>
-                    </article>
-                  )}
-
-                  {hasPermission('write_articles') && (
-                    <article className="featured-bottom">
-                      <div className="article-image feature-image"></div>
-                      <button
-                        className="enter-text-button"
-                        onClick={() => setShowPostCreator(true)}
-                      >
-                        ENTER TEXT HERE
-                      </button>
                     </article>
                   )}
                 </>
