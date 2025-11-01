@@ -78,7 +78,6 @@ export class Post implements IPost {
         excerpt: postData.excerpt || postData.content.substring(0, 150) + '...',
         authorId,
         authorName,
-        authorUsername: authorUsername || '',
         category: postData.category,
         tags: Array.isArray(postData.tags) ? postData.tags : [],
         status: postData.status || 'draft',
