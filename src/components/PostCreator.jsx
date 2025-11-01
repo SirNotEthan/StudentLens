@@ -12,7 +12,7 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
     tags: [],
     status: 'draft',
     featured: false,
-    imageUrl: ''
+    featuredImage: ''
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
           tags: [],
           status: 'draft',
           featured: false,
-          imageUrl: ''
+          featuredImage: ''
         });
       }
     } catch (error) {
@@ -180,12 +180,12 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="imageUrl">Image URL</label>
+            <label htmlFor="featuredImage">Image URL</label>
             <input
               type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
+              id="featuredImage"
+              name="featuredImage"
+              value={formData.featuredImage}
               onChange={handleInputChange}
               placeholder="https://example.com/image.jpg"
             />

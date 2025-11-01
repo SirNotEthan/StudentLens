@@ -349,8 +349,8 @@ const MainPage = () => {
                       {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post, index) => (
                         <article key={post.id} className={`article-card ${index === 0 ? 'large' : 'small'}`} onClick={() => navigate(`/post/${post.id}`)}>
                           <div className="article-card-image">
-                            {post.imageUrl ? (
-                              <img src={post.imageUrl} alt={post.title} />
+                            {post.featuredImage ? (
+                              <img src={post.featuredImage} alt={post.title} />
                             ) : (
                               <div className="placeholder-image"></div>
                             )}
@@ -486,8 +486,8 @@ const MainPage = () => {
                 onClick={() => navigate(`/post/${post.id}`)}
               >
                 <div className="news-card-image">
-                  {post.imageUrl ? (
-                    <img src={post.imageUrl} alt={post.title} />
+                  {post.featuredImage ? (
+                    <img src={post.featuredImage} alt={post.title} />
                   ) : (
                     <div className="placeholder-image"></div>
                   )}

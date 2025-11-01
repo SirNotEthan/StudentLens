@@ -12,7 +12,7 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
     tags: [],
     status: 'draft',
     featured: false,
-    imageUrl: ''
+    featuredImage: ''
   });
   const [originalPost, setOriginalPost] = useState(null);
   const [newTag, setNewTag] = useState('');
@@ -57,7 +57,7 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
           tags: post.tags || [],
           status: post.status,
           featured: post.featured || false,
-          imageUrl: post.imageUrl || ''
+          featuredImage: post.featuredImage || ''
         });
       }
     } catch (error) {
@@ -313,12 +313,12 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="imageUrl">Image URL</label>
+            <label htmlFor="featuredImage">Image URL</label>
             <input
               type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
+              id="featuredImage"
+              name="featuredImage"
+              value={formData.featuredImage}
               onChange={handleInputChange}
               placeholder="https://example.com/image.jpg"
             />

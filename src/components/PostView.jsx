@@ -206,9 +206,9 @@ const PostView = () => {
           </div>
         </div>
 
-        {post.imageUrl && (
+        {post.featuredImage && (
           <div className="post-featured-image">
-            <img src={post.imageUrl} alt={post.title} />
+            <img src={post.featuredImage} alt={post.title} />
           </div>
         )}
       </header>

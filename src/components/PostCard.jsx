@@ -64,9 +64,9 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
 
   return (
     <article className={cardClass} onClick={handleCardClick}>
-      {post.imageUrl && (
+      {post.featuredImage && (
         <div className="post-image">
-          <img src={post.imageUrl} alt={post.title} />
+          <img src={post.featuredImage} alt={post.title} />
           {post.featured && (
             <div className="featured-badge">
               ⭐ Featured
@@ -86,7 +86,7 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
                 {post.status}
               </span>
             )}
-            {post.featured && !post.imageUrl && (
+            {post.featured && !post.featuredImage && (
               <span className="featured-indicator">⭐</span>
             )}
           </div>

@@ -16,7 +16,7 @@ const WriteArticle = () => {
     excerpt: '',
     category: 'ACADEMIC',
     tags: '',
-    imageUrl: '',
+    featuredImage: '',
     status: 'draft'
   });
   const [loading, setLoading] = useState(false);
@@ -77,7 +77,7 @@ const WriteArticle = () => {
           excerpt: post.excerpt || '',
           category: post.category || 'ACADEMIC',
           tags: post.tags ? (Array.isArray(post.tags) ? post.tags.join(', ') : post.tags) : '',
-          imageUrl: post.imageUrl || '',
+          featuredImage: post.featuredImage || '',
           status: post.status || 'draft'
         });
       }
@@ -374,19 +374,19 @@ const WriteArticle = () => {
             </div>
 
             <div className="meta-field">
-              <label htmlFor="imageUrl">Featured Image URL (optional)</label>
+              <label htmlFor="featuredImage">Featured Image URL (optional)</label>
               <input
                 type="url"
-                id="imageUrl"
-                name="imageUrl"
-                value={article.imageUrl}
+                id="featuredImage"
+                name="featuredImage"
+                value={article.featuredImage}
                 onChange={handleInputChange}
                 placeholder="https://example.com/image.jpg"
                 className="image-input"
               />
-              {article.imageUrl && (
+              {article.featuredImage && (
                 <div className="image-preview">
-                  <img src={article.imageUrl} alt="Preview" onError={(e) => e.target.style.display = 'none'} />
+                  <img src={article.featuredImage} alt="Preview" onError={(e) => e.target.style.display = 'none'} />
                 </div>
               )}
             </div>
@@ -449,10 +449,10 @@ const WriteArticle = () => {
               <p className="preview-subtitle">See how your article will appear to readers</p>
             </div>
             <div className="preview-content">
-              {article.imageUrl && (
+              {article.featuredImage && (
                 <div className="preview-image-container">
                   <img
-                    src={article.imageUrl}
+                    src={article.featuredImage}
                     alt="Article preview"
                     className="preview-featured-image"
                     onError={(e) => e.target.style.display = 'none'}
