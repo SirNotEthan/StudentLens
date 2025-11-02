@@ -52,6 +52,33 @@
   font-weight: 700;
 }
 
+.analytics-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.refresh-btn {
+  padding: 0.5rem 1rem;
+  border: 2px solid #2d5a4d;
+  background-color: #2d5a4d;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.refresh-btn:hover {
+  background-color: #1f3d33;
+  border-color: #1f3d33;
+  transform: translateY(-1px);
+}
+
 .time-range-selector {
   display: flex;
   gap: 0.5rem;

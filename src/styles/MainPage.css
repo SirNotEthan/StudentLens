@@ -250,10 +250,11 @@ body {
   display: grid;
   grid-template-columns: 160px 1fr 280px;
   gap: 2.5rem;
-  padding: 2rem 2rem;
-  max-width: 1600px;
+  padding: 2rem;
+  max-width: 1400px;
   margin: 0 auto;
   background-color: #ffffff;
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
 }
 
 /* Left Sidebar - Games */
@@ -724,15 +725,26 @@ body {
   color: #1a1a1a;
 }
 
-.contact-info {
-  font-size: 0.6rem;
-  color: #666;
-  line-height: 1.6;
+.contact-button {
+  width: 100%;
+  background-color: transparent;
+  color: #1a1a1a;
+  border: 2px solid #1a1a1a;
+  padding: 0.75rem;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  font-weight: 500;
+  letter-spacing: 0.5px;
+  margin-top: 0.75rem;
   font-family: 'Arial', sans-serif;
-  letter-spacing: 0.2px;
-  margin-top: 0;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.contact-button:hover {
+  background-color: #1a1a1a;
+  color: #ffffff;
 }
 
 /* News Grid Section */
@@ -741,7 +753,7 @@ body {
   background-color: #f5f0eb;
   border-top: 1px solid #d4cdc3;
   margin-top: 2rem;
-  max-width: 1600px;
+  max-width: 1400px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1115,8 +1127,9 @@ body {
 }
 
 /* Responsive Design */
-@media (max-width: 1400px) {
+@media (max-width: 1500px) {
   .main-content {
+    max-width: 95%;
     padding: 1.5rem;
     gap: 1.5rem;
     grid-template-columns: 140px 1fr 250px;

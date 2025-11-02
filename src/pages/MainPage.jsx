@@ -399,11 +399,7 @@ const MainPage = () => {
               <h4>STUDENT LENS</h4>
               <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
               <button className="writer-button" onClick={() => navigate('/write')}>BECOME A WRITER</button>
-              <p className="contact-info">
-                FOR ANY INQUIRIES,<br />
-                CONTACT US VIA EMAIL OR<br />
-                FIND US IN DOC 21
-              </p>
+              <button className="contact-button" onClick={() => navigate('/contact')}>CONTACT US</button>
             </div>
           </section>
         </aside>

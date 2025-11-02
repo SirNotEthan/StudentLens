@@ -9,12 +9,15 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [contentSearchQuery, setContentSearchQuery] = useState('');
+  const [applicationSearchQuery, setApplicationSearchQuery] = useState('');
+  const [applicationFilter, setApplicationFilter] = useState('pending');
 
   useEffect(() => {
     if (!hasPermission('manage_users')) {
@@ -27,13 +30,15 @@ const AdminPanel = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersRes, postsRes] = await Promise.all([
+      const [usersRes, postsRes, applicationsRes] = await Promise.all([
         axios.get('/users'),
-        axios.get('/posts?limit=50')
+        axios.get('/posts?limit=50'),
+        axios.get('/applications').catch(() => ({ data: { data: { applications: [] } } }))
       ]);
 
       setUsers(usersRes.data.users || []);
       setPosts(postsRes.data.posts || []);
+      setApplications(applicationsRes.data.data?.applications || []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
@@ -87,6 +92,24 @@ const AdminPanel = () => {
     }
   };
 
+  const handleReviewApplication = async (applicationId, status) => {
+    const action = status === 'approved' ? 'approve' : 'reject';
+    if (!confirm(`Are you sure you want to ${action} this application?`)) return;
+
+    try {
+      const response = await axios.put(`/applications/${applicationId}/review`, { status });
+      if (response.data.success) {
+        // Refresh applications
+        const applicationsRes = await axios.get('/applications');
+        setApplications(applicationsRes.data.data?.applications || []);
+        alert(`Application ${status} successfully!`);
+      }
+    } catch (error) {
+      console.error('Error reviewing application:', error);
+      alert(error.response?.data?.message || 'Failed to review application');
+    }
+  };
+
   const getRoleBadgeColor = (role) => {
     const colors = {
       Student: '#4a90e2',
@@ -137,6 +160,10 @@ const AdminPanel = () => {
             <span className="stat-label">Total Posts</span>
           </div>
           <div className="stat-card">
+            <span className="stat-number">{applications.filter(a => a.status === 'pending').length}</span>
+            <span className="stat-label">Pending Applications</span>
+          </div>
+          <div className="stat-card">
             <span className="stat-number">{users.filter(u => u.isActive).length}</span>
             <span className="stat-label">Active Users</span>
           </div>
@@ -149,6 +176,17 @@ const AdminPanel = () => {
           onClick={() => setActiveTab('users')}
         >
           👥 User Management
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
+          onClick={() => setActiveTab('applications')}
+        >
+          ✍️ Writer Applications
+          {applications.filter(a => a.status === 'pending').length > 0 && (
+            <span className="notification-badge">
+              {applications.filter(a => a.status === 'pending').length}
+            </span>
+          )}
         </button>
         <button
           className={`tab-button ${activeTab === 'posts' ? 'active' : ''}`}
@@ -255,6 +293,139 @@ const AdminPanel = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'applications' && (
+          <div className="applications-management">
+            <div className="section-header">
+              <h2>Writer Applications</h2>
+              <p>Review and manage writer applications</p>
+            </div>
+
+            <div className="filter-bar">
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${applicationFilter === 'pending' ? 'active' : ''}`}
+                  onClick={() => setApplicationFilter('pending')}
+                >
+                  Pending ({applications.filter(a => a.status === 'pending').length})
+                </button>
+                <button
+                  className={`filter-btn ${applicationFilter === 'approved' ? 'active' : ''}`}
+                  onClick={() => setApplicationFilter('approved')}
+                >
+                  Approved ({applications.filter(a => a.status === 'approved').length})
+                </button>
+                <button
+                  className={`filter-btn ${applicationFilter === 'rejected' ? 'active' : ''}`}
+                  onClick={() => setApplicationFilter('rejected')}
+                >
+                  Rejected ({applications.filter(a => a.status === 'rejected').length})
+                </button>
+                <button
+                  className={`filter-btn ${applicationFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setApplicationFilter('all')}
+                >
+                  All ({applications.length})
+                </button>
+              </div>
+              <div className="search-bar">
+                <input
+                  type="text"
+                  placeholder="Search applications by name or email..."
+                  value={applicationSearchQuery}
+                  onChange={(e) => setApplicationSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                {applicationSearchQuery && (
+                  <button className="clear-search" onClick={() => setApplicationSearchQuery('')}>✕</button>
+                )}
+              </div>
+            </div>
+
+            <div className="applications-grid">
+              {applications
+                .filter(app => {
+                  if (applicationFilter !== 'all' && app.status !== applicationFilter) return false;
+                  if (!applicationSearchQuery) return true;
+                  const query = applicationSearchQuery.toLowerCase();
+                  return (
+                    app.userName?.toLowerCase().includes(query) ||
+                    app.userEmail?.toLowerCase().includes(query)
+                  );
+                })
+                .map(app => (
+                  <div key={app.id} className={`application-card ${app.status}`}>
+                    <div className="application-header">
+                      <div className="applicant-info">
+                        <div className="applicant-avatar">
+                          {app.userName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="applicant-details">
+                          <h3>{app.userName}</h3>
+                          <p>{app.userEmail}</p>
+                        </div>
+                      </div>
+                      <span className={`status-badge ${app.status}`}>
+                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                      </span>
+                    </div>
+
+                    <div className="application-content">
+                      <div className="application-section">
+                        <h4>Application Details</h4>
+                        <pre className="application-reason">{app.reason}</pre>
+                      </div>
+
+                      {app.writingSample && (
+                        <div className="application-section">
+                          <h4>Writing Sample</h4>
+                          <pre className="writing-sample">{app.writingSample}</pre>
+                        </div>
+                      )}
+
+                      <div className="application-meta">
+                        <small>Submitted: {formatDate(app.submittedAt)}</small>
+                        {app.reviewedAt && (
+                          <small>Reviewed: {formatDate(app.reviewedAt)} by {app.reviewerName}</small>
+                        )}
+                      </div>
+                    </div>
+
+                    {app.status === 'pending' && (
+                      <div className="application-actions">
+                        <button
+                          className="approve-btn"
+                          onClick={() => handleReviewApplication(app.id, 'approved')}
+                        >
+                          ✓ Approve
+                        </button>
+                        <button
+                          className="reject-btn"
+                          onClick={() => handleReviewApplication(app.id, 'rejected')}
+                        >
+                          ✗ Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+
+            {applications.filter(app => {
+              if (applicationFilter !== 'all' && app.status !== applicationFilter) return false;
+              if (!applicationSearchQuery) return true;
+              const query = applicationSearchQuery.toLowerCase();
+              return (
+                app.userName?.toLowerCase().includes(query) ||
+                app.userEmail?.toLowerCase().includes(query)
+              );
+            }).length === 0 && (
+              <div className="no-applications">
+                <p>No {applicationFilter !== 'all' ? applicationFilter : ''} applications found.</p>
+              </div>
+            )}
           </div>
         )}
 

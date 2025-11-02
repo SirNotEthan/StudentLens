@@ -30,10 +30,20 @@ const Analytics = () => {
 
   useEffect(() => {
     fetchAnalytics();
+
+    // Auto-refresh every 30 seconds
+    const intervalId = setInterval(() => {
+      fetchAnalytics();
+    }, 30000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
   }, [timeRange]);
 
-  const fetchAnalytics = async () => {
-    setLoading(true);
+  const fetchAnalytics = async (showLoadingSpinner = true) => {
+    if (showLoadingSpinner) {
+      setLoading(true);
+    }
     try {
 
       const promises = [
@@ -99,8 +109,14 @@ const Analytics = () => {
     } catch (error) {
       console.error('Error fetching analytics:', error);
     } finally {
-      setLoading(false);
+      if (showLoadingSpinner) {
+        setLoading(false);
+      }
     }
+  };
+
+  const handleRefresh = () => {
+    fetchAnalytics(true);
   };
 
   const calculateCategoryStats = (posts) => {
@@ -176,16 +192,20 @@ const Analytics = () => {
     <div className="analytics-dashboard">
       <div className="analytics-header">
         <h2>📊 Analytics Dashboard</h2>
-        <div className="time-range-selector">
-          <button
-            className={timeRange === '7d' ? 'active' : ''}
-            onClick={() => setTimeRange('7d')}
-          >
-            7 Days
+        <div className="analytics-header-actions">
+          <button className="refresh-btn" onClick={handleRefresh} title="Refresh data">
+            🔄 Refresh
           </button>
-          <button
-            className={timeRange === '30d' ? 'active' : ''}
-            onClick={() => setTimeRange('30d')}
+          <div className="time-range-selector">
+            <button
+              className={timeRange === '7d' ? 'active' : ''}
+              onClick={() => setTimeRange('7d')}
+            >
+              7 Days
+            </button>
+            <button
+              className={timeRange === '30d' ? 'active' : ''}
+              onClick={() => setTimeRange('30d')}
           >
             30 Days
           </button>
@@ -195,6 +215,7 @@ const Analytics = () => {
           >
             90 Days
           </button>
+          </div>
         </div>
       </div>
 

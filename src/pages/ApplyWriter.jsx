@@ -8,7 +8,7 @@ const ApplyWriter = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    writingSamples: '',
+    writingSample: '',
     interests: '',
     experience: '',
     motivation: '',
@@ -31,11 +31,24 @@ const ApplyWriter = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      const response = await axios.post('/writer-applications', {
-        ...formData,
-        userId: user.id,
-        userName: user.fullName || user.username,
-        userEmail: user.email
+      // Combine all fields into the reason field
+      const reason = `
+**Areas of Interest:**
+${formData.interests}
+
+**Writing Experience:**
+${formData.experience}
+
+**Motivation:**
+${formData.motivation}
+
+**Availability:**
+${formData.availability}
+      `.trim();
+
+      const response = await axios.post('/applications', {
+        reason,
+        writingSample: formData.writingSample || undefined
       });
 
       if (response.data.success) {
@@ -142,16 +155,16 @@ const ApplyWriter = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="writingSamples">
+            <label htmlFor="writingSample">
               Writing Samples
               <span className="helper-text">
                 Share links to your previous work or paste a short sample (optional but recommended)
               </span>
             </label>
             <textarea
-              id="writingSamples"
-              name="writingSamples"
-              value={formData.writingSamples}
+              id="writingSample"
+              name="writingSample"
+              value={formData.writingSample}
               onChange={handleChange}
               rows="4"
               placeholder="Links or samples of your work..."
