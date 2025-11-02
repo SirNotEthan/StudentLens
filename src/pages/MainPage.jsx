@@ -498,6 +498,7 @@ const MainPage = () => {
         <div className="footer-links">
           <a href="#about" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
           <a href="#contact" onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>CONTACT US</a>
+          <a href="#terms" onClick={(e) => { e.preventDefault(); navigate('/terms-privacy'); }}>TERMS & PRIVACY</a>
         </div>
       </footer>
 

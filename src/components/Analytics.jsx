@@ -33,22 +33,21 @@ const Analytics = () => {
   }, [timeRange]);
 
   const fetchAnalytics = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
 
-      
       const promises = [
-        
-        axios.get('/posts?status=published&limit=1000'),
-        
-        axios.get('/posts/my'),
-        
-        axios.get('/posts/bookmarks'),
+
+        axios.get('/posts?status=published&limit=1000').catch(() => ({ data: { posts: [] } })),
+
+        axios.get('/posts/my').catch(() => ({ data: { posts: [] } })),
+
+        axios.get('/posts/bookmarks').catch(() => ({ data: { posts: [] } })),
       ];
 
-      
+
       if (hasPermission('manage_users')) {
-        promises.push(axios.get('/users'));
+        promises.push(axios.get('/users').catch(() => ({ data: { users: [] } })));
       }
 
       const responses = await Promise.all(promises);

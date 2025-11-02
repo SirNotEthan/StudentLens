@@ -13,6 +13,10 @@ import Analytics from './components/Analytics'
 import AdminPanel from './pages/AdminPanel'
 import WriteArticle from './pages/WriteArticle'
 import PostDetail from './pages/PostDetail'
+import AboutUs from './pages/AboutUs'
+import ContactUs from './pages/ContactUs'
+import TermsPrivacy from './pages/TermsPrivacy'
+import ApplyWriter from './pages/ApplyWriter'
 
 function App() {
   return (
@@ -92,6 +96,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <ProtectedRoute>
+                <AboutUs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contact"
+            element={
+              <ProtectedRoute>
+                <ContactUs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/terms-privacy"
+            element={
+              <ProtectedRoute>
+                <TermsPrivacy />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/apply-writer"
+            element={
+              <ProtectedRoute>
+                <ApplyWriter />
               </ProtectedRoute>
             }
           />
