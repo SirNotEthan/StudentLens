@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { AnalyticsProvider } from './contexts/AnalyticsContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import MainPage from './pages/MainPage'
@@ -21,8 +22,9 @@ import ApplyWriter from './pages/ApplyWriter'
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
+      <AnalyticsProvider>
+        <Router>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
@@ -134,6 +136,7 @@ function App() {
           <Route path="/" element={<Navigate to="/main" replace />} />
         </Routes>
       </Router>
+      </AnalyticsProvider>
     </AuthProvider>
   )
 }

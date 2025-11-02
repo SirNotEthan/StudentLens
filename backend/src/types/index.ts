@@ -328,3 +328,108 @@ export interface LoggerContext {
   role?: string;
   userRole?: string;
 }
+
+// Analytics Types
+export type AnalyticsEventType =
+  | 'page_view'
+  | 'post_view'
+  | 'post_like'
+  | 'post_unlike'
+  | 'post_bookmark'
+  | 'post_unbookmark'
+  | 'comment_create'
+  | 'comment_like'
+  | 'search'
+  | 'login'
+  | 'logout'
+  | 'signup'
+  | 'profile_update'
+  | 'post_create'
+  | 'post_edit'
+  | 'post_delete'
+  | 'feature_use';
+
+export interface IAnalyticsEvent {
+  id: string;
+  userId?: string;
+  sessionId?: string;
+  eventType: AnalyticsEventType;
+  eventData?: Record<string, any>;
+
+  // User Technical Data
+  ipAddress?: string;
+  browser?: string;
+  browserVersion?: string;
+  deviceType?: string;
+  operatingSystem?: string;
+  osVersion?: string;
+  userAgent?: string;
+
+  // Page/Content Data
+  pageUrl?: string;
+  pageTitle?: string;
+  referrer?: string;
+
+  // Interaction Data
+  postId?: string;
+  commentId?: string;
+  searchQuery?: string;
+  featureName?: string;
+
+  // Metadata
+  timestamp: string;
+  createdAt: string;
+}
+
+export interface CreateAnalyticsEventRequest {
+  eventType: AnalyticsEventType;
+  eventData?: Record<string, any>;
+  pageUrl?: string;
+  pageTitle?: string;
+  referrer?: string;
+  postId?: string;
+  commentId?: string;
+  searchQuery?: string;
+  featureName?: string;
+}
+
+export interface AnalyticsQuery {
+  userId?: string;
+  eventType?: AnalyticsEventType;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface AnalyticsStats {
+  totalEvents: number;
+  uniqueUsers: number;
+  eventsByType: Record<AnalyticsEventType, number>;
+  topPages: Array<{ page: string; views: number }>;
+  topPosts: Array<{ postId: string; views: number }>;
+  deviceStats: {
+    desktop: number;
+    mobile: number;
+    tablet: number;
+    other: number;
+  };
+  browserStats: Record<string, number>;
+  osStats: Record<string, number>;
+  userGrowth: Array<{ date: string; count: number }>;
+}
+
+export interface UserBehaviorData {
+  userId: string;
+  totalPageViews: number;
+  totalPostViews: number;
+  totalLikes: number;
+  totalComments: number;
+  totalBookmarks: number;
+  pagesViewed: string[];
+  postsViewed: string[];
+  featuresUsed: string[];
+  lastActive: string;
+  firstSeen: string;
+  sessionCount: number;
+}

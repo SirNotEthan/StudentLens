@@ -49,18 +49,30 @@ const AdminPanel = () => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       const response = await axios.put(`/users/${userId}/role`, { role: newRole });
+
       // Update the user in the list with the response data
       if (response.data.success && response.data.data?.user) {
-        setUsers(users.map(u => u.id === userId ? response.data.data.user : u));
+        const updatedUser = response.data.data.user;
+        setUsers(users.map(u => u.id === userId ? updatedUser : u));
+        alert(`Successfully updated role to ${newRole}`);
       } else {
-        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        // Fallback update if no user data returned
+        setUsers(users.map(u => u.id === userId ? { ...u, role: newRole, permissions: [] } : u));
+        alert(`Role updated to ${newRole}`);
       }
+
       setShowRoleModal(false);
       setSelectedUser(null);
     } catch (error) {
       console.error('Error updating user role:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to update user role';
-      alert(errorMessage);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update user role';
+      alert(`Error: ${errorMessage}`);
+
+      // Log more details for debugging
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
     }
   };
 
@@ -116,7 +128,6 @@ const AdminPanel = () => {
       Writer: '#17a2b8',
       Editor: '#fd7e14',
       Teacher: '#28a745',
-      Publisher: '#dc3545',
       Owner: '#6f42c1'
     };
     return colors[role] || '#6c757d';
@@ -532,18 +543,28 @@ const AdminPanel = () => {
               <p>Current role: <strong>{selectedUser.role}</strong></p>
 
               <div className="role-options">
-                {['Student', 'Writer', 'Editor', 'Teacher', 'Publisher', 'Owner'].map(role => (
+                {[
+                  { name: 'Student', desc: 'Can read articles and apply to be a writer' },
+                  { name: 'Writer', desc: 'Can write and submit articles for review' },
+                  { name: 'Editor', desc: 'Can edit and moderate content' },
+                  { name: 'Teacher', desc: 'Can manage users, review articles, and publish content' },
+                  { name: 'Owner', desc: 'Full system access (requires Owner to assign)' }
+                ].map(({ name, desc }) => (
                   <button
-                    key={role}
-                    className={`role-option ${selectedUser.role === role ? 'current' : ''}`}
-                    onClick={() => handleRoleChange(selectedUser.id, role)}
-                    disabled={selectedUser.role === role}
+                    key={name}
+                    className={`role-option ${selectedUser.role === name ? 'current' : ''}`}
+                    onClick={() => handleRoleChange(selectedUser.id, name)}
+                    disabled={selectedUser.role === name}
+                    title={desc}
                   >
                     <span
                       className="role-color"
-                      style={{ backgroundColor: getRoleBadgeColor(role) }}
+                      style={{ backgroundColor: getRoleBadgeColor(name) }}
                     ></span>
-                    {role}
+                    <div className="role-info">
+                      <div className="role-name">{name}</div>
+                      <div className="role-desc">{desc}</div>
+                    </div>
                   </button>
                 ))}
               </div>

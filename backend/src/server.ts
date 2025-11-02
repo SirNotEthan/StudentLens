@@ -52,6 +52,7 @@ import googleAuthRoutes from '@/routes/googleAuth';
 import applicationRoutes from '@/routes/applications';
 import postRoutes from '@/routes/posts';
 import commentRoutes from '@/routes/comments';
+import analyticsRoutes from '@/routes/analytics';
 console.log('LOADING: all routes loaded');
 
 import { EnvironmentVariables } from '@/types';
@@ -436,6 +437,9 @@ const startServer = async (): Promise<void> => {
     app.use('/api/posts', postRoutes);
     console.log('STARTUP: - Post routes added');
     app.use('/api/comments', commentRoutes);
+    console.log('STARTUP: - Comment routes added');
+    app.use('/api/analytics', analyticsRoutes);
+    console.log('STARTUP: - Analytics routes added');
     console.log('STARTUP: ✅ All API routes configured');
 
     // Set up SPA fallback route (must be after all API routes)
