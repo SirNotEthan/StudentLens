@@ -921,14 +921,15 @@ body {
 .footer {
   background-color: #d4834e;
   color: white;
-  padding: 2rem;
+  padding: 2.5rem 2rem;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
+  gap: 4rem;
   border-top: 1px solid #c57640;
-  max-width: 1400px;
   width: 100%;
-  margin: 2rem auto 0 auto;
+  margin-top: auto;
+  min-height: 80px;
 }
 
 .footer-title {
@@ -1217,7 +1218,8 @@ body {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
+    min-height: 100px;
   }
 }
 
@@ -1260,6 +1262,7 @@ body {
   }
 
   .footer {
-    padding: 1rem;
+    padding: 2rem 1rem;
+    min-height: 120px;
   }
 }

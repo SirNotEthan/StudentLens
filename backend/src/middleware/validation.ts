@@ -334,8 +334,9 @@ export const validateBusinessRules = (
   }
 
   if (method === 'PUT' && endpoint.includes('/role')) {
-    if (req.body.role && user && user.role === 'Owner') {
-      throw AppError.badRequest('Owner role cannot be modified');
+    // Prevent non-Owners from assigning Owner role to anyone
+    if (req.body.role === 'Owner' && user && user.role !== 'Owner') {
+      throw AppError.forbidden('Only Owners can assign the Owner role');
     }
   }
 
