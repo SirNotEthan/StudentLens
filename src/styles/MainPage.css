@@ -94,14 +94,16 @@ body {
   font-weight: 400;
   color: #666;
   font-family: 'Arial', sans-serif;
+  line-height: 1.5;
+  padding: 0.25rem 0;
 }
 
 .home-icon-btn,
 .user-icon-btn {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
   padding: 0.4rem 0.6rem;
   background: transparent;
   border: none;
@@ -645,7 +647,7 @@ body {
   margin: 0;
   background-color: transparent;
   border: none;
-  border-bottom: 0.5px solid #e0e0e0;
+  border-bottom: 1.5px solid #c0c0c0;
   padding: 1.25rem 0;
 }
 
