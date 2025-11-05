@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAnalytics } from '../contexts/AnalyticsContext';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/Analytics.css';
 
 const Analytics = () => {
   const { user: _user, hasPermission } = useAuth();
   const { getAnalyticsStats, getUserBehavior } = useAnalytics();
+  const navigate = useNavigate();
 
   const [analyticsData, setAnalyticsData] = useState({
     overview: {
@@ -199,7 +201,12 @@ const Analytics = () => {
   return (
     <div className="analytics-dashboard">
       <div className="analytics-header">
-        <h2>📊 Analytics Dashboard</h2>
+        <div className="analytics-header-left">
+          <button className="back-btn" onClick={() => navigate('/main')} title="Return to main page">
+            ← Back
+          </button>
+          <h2>📊 Analytics Dashboard</h2>
+        </div>
         <div className="analytics-header-actions">
           <button className="refresh-btn" onClick={handleRefresh} title="Refresh data">
             🔄 Refresh
