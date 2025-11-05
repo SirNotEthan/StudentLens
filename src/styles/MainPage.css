@@ -273,7 +273,7 @@ body {
   background-color: transparent;
   padding: 0;
   border: none;
-  border-right: 1px solid #e0e0e0;
+  border-right: 2px solid #c0c0c0;
   padding-right: 2rem;
 }
 
@@ -616,7 +616,7 @@ body {
   background-color: transparent;
   padding: 0;
   border: none;
-  border-left: 1px solid #e0e0e0;
+  border-left: 2px solid #c0c0c0;
   padding-left: 2rem;
 }
 
@@ -647,7 +647,7 @@ body {
   margin: 0;
   background-color: transparent;
   border: none;
-  border-bottom: 1.5px solid #c0c0c0;
+  border-bottom: 1px solid #d0d0d0;
   padding: 1.25rem 0;
 }
 
