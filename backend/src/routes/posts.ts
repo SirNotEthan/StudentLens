@@ -31,7 +31,7 @@ import {
   validatePostQuery,
   validate
 } from '@/middleware/validation';
-import { authLimiter } from '@/middleware/security';
+import { authLimiter, apiLimiter } from '@/middleware/security';
 
 const router = Router();
 
@@ -43,21 +43,25 @@ router.use((req, res, next) => {
 });
 
 router.get('/public',
+  apiLimiter,
   validate(validatePostQuery),
   getPublicPosts
 );
 
 router.get('/public/:id',
+  apiLimiter,
   validate(validatePostId),
   getPublicPost
 );
 
 router.get('/featured',
+  apiLimiter,
   validate(validatePostQuery),
   getFeaturedPosts
 );
 
 router.get('/search',
+  apiLimiter,
   validate(validatePostQuery),
   searchPosts
 );

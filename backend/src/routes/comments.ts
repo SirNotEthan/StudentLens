@@ -7,12 +7,13 @@ import {
   toggleCommentLike
 } from '@/controllers/commentController';
 import { authenticate, optionalAuth } from '@/middleware/auth';
-import { authLimiter } from '@/middleware/security';
+import { authLimiter, apiLimiter } from '@/middleware/security';
 import { validateCreateComment, validateUpdateComment, validateCommentId, validatePostIdParam, validate } from '@/middleware/validation';
 
 const router = Router();
 
 router.get('/post/:postId',
+  apiLimiter,
   validate(validatePostIdParam),
   optionalAuth,
   getPostComments
