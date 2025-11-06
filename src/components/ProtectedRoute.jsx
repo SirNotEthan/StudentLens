@@ -13,9 +13,6 @@ const ProtectedRoute = ({ children, requiredPermission, requiredRole, fallback =
           <div className="welcome-brand">
             <div className="brand-title">STUDENT LENS</div>
           </div>
-          <div className="welcome-spinner">
-            <div className="spinner"></div>
-          </div>
           <h1>Loading...</h1>
           <p>Checking your access permissions.</p>
         </div>

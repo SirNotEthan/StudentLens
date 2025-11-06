@@ -190,7 +190,6 @@ const Analytics = () => {
   if (loading) {
     return (
       <div className="analytics-loading">
-        <div className="loading-spinner"></div>
         <p>Loading analytics...</p>
       </div>
     );

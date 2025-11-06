@@ -47,9 +47,6 @@ const AuthCallback = () => {
         <div className="welcome-brand">
           <div className="brand-title">STUDENT LENS</div>
         </div>
-        <div className="welcome-spinner">
-          <div className="spinner"></div>
-        </div>
         <h1>Authenticating...</h1>
         <p>Please wait while we complete your authentication.</p>
         <div className="welcome-progress">

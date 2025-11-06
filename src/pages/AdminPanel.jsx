@@ -146,7 +146,6 @@ const AdminPanel = () => {
   if (loading) {
     return (
       <div className="admin-loading">
-        <div className="loading-spinner"></div>
         <p>Loading admin panel...</p>
       </div>
     );

@@ -119,7 +119,6 @@ const PostView = () => {
   if (loading) {
     return (
       <div className="post-view-loading">
-        <div className="loading-spinner"></div>
         <p>Loading article...</p>
       </div>
     );

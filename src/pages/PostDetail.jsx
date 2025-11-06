@@ -435,7 +435,6 @@ const PostDetail = () => {
   if (loading) {
     return (
       <div className="post-detail-loading">
-        <div className="loading-spinner"></div>
         <p>Loading post...</p>
       </div>
     );

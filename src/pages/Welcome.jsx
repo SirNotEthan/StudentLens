@@ -77,9 +77,6 @@ const Welcome = () => {
     return (
       <div className="welcome-container">
         <div className="welcome-card">
-          <div className="welcome-spinner">
-            <div className="spinner"></div>
-          </div>
           <h1>Authenticating...</h1>
           <p>Please wait while we complete your authentication.</p>
         </div>

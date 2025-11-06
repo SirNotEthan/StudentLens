@@ -276,7 +276,6 @@ const WriteArticle = () => {
   if (loading && isEditing) {
     return (
       <div className="write-loading">
-        <div className="loading-spinner"></div>
         <p>Loading article...</p>
       </div>
     );
