@@ -42,7 +42,7 @@ body {
 
 .header-date {
   text-align: left;
-  padding: 0.5rem 0 0.75rem 0;
+  padding: 0.5rem 2rem 0.75rem 0;
   border-bottom: 1px solid #e0e0e0;
   max-width: 1400px;
   width: 100%;
@@ -138,6 +138,34 @@ body {
   align-items: flex-end;
   justify-content: center;
   gap: 0.25rem;
+}
+
+.header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  margin-top: 0.25rem;
+}
+
+.header-action-link {
+  background: transparent;
+  border: none;
+  font-size: 0.6rem;
+  font-weight: 600;
+  font-family: 'Arial', sans-serif;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  padding: 0.2rem 0;
+  color: #1a1a1a;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease;
+  text-decoration: underline;
+  text-align: right;
+}
+
+.header-action-link:hover {
+  opacity: 0.7;
 }
 
 .user-dropdown-menu {
@@ -399,8 +427,7 @@ body {
 
 .articles-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-columns: 1fr;
   gap: 1rem;
 }
 
@@ -413,7 +440,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .article-card:hover {
@@ -422,7 +449,8 @@ body {
 }
 
 .article-card.large {
-  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
 }
 
 .article-card-image {
@@ -432,12 +460,12 @@ body {
   justify-content: center;
   color: #999;
   overflow: hidden;
-  flex: 1;
+  position: relative;
   min-height: 200px;
 }
 
 .article-card.large .article-card-image {
-  min-height: 400px;
+  min-height: 300px;
 }
 
 .article-card-image img {
@@ -447,8 +475,9 @@ body {
 }
 
 .article-card-content {
-  padding: 1.25rem;
+  padding: 1.5rem 1.25rem;
   background-color: white;
+  flex: 1;
 }
 
 .article-card-title {
@@ -592,13 +621,13 @@ body {
 
 .enter-text-button {
   position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  background-color: #fd7e14;
+  bottom: 1rem;
+  right: 1rem;
+  background-color: rgba(45, 90, 77, 0.85);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.75rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.65rem;
   font-weight: 700;
   cursor: pointer;
   text-transform: uppercase;
@@ -608,7 +637,7 @@ body {
 }
 
 .enter-text-button:hover {
-  background-color: #e8690b;
+  background-color: rgba(45, 90, 77, 1);
 }
 
 /* Right Sidebar - Info */
@@ -665,6 +694,18 @@ body {
   letter-spacing: 0.5px;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #e0e0e0;
+}
+
+.streak-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.streak-flames {
+  font-size: 1.5rem;
+  text-align: center;
+  line-height: 1;
 }
 
 .streak-counter {
@@ -734,6 +775,15 @@ body {
 .writer-button:hover {
   background-color: transparent;
   color: #1a1a1a;
+}
+
+.info-text {
+  font-size: 0.65rem;
+  line-height: 1.5;
+  color: #555;
+  font-family: 'Arial', sans-serif;
+  margin-top: 0.75rem;
+  text-align: left;
 }
 
 .contact-button {
@@ -812,12 +862,12 @@ body {
 }
 
 /* Category-specific colors */
-.tag.tag-all { background-color: #28a745 !important; color: white !important; } /* ALL - Green */
-.tag.tag-academic { background-color: #dc3545 !important; color: white !important; } /* ACADEMIC - Red */
-.tag.tag-sports { background-color: #ffc107 !important; color: white !important; } /* SPORTS - Yellow */
-.tag.tag-events { background-color: #4a90e2 !important; color: white !important; } /* EVENTS - Blue */
-.tag.tag-clubs { background-color: #fd7e14 !important; color: white !important; } /* CLUBS - Orange */
-.tag.tag-announcements { background-color: #28a745 !important; color: white !important; } /* ANNOUNCEMENTS - Green */
+.tag.tag-all { background-color: #dc3545 !important; color: white !important; } /* ALL - Red */
+.tag.tag-academic { background-color: #4a90e2 !important; color: white !important; } /* ACADEMIC - Blue */
+.tag.tag-sports { background-color: #28a745 !important; color: white !important; } /* SPORTS - Green */
+.tag.tag-events { background-color: #fd7e14 !important; color: white !important; } /* EVENTS - Orange */
+.tag.tag-clubs { background-color: #28a745 !important; color: white !important; } /* CLUBS - Green */
+.tag.tag-announcements { background-color: #e83e8c !important; color: white !important; } /* ANNOUNCEMENTS - Pink */
 
 .tag.active {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -827,10 +877,22 @@ body {
 
 .news-grid-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
   padding: 2rem;
   background-color: transparent;
+}
+
+@media (max-width: 1400px) {
+  .news-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .news-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .news-card {
@@ -1215,7 +1277,7 @@ body {
 
   .news-grid-container {
     padding: 1.5rem;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 

@@ -72,11 +72,20 @@ const MainPage = () => {
   };
 
   const getCurrentDate = () => {
-    return new Date().toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    const date = new Date();
+    const day = date.getDate();
+    const daySuffix = (day) => {
+      if (day > 3 && day < 21) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    };
+    const month = date.toLocaleDateString('en-US', { month: 'long' });
+    const year = date.getFullYear();
+    return `${day}${daySuffix(day)} ${month}, ${year}`;
   };
 
   const getRoleDisplayName = (role) => {
@@ -119,12 +128,12 @@ const MainPage = () => {
 
   const getCategoryButtonStyle = (category) => {
     const styles = {
-      ALL: { backgroundImage: 'linear-gradient(135deg, rgb(45, 90, 77), rgb(58, 107, 92))', color: 'white' },
-      ACADEMIC: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
-      SPORTS: { backgroundColor: '#ffc107', color: 'white', backgroundImage: 'none' },
-      EVENTS: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
-      CLUBS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
-      ANNOUNCEMENTS: { backgroundImage: 'linear-gradient(135deg, rgb(45, 90, 77), rgb(58, 107, 92))', color: 'white' }
+      ALL: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
+      ACADEMIC: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
+      SPORTS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
+      EVENTS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
+      CLUBS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
+      ANNOUNCEMENTS: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' }
     };
     return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };
   };
@@ -215,10 +224,18 @@ const MainPage = () => {
               <span className="icon-user">👤</span>
               <span className="icon-label">USER</span>
             </button>
+            <div className="header-actions">
+              <button className="header-action-link" onClick={() => navigate('/profile')}>
+                ACCOUNT SETTINGS
+              </button>
+              <button className="header-action-link logout-action" onClick={handleLogout}>
+                LOGOUT
+              </button>
+            </div>
             {showUserDropdown && (
               <div className="user-dropdown-menu show">
                 <div className="dropdown-header">
-                  <span className="dropdown-title">ACCOUNT SETTINGS</span>
+                  <span className="dropdown-title">QUICK LINKS</span>
                   <button className="dropdown-close" onClick={() => setShowUserDropdown(false)}>×</button>
                 </div>
                 <div className="dropdown-divider"></div>
@@ -241,8 +258,6 @@ const MainPage = () => {
                 {hasPermission('write_articles') && (
                   <button className="dropdown-link" onClick={() => { navigate('/write'); setShowUserDropdown(false); }}>WRITE ARTICLE</button>
                 )}
-                <div className="dropdown-divider"></div>
-                <button className="dropdown-link logout-link" onClick={() => { handleLogout(); }}>LOG OUT</button>
               </div>
             )}
           </div>
@@ -340,18 +355,11 @@ const MainPage = () => {
                 <>
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
                     <div className="articles-grid">
-                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post, index) => (
-                        <article key={post.id} className={`article-card ${index === 0 ? 'large' : 'small'}`} onClick={() => navigate(`/post/${post.id}`)}>
-                          <div className="article-card-image">
-                            {post.featuredImage ? (
-                              <img src={post.featuredImage} alt={post.title} />
-                            ) : (
-                              <div className="placeholder-image"></div>
-                            )}
-                          </div>
+                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 1) : recentPosts.slice(0, 1)).map((post, index) => (
+                        <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
                           <div className="article-card-content">
                             <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                              {post.category?.replace(/_/g, ' ') || 'NEWS'}
+                              {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
                             </span>
                             <h3 className="article-card-title">{post.title}</h3>
                             <p className="article-card-author">
@@ -361,7 +369,14 @@ const MainPage = () => {
                                 username={post.authorUsername}
                               />
                             </p>
-                            <p className="article-card-date">{formatDate(post.publishedAt || post.createdAt)}</p>
+                          </div>
+                          <div className="article-card-image">
+                            {post.featuredImage ? (
+                              <img src={post.featuredImage} alt={post.title} />
+                            ) : (
+                              <div className="placeholder-image"></div>
+                            )}
+                            <button className="enter-text-button">ENTER TEXT HERE</button>
                           </div>
                         </article>
                       ))}
@@ -389,17 +404,22 @@ const MainPage = () => {
 
             <div className="info-box streak-info">
               <h4>STREAK</h4>
-              <div className="streak-counter">
-                <span className="streak-number">{user?.streak || 5}</span>
-                <span className="streak-label">DAYS<br />NEW STREAK!</span>
+              <div className="streak-display">
+                <div className="streak-flames">🔥🔥🔥</div>
+                <div className="streak-counter">
+                  <span className="streak-number">{user?.streak || 5}</span>
+                  <span className="streak-label">DAYS<br />NEW STREAK!</span>
+                </div>
               </div>
             </div>
 
             <div className="info-box student-lens-info">
               <h4>STUDENT LENS</h4>
               <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
-              <button className="writer-button" onClick={() => navigate('/write')}>BECOME A WRITER</button>
-              <button className="contact-button" onClick={() => navigate('/contact')}>CONTACT US</button>
+              <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
+              <p className="info-text">
+                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US OR FIND US ON [SOCIALS]
+              </p>
             </div>
           </section>
         </aside>
