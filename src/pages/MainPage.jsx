@@ -19,25 +19,11 @@ const MainPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [error, setError] = useState(null);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
     fetchFeaturedPosts();
     fetchRecentPosts();
   }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showUserDropdown && !event.target.closest('.user-dropdown-menu') && !event.target.closest('.user-icon-btn')) {
-        setShowUserDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showUserDropdown]);
 
   const fetchFeaturedPosts = async () => {
     try {
@@ -220,7 +206,7 @@ const MainPage = () => {
               <span className="icon-house">🏠</span>
               <span className="icon-label">HOME</span>
             </button>
-            <button className="user-icon-btn" onClick={() => setShowUserDropdown(!showUserDropdown)}>
+            <button className="user-icon-btn" onClick={() => navigate('/profile')}>
               <span className="icon-user">👤</span>
               <span className="icon-label">USER</span>
             </button>
@@ -229,37 +215,9 @@ const MainPage = () => {
                 ACCOUNT SETTINGS
               </button>
               <button className="header-action-link logout-action" onClick={handleLogout}>
-                LOGOUT
+                LOG OUT
               </button>
             </div>
-            {showUserDropdown && (
-              <div className="user-dropdown-menu show">
-                <div className="dropdown-header">
-                  <span className="dropdown-title">QUICK LINKS</span>
-                  <button className="dropdown-close" onClick={() => setShowUserDropdown(false)}>×</button>
-                </div>
-                <div className="dropdown-divider"></div>
-                {user && (
-                  <div className="user-info-header">
-                    <span className="user-name">{getUserDisplayName()}</span>
-                    <span
-                      className="role-badge"
-                      style={{ backgroundColor: getRoleBadgeColor(user.role) }}
-                    >
-                      {getRoleDisplayName(user.role)}
-                    </span>
-                  </div>
-                )}
-                <button className="dropdown-link" onClick={() => { navigate('/profile'); setShowUserDropdown(false); }}>PROFILE</button>
-                <button className="dropdown-link" onClick={() => { navigate('/analytics'); setShowUserDropdown(false); }}>ANALYTICS</button>
-                {hasPermission('manage_users') && (
-                  <button className="dropdown-link" onClick={() => { navigate('/admin'); setShowUserDropdown(false); }}>ADMIN PANEL</button>
-                )}
-                {hasPermission('write_articles') && (
-                  <button className="dropdown-link" onClick={() => { navigate('/write'); setShowUserDropdown(false); }}>WRITE ARTICLE</button>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -291,6 +249,12 @@ const MainPage = () => {
                 <span className="game-name">Wordle</span>
               </div>
               <div className="game-item strands">
+                <div className="game-icon">
+                  <span className="strands-icon">🎯</span>
+                </div>
+                <span className="game-name">Strands</span>
+              </div>
+              <div className="game-item strands-alt">
                 <div className="game-icon">
                   <span className="strands-icon">🎯</span>
                 </div>
@@ -418,7 +382,7 @@ const MainPage = () => {
               <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
               <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               <p className="info-text">
-                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US OR FIND US ON [SOCIALS]
+                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US OR FIND US ON [S-21]
               </p>
             </div>
           </section>
