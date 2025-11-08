@@ -4,8 +4,6 @@ import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import '../styles/UserProfile.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-
 const UserProfile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -22,7 +20,7 @@ const UserProfile = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`${API_URL}/users/profile/${username}`);
+      const response = await axios.get(`/users/profile/${username}`);
       setProfileData(response.data);
     } catch (err) {
       console.error('Error fetching user profile:', err);
