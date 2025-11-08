@@ -95,9 +95,6 @@
   object-fit: cover;
   object-position: center;
   display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
 }
 
 .avatar-placeholder {
@@ -483,22 +480,72 @@
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .profile-content {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .profile-card {
+    padding: 1.5rem;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar-placeholder {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-container {
     padding: 1rem;
+  }
+
+  .profile-content {
+    grid-template-columns: 1fr;
+    padding: 0;
+    gap: 1rem;
   }
 
   .profile-header {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
+    padding: 1rem;
+  }
+
+  .profile-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .profile-card {
+    padding: 1.5rem;
   }
 
   .profile-avatar-section {
     flex-direction: column;
     text-align: center;
     gap: 1rem;
+    align-items: center;
+  }
+
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar-placeholder {
+    font-size: 2.5rem;
+  }
+
+  .profile-basic-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .form-row,
@@ -518,5 +565,33 @@
 
   .profile-action-buttons {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border: 3px solid #2d5a4d;
+  }
+
+  .avatar-placeholder {
+    font-size: 2rem;
+  }
+
+  .profile-card {
+    padding: 1rem;
+  }
+
+  .profile-basic-info h2 {
+    font-size: 1.5rem;
+  }
+
+  .username {
+    font-size: 0.9rem;
   }
 }

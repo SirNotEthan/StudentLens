@@ -274,15 +274,15 @@ const MainPage = () => {
                     </button>
                   )}
 
-                  {hasRole('Owner') && (
+                  {(hasRole('Owner') || hasPermission('manage_users')) && (
                     <button className="dropdown-link" onClick={() => navigate('/admin')}>
                       Admin Panel
                     </button>
                   )}
 
-                  {(hasPermission('write_articles') || hasPermission('edit_articles') || hasRole('Owner')) && (
+                  {(hasPermission('write_articles') || hasPermission('edit_articles') || hasPermission('review_articles') || hasPermission('publish_articles') || hasRole('Owner')) && (
                     <button className="dropdown-link" onClick={() => navigate('/write')}>
-                      {hasRole('Writer') ? 'Writer Panel' : hasRole('Editor') ? 'Editor Panel' : 'Content Panel'}
+                      {hasRole('Writer') ? 'Writer Panel' : hasRole('Editor') ? 'Editor Panel' : hasRole('Teacher') ? 'Teacher Panel' : 'Content Panel'}
                     </button>
                   )}
 
