@@ -1,0 +1,123 @@
+.notfound-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e8e4df;
+  padding: 2rem;
+}
+
+.notfound-content {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  background-color: white;
+  padding: 4rem 3rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.notfound-title {
+  font-size: 8rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+  font-family: 'Playfair Display', serif;
+  line-height: 1;
+}
+
+.notfound-subtitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 1rem 0;
+  font-family: 'Playfair Display', serif;
+}
+
+.notfound-message {
+  font-size: 1rem;
+  color: #666;
+  margin: 0 0 2.5rem 0;
+  line-height: 1.6;
+  font-family: 'Arial', sans-serif;
+}
+
+.notfound-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.notfound-button {
+  padding: 0.85rem 2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Arial', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid #1a1a1a;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 4px;
+}
+
+.notfound-button.primary {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+.notfound-button.primary:hover {
+  background-color: transparent;
+  color: #1a1a1a;
+}
+
+.notfound-button.secondary {
+  background-color: transparent;
+  color: #1a1a1a;
+}
+
+.notfound-button.secondary:hover {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .notfound-content {
+    padding: 3rem 2rem;
+  }
+
+  .notfound-title {
+    font-size: 6rem;
+  }
+
+  .notfound-subtitle {
+    font-size: 1.5rem;
+  }
+
+  .notfound-message {
+    font-size: 0.9rem;
+  }
+
+  .notfound-actions {
+    flex-direction: column;
+  }
+
+  .notfound-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .notfound-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .notfound-title {
+    font-size: 4.5rem;
+  }
+
+  .notfound-subtitle {
+    font-size: 1.3rem;
+  }
+}

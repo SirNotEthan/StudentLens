@@ -208,7 +208,7 @@ const MainPage = () => {
               <span className="icon-label">HOME</span>
             </button>
             <div
-              style={{ position: 'relative' }}
+              className="user-dropdown-wrapper"
               onMouseEnter={() => setShowUserDropdown(true)}
               onMouseLeave={() => setShowUserDropdown(false)}
             >
@@ -378,14 +378,6 @@ const MainPage = () => {
                     <div className="articles-grid">
                       {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post, index) => (
                         <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
-                          <div className="article-card-image">
-                            {post.featuredImage ? (
-                              <img src={post.featuredImage} alt={post.title} />
-                            ) : (
-                              <div className="placeholder-image"></div>
-                            )}
-                            <button className="enter-text-button">ENTER TEXT HERE</button>
-                          </div>
                           <div className="article-card-content">
                             <span className={`category-tag ${getCategoryColor(post.category)}`}>
                               {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
@@ -398,6 +390,14 @@ const MainPage = () => {
                                 username={post.authorUsername}
                               />
                             </p>
+                          </div>
+                          <div className="article-card-image">
+                            {post.featuredImage ? (
+                              <img src={post.featuredImage} alt={post.title} />
+                            ) : (
+                              <div className="placeholder-image"></div>
+                            )}
+                            <button className="enter-text-button">ENTER TEXT HERE</button>
                           </div>
                         </article>
                       ))}

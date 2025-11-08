@@ -18,6 +18,7 @@ import AboutUs from './pages/AboutUs'
 import ContactUs from './pages/ContactUs'
 import TermsPrivacy from './pages/TermsPrivacy'
 import ApplyWriter from './pages/ApplyWriter'
+import NotFound from './pages/NotFound'
 
 function App() {
   return (
@@ -134,6 +135,7 @@ function App() {
             }
           />
           <Route path="/" element={<Navigate to="/main" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
       </AnalyticsProvider>
