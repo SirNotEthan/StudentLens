@@ -576,6 +576,7 @@ const AdminPanel = () => {
 
             <div className="posts-grid">
               {posts
+                .filter(post => post.status === 'published')
                 .filter(post => {
                   if (!contentSearchQuery) return true;
                   const query = contentSearchQuery.toLowerCase();
