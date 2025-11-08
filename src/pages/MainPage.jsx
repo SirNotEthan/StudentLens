@@ -286,21 +286,9 @@ const MainPage = () => {
                     </button>
                   )}
 
-                  {hasRole('Editor') && (
-                    <button className="dropdown-link" onClick={() => navigate('/write')}>
-                      Editor Panel
-                    </button>
-                  )}
-
-                  {hasRole('Teacher') && (
-                    <button className="dropdown-link" onClick={() => navigate('/write')}>
-                      Teacher Panel
-                    </button>
-                  )}
-
                   {hasRole('Owner') && (
                     <button className="dropdown-link" onClick={() => navigate('/write')}>
-                      Content Panel
+                      Writer Panel
                     </button>
                   )}
 

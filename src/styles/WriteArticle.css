@@ -95,6 +95,7 @@
 
 .preview-toggle-btn,
 .save-draft-btn,
+.submit-review-btn,
 .publish-btn,
 .delete-btn {
   padding: 0.5rem 1rem;
@@ -130,6 +131,17 @@
   border-color: #545b62;
 }
 
+.submit-review-btn {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+.submit-review-btn:hover:not(:disabled) {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
 .publish-btn {
   background-color: #2d5a4d;
   border-color: #2d5a4d;
@@ -153,6 +165,7 @@
 }
 
 .save-draft-btn:disabled,
+.submit-review-btn:disabled,
 .publish-btn:disabled,
 .delete-btn:disabled {
   opacity: 0.6;
@@ -575,6 +588,7 @@
   }
 
   .save-draft-btn,
+  .submit-review-btn,
   .publish-btn,
   .delete-btn {
     min-width: auto;

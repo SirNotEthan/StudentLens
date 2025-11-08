@@ -70,13 +70,18 @@ export const uploadLimiter = createRateLimit(
 );
 
 export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
+  // In development, allow connections to localhost on various ports
+  const connectSrc = process.env.NODE_ENV === 'development'
+    ? "'self' http://localhost:3000 http://localhost:5173 ws://localhost:*"
+    : "'self'";
+
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src ${connectSrc}`,
     "frame-ancestors 'none'"
   ].join('; '));
 

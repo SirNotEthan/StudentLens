@@ -274,6 +274,23 @@
   line-height: 1.2;
 }
 
+.username-cell {
+  font-family: 'Courier New', Consolas, monospace;
+  font-weight: 500;
+  color: #2d5a4d;
+  background-color: #f0f8ff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.no-username {
+  color: #999;
+  font-style: italic;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
 .role-badge {
   display: inline-block;
   padding: 0.25rem 0.75rem;

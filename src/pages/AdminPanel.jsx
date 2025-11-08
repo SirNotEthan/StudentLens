@@ -293,6 +293,7 @@ const AdminPanel = () => {
                 <thead>
                   <tr>
                     <th>User</th>
+                    <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Status</th>
@@ -321,10 +322,14 @@ const AdminPanel = () => {
                             {user.username ? user.username.charAt(0).toUpperCase() : user.email.charAt(0).toUpperCase()}
                           </div>
                           <div className="user-details">
-                            <div className="user-name">{user.username || 'No username'}</div>
-                            <div className="user-full-name">{user.firstName} {user.lastName}</div>
+                            <div className="user-name">{user.firstName} {user.lastName}</div>
                           </div>
                         </div>
+                      </td>
+                      <td>
+                        <span className="username-cell">
+                          {user.username || <em className="no-username">Not set</em>}
+                        </span>
                       </td>
                       <td>{user.email}</td>
                       <td>

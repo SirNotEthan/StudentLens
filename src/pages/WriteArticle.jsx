@@ -132,11 +132,14 @@ const WriteArticle = () => {
 
       if (response.data.success) {
         if (!isAutoSave) {
-          setSaveStatus(`${status === 'published' ? 'Published' : 'Saved'} successfully!`);
+          let statusMessage = 'Saved';
+          if (status === 'published') statusMessage = 'Published';
+          else if (status === 'pending_reviewer' || status === 'pending_editor') statusMessage = 'Submitted for review';
+          setSaveStatus(`${statusMessage} successfully!`);
           setTimeout(() => setSaveStatus(''), 3000);
         }
 
-        if (status === 'published') {
+        if (status === 'published' || status === 'pending_reviewer' || status === 'pending_editor') {
           setTimeout(() => navigate('/main'), 2000);
         }
 
@@ -170,6 +173,23 @@ const WriteArticle = () => {
     const confirmPublish = confirm('Are you sure you want to publish this article? It will be visible to all users.');
     if (confirmPublish) {
       handleSave('published');
+    }
+  };
+
+  const handleSubmitForReview = () => {
+    if (!article.title.trim() || !article.content.trim()) {
+      alert('Please fill in both title and content before submitting for review');
+      return;
+    }
+
+    if (!article.excerpt.trim()) {
+      alert('Please add an excerpt for your article');
+      return;
+    }
+
+    const confirmSubmit = confirm('Are you sure you want to submit this article for review?');
+    if (confirmSubmit) {
+      handleSave('pending_reviewer');
     }
   };
 
@@ -309,6 +329,15 @@ const WriteArticle = () => {
             >
               {loading ? 'Saving...' : 'Save Draft'}
             </button>
+            {hasPermission('write_articles') && !hasPermission('publish_articles') && (
+              <button
+                className="submit-review-btn"
+                onClick={handleSubmitForReview}
+                disabled={loading}
+              >
+                {loading ? 'Submitting...' : 'Submit for Review'}
+              </button>
+            )}
             {hasPermission('publish_articles') && (
               <button
                 className="publish-btn"
