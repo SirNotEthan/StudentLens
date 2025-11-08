@@ -628,7 +628,7 @@ export const getPublicProfile = catchAsync(async (
       DATABASE_ID,
       COMMENTS_COLLECTION_ID,
       [
-        Query.equal('userId', user.id)
+        Query.equal('authorId', user.id)
       ]
     );
 
