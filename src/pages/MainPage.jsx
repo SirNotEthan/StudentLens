@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PostCreator from '../components/PostCreator';
@@ -20,11 +20,28 @@ const MainPage = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [error, setError] = useState(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     fetchFeaturedPosts();
     fetchRecentPosts();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+
+    if (showUserDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserDropdown]);
 
   const fetchFeaturedPosts = async () => {
     try {
@@ -209,10 +226,12 @@ const MainPage = () => {
             </button>
             <div
               className="user-dropdown-wrapper"
-              onMouseEnter={() => setShowUserDropdown(true)}
-              onMouseLeave={() => setShowUserDropdown(false)}
+              ref={dropdownRef}
             >
-              <button className="user-icon-btn">
+              <button
+                className="user-icon-btn"
+                onClick={() => setShowUserDropdown(!showUserDropdown)}
+              >
                 <span className="icon-user">👤</span>
                 <span className="icon-label">USER</span>
               </button>
@@ -397,7 +416,7 @@ const MainPage = () => {
                             ) : (
                               <div className="placeholder-image"></div>
                             )}
-                            <button className="enter-text-button">ENTER TEXT HERE</button>
+                            <button className="enter-text-button">View Article</button>
                           </div>
                         </article>
                       ))}

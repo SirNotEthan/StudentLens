@@ -433,7 +433,8 @@ body {
 
 .articles-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: 1fr 1fr;
   gap: 1rem;
 }
 
@@ -502,6 +503,10 @@ body {
 .article-card.large .article-card-title {
   font-size: 1.3rem;
   -webkit-line-clamp: 3;
+}
+
+.article-card.large:first-child {
+  grid-row: 1 / 3;
 }
 
 .article-card-author {

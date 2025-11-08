@@ -122,6 +122,36 @@ const AdminPanel = () => {
     }
   };
 
+  const handleApproveSubmission = async (postId) => {
+    if (!confirm('Approve this submission and publish it?')) return;
+
+    try {
+      const response = await axios.put(`/posts/${postId}`, { status: 'published' });
+      if (response.data.success) {
+        setPosts(posts.map(p => p.id === postId ? { ...p, status: 'published', publishedAt: new Date().toISOString() } : p));
+        alert('Submission approved and published successfully!');
+      }
+    } catch (error) {
+      console.error('Error approving submission:', error);
+      alert(error.response?.data?.message || 'Failed to approve submission');
+    }
+  };
+
+  const handleRejectSubmission = async (postId) => {
+    if (!confirm('Reject this submission? It will be sent back to draft status.')) return;
+
+    try {
+      const response = await axios.put(`/posts/${postId}`, { status: 'draft' });
+      if (response.data.success) {
+        setPosts(posts.map(p => p.id === postId ? { ...p, status: 'draft' } : p));
+        alert('Submission rejected and returned to draft.');
+      }
+    } catch (error) {
+      console.error('Error rejecting submission:', error);
+      alert(error.response?.data?.message || 'Failed to reject submission');
+    }
+  };
+
   const getRoleBadgeColor = (role) => {
     const colors = {
       Student: '#4a90e2',
@@ -195,6 +225,17 @@ const AdminPanel = () => {
           {applications.filter(a => a.status === 'pending').length > 0 && (
             <span className="notification-badge">
               {applications.filter(a => a.status === 'pending').length}
+            </span>
+          )}
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'submissions' ? 'active' : ''}`}
+          onClick={() => setActiveTab('submissions')}
+        >
+          📝 Writer Submissions
+          {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length > 0 && (
+            <span className="notification-badge">
+              {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length}
             </span>
           )}
         </button>
@@ -436,6 +477,81 @@ const AdminPanel = () => {
                 <p>No {applicationFilter !== 'all' ? applicationFilter : ''} applications found.</p>
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === 'submissions' && (
+          <div className="submissions-management">
+            <div className="section-header">
+              <h2>Writer Submissions</h2>
+              <p>Review and manage article submissions from writers</p>
+            </div>
+
+            <div className="posts-grid">
+              {posts
+                .filter(post => post.status === 'pending_editor' || post.status === 'pending_reviewer')
+                .map(post => (
+                <div key={post.id} className="post-card submission-card">
+                  <div className="post-header">
+                    <span className={`category-tag ${post.category.toLowerCase()}`}>
+                      {post.category.replace(/_/g, ' ')}
+                    </span>
+                    <span className={`status-badge ${post.status}`}>
+                      {post.status.replace(/_/g, ' ').toUpperCase()}
+                    </span>
+                  </div>
+
+                  <h3 className="post-title">{post.title}</h3>
+                  <p className="post-excerpt">{post.excerpt}</p>
+
+                  <div className="post-meta">
+                    <div className="post-author">
+                      <span>👤 {post.authorName}</span>
+                    </div>
+                    <div className="post-stats">
+                      <span>👁️ {post.viewCount || 0}</span>
+                      <span>❤️ {post.likes || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="post-dates">
+                    <small>Submitted: {formatDate(post.createdAt)}</small>
+                  </div>
+
+                  <div className="submission-actions">
+                    <button
+                      className="view-post-btn"
+                      onClick={() => navigate(`/post/${post.id}`)}
+                    >
+                      👁️ View
+                    </button>
+                    <button
+                      className="edit-post-btn"
+                      onClick={() => navigate(`/write/${post.id}`)}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      className="approve-btn"
+                      onClick={() => handleApproveSubmission(post.id)}
+                    >
+                      ✅ Approve & Publish
+                    </button>
+                    <button
+                      className="reject-btn"
+                      onClick={() => handleRejectSubmission(post.id)}
+                    >
+                      ❌ Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length === 0 && (
+                <div className="no-submissions">
+                  <p>No pending submissions to review.</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

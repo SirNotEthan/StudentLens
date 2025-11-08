@@ -9,37 +9,66 @@
 
 .notfound-content {
   text-align: center;
-  max-width: 600px;
+  max-width: 800px;
   width: 100%;
   background-color: white;
-  padding: 4rem 3rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  border: 2px solid #1a1a1a;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.notfound-title {
+.notfound-header {
+  background-color: white;
+  padding: 2rem 2rem 1.5rem 2rem;
+  border-bottom: 2px solid #1a1a1a;
+}
+
+.notfound-logo {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: 0.1em;
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+}
+
+.notfound-divider {
+  height: 1px;
+  background-color: #c0c0c0;
+  margin: 1rem 0 0 0;
+}
+
+.notfound-main {
+  padding: 3rem 2rem;
+}
+
+.notfound-number {
   font-size: 8rem;
   font-weight: 700;
   color: #1a1a1a;
+  line-height: 1;
   margin: 0 0 1rem 0;
   font-family: 'Playfair Display', serif;
-  line-height: 1;
 }
 
-.notfound-subtitle {
-  font-size: 2rem;
+.notfound-title {
+  font-size: 1.8rem;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0 0 1rem 0;
   font-family: 'Playfair Display', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .notfound-message {
   font-size: 1rem;
   color: #666;
-  margin: 0 0 2.5rem 0;
-  line-height: 1.6;
+  margin: 0;
+  line-height: 1.8;
   font-family: 'Arial', sans-serif;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 .notfound-actions {
@@ -47,19 +76,21 @@
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  padding: 2rem;
+  border-top: 1px solid #e0e0e0;
 }
 
 .notfound-button {
   padding: 0.85rem 2rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   font-family: 'Arial', sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border: 2px solid #1a1a1a;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 4px;
+  transition: all 0.2s ease;
+  border-radius: 0;
 }
 
 .notfound-button.primary {
@@ -82,16 +113,34 @@
   color: white;
 }
 
+.notfound-footer {
+  background-color: #d4834e;
+  padding: 1.5rem;
+  border-top: 1px solid #c57640;
+}
+
+.notfound-footer span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.5px;
+}
+
 @media (max-width: 768px) {
-  .notfound-content {
-    padding: 3rem 2rem;
+  .notfound-logo {
+    font-size: 2rem;
   }
 
-  .notfound-title {
+  .notfound-main {
+    padding: 2rem 1.5rem;
+  }
+
+  .notfound-number {
     font-size: 6rem;
   }
 
-  .notfound-subtitle {
+  .notfound-title {
     font-size: 1.5rem;
   }
 
@@ -101,6 +150,7 @@
 
   .notfound-actions {
     flex-direction: column;
+    padding: 1.5rem;
   }
 
   .notfound-button {
@@ -109,15 +159,31 @@
 }
 
 @media (max-width: 480px) {
-  .notfound-content {
-    padding: 2rem 1.5rem;
+  .notfound-header {
+    padding: 1.5rem 1.5rem 1rem 1.5rem;
   }
 
-  .notfound-title {
+  .notfound-logo {
+    font-size: 1.8rem;
+  }
+
+  .notfound-main {
+    padding: 2rem 1rem;
+  }
+
+  .notfound-number {
     font-size: 4.5rem;
   }
 
-  .notfound-subtitle {
+  .notfound-title {
     font-size: 1.3rem;
+  }
+
+  .notfound-message {
+    font-size: 0.85rem;
+  }
+
+  .notfound-actions {
+    padding: 1rem;
   }
 }
