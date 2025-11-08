@@ -5,7 +5,7 @@ import axios from 'axios';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
-  const { user: _user, hasPermission } = useAuth();
+  const { user: _user, hasPermission, hasRole } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -20,12 +20,19 @@ const AdminPanel = () => {
   const [applicationFilter, setApplicationFilter] = useState('pending');
 
   useEffect(() => {
-    if (!hasPermission('manage_users')) {
+    // Allow Owner, Teacher, and Editor to access admin panel
+    if (!hasRole('Owner') && !hasRole('Teacher') && !hasRole('Editor')) {
       navigate('/main');
       return;
     }
+
+    // Set default tab based on role
+    if (hasRole('Editor')) {
+      setActiveTab('posts'); // Editors can only see Content Management
+    }
+
     fetchData();
-  }, [hasPermission, navigate]);
+  }, [hasRole, navigate]);
 
   const fetchData = async () => {
     try {
@@ -211,34 +218,47 @@ const AdminPanel = () => {
       </div>
 
       <div className="admin-tabs">
-        <button
-          className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          👥 User Management
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
-          onClick={() => setActiveTab('applications')}
-        >
-          ✍️ Writer Applications
-          {applications.filter(a => a.status === 'pending').length > 0 && (
-            <span className="notification-badge">
-              {applications.filter(a => a.status === 'pending').length}
-            </span>
-          )}
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'submissions' ? 'active' : ''}`}
-          onClick={() => setActiveTab('submissions')}
-        >
-          📝 Writer Submissions
-          {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length > 0 && (
-            <span className="notification-badge">
-              {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length}
-            </span>
-          )}
-        </button>
+        {/* User Management - Only visible to Owner and Teacher */}
+        {(hasRole('Owner') || hasRole('Teacher')) && (
+          <button
+            className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            👥 User Management
+          </button>
+        )}
+
+        {/* Writer Applications - Only visible to Owner and Teacher */}
+        {(hasRole('Owner') || hasRole('Teacher')) && (
+          <button
+            className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
+            onClick={() => setActiveTab('applications')}
+          >
+            ✍️ Writer Applications
+            {applications.filter(a => a.status === 'pending').length > 0 && (
+              <span className="notification-badge">
+                {applications.filter(a => a.status === 'pending').length}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Writer Submissions - Only visible to Owner and Teacher */}
+        {(hasRole('Owner') || hasRole('Teacher')) && (
+          <button
+            className={`tab-button ${activeTab === 'submissions' ? 'active' : ''}`}
+            onClick={() => setActiveTab('submissions')}
+          >
+            📝 Writer Submissions
+            {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length > 0 && (
+              <span className="notification-badge">
+                {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length}
+              </span>
+            )}
+          </button>
+        )}
+
+        {/* Content Management - Visible to all admin roles */}
         <button
           className={`tab-button ${activeTab === 'posts' ? 'active' : ''}`}
           onClick={() => setActiveTab('posts')}
@@ -248,7 +268,8 @@ const AdminPanel = () => {
       </div>
 
       <div className="admin-content">
-        {activeTab === 'users' && (
+        {/* User Management Tab - Only accessible by Owner and Teacher */}
+        {activeTab === 'users' && (hasRole('Owner') || hasRole('Teacher')) && (
           <div className="users-management">
             <div className="section-header">
               <h2>User Management</h2>
@@ -347,7 +368,8 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {activeTab === 'applications' && (
+        {/* Writer Applications Tab - Only accessible by Owner and Teacher */}
+        {activeTab === 'applications' && (hasRole('Owner') || hasRole('Teacher')) && (
           <div className="applications-management">
             <div className="section-header">
               <h2>Writer Applications</h2>
@@ -480,7 +502,8 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {activeTab === 'submissions' && (
+        {/* Writer Submissions Tab - Only accessible by Owner and Teacher */}
+        {activeTab === 'submissions' && (hasRole('Owner') || hasRole('Teacher')) && (
           <div className="submissions-management">
             <div className="section-header">
               <h2>Writer Submissions</h2>
