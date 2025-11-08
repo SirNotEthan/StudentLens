@@ -199,26 +199,6 @@ const Profile = () => {
                 {user.role}
               </span>
             </div>
-            <div className="profile-action-buttons">
-              <button
-                className="profile-action-btn read-articles-btn"
-                onClick={() => navigate('/main')}
-              >
-                Read Articles
-              </button>
-              <button
-                className="profile-action-btn writer-btn"
-                onClick={() => {
-                  if (user.role === 'Student') {
-                    navigate('/apply-writer');
-                  } else {
-                    navigate('/write');
-                  }
-                }}
-              >
-                {user.role === 'Student' ? 'Apply to Be a Writer' : 'Write Article'}
-              </button>
-            </div>
           </div>
 
           <div className="profile-details">

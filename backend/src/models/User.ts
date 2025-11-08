@@ -639,9 +639,9 @@ export class User implements IUser {
   static getPermissionsByRole(role: UserRole): Permission[] {
     const rolePermissions: Record<UserRole, Permission[]> = {
       Student: ['read_articles', 'apply_writer'],
-      Writer: ['read_articles', 'write_articles', 'view_analytics'],
-      Editor: ['read_articles', 'write_articles', 'edit_articles', 'moderate_content', 'view_analytics', 'manage_categories'],
-      Teacher: ['read_articles', 'write_articles', 'edit_articles', 'publish_articles', 'review_articles', 'moderate_content', 'view_analytics', 'manage_categories', 'manage_users'],
+      Writer: ['read_articles', 'write_articles'],
+      Editor: ['read_articles', 'edit_articles', 'moderate_content', 'view_analytics'],
+      Teacher: ['read_articles', 'review_articles', 'publish_articles', 'manage_users', 'view_analytics'],
       Owner: ['read_articles', 'write_articles', 'edit_articles', 'delete_articles', 'publish_articles', 'review_articles', 'moderate_content', 'view_analytics', 'manage_categories', 'manage_users', 'manage_roles', 'manage_system', 'manage_applications']
     };
 

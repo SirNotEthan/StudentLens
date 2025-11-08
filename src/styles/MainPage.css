@@ -427,7 +427,7 @@ body {
 
 .articles-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
@@ -440,7 +440,7 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 0;
+  border-radius: 8px;
 }
 
 .article-card:hover {

@@ -19,6 +19,7 @@ const MainPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [error, setError] = useState(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   useEffect(() => {
     fetchFeaturedPosts();
@@ -202,21 +203,77 @@ const MainPage = () => {
           <h1 className="main-title">STUDENT LENS</h1>
 
           <div className="header-right">
-            <button className="home-icon-btn" onClick={() => window.location.href = '/main'}>
+            <button className="home-icon-btn" onClick={() => navigate('/main')}>
               <span className="icon-house">🏠</span>
               <span className="icon-label">HOME</span>
             </button>
-            <button className="user-icon-btn" onClick={() => navigate('/profile')}>
-              <span className="icon-user">👤</span>
-              <span className="icon-label">USER</span>
-            </button>
-            <div className="header-actions">
-              <button className="header-action-link" onClick={() => navigate('/profile')}>
-                ACCOUNT SETTINGS
+            <div
+              style={{ position: 'relative' }}
+              onMouseEnter={() => setShowUserDropdown(true)}
+              onMouseLeave={() => setShowUserDropdown(false)}
+            >
+              <button className="user-icon-btn">
+                <span className="icon-user">👤</span>
+                <span className="icon-label">USER</span>
               </button>
-              <button className="header-action-link logout-action" onClick={handleLogout}>
-                LOG OUT
-              </button>
+
+              {showUserDropdown && (
+                <div className="user-dropdown-menu">
+                  <div className="dropdown-header">
+                    <span className="dropdown-title">Menu</span>
+                    <button
+                      className="dropdown-close"
+                      onClick={() => setShowUserDropdown(false)}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="user-info-header">
+                    <span className="user-name">{getUserDisplayName()}</span>
+                    <span
+                      className="role-badge"
+                      style={{ backgroundColor: getRoleBadgeColor(user?.role) }}
+                    >
+                      {getRoleDisplayName(user?.role)}
+                    </span>
+                  </div>
+
+                  <div className="dropdown-divider"></div>
+
+                  <button className="dropdown-link" onClick={() => navigate('/profile')}>
+                    Profile
+                  </button>
+
+                  <button className="dropdown-link" onClick={() => navigate('/account-settings')}>
+                    Account Settings
+                  </button>
+
+                  {hasPermission('view_analytics') && (
+                    <button className="dropdown-link" onClick={() => navigate('/analytics')}>
+                      Analytics
+                    </button>
+                  )}
+
+                  {hasRole('Owner') && (
+                    <button className="dropdown-link" onClick={() => navigate('/admin')}>
+                      Admin Panel
+                    </button>
+                  )}
+
+                  {(hasPermission('write_articles') || hasPermission('edit_articles') || hasRole('Owner')) && (
+                    <button className="dropdown-link" onClick={() => navigate('/write')}>
+                      {hasRole('Writer') ? 'Writer Panel' : hasRole('Editor') ? 'Editor Panel' : 'Content Panel'}
+                    </button>
+                  )}
+
+                  <div className="dropdown-divider"></div>
+
+                  <button className="dropdown-link logout-link" onClick={handleLogout}>
+                    Log Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -319,8 +376,16 @@ const MainPage = () => {
                 <>
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
                     <div className="articles-grid">
-                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 1) : recentPosts.slice(0, 1)).map((post, index) => (
+                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post, index) => (
                         <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
+                          <div className="article-card-image">
+                            {post.featuredImage ? (
+                              <img src={post.featuredImage} alt={post.title} />
+                            ) : (
+                              <div className="placeholder-image"></div>
+                            )}
+                            <button className="enter-text-button">ENTER TEXT HERE</button>
+                          </div>
                           <div className="article-card-content">
                             <span className={`category-tag ${getCategoryColor(post.category)}`}>
                               {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
@@ -333,14 +398,6 @@ const MainPage = () => {
                                 username={post.authorUsername}
                               />
                             </p>
-                          </div>
-                          <div className="article-card-image">
-                            {post.featuredImage ? (
-                              <img src={post.featuredImage} alt={post.title} />
-                            ) : (
-                              <div className="placeholder-image"></div>
-                            )}
-                            <button className="enter-text-button">ENTER TEXT HERE</button>
                           </div>
                         </article>
                       ))}
