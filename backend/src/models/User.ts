@@ -702,6 +702,7 @@ export class User implements IUser {
       bio: this.bio,
       needsSetup: this.needsSetup,
       provider: this.provider,
+      profileVisibility: this.profileVisibility,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

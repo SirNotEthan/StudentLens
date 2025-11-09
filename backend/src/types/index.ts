@@ -268,6 +268,7 @@ export interface UpdateUserRequest {
   streak?: number;
   googleId?: string;
   provider?: AuthProvider;
+  profileVisibility?: boolean;
 }
 
 export interface ChangePasswordRequest {
