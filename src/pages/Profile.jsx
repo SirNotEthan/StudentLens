@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/Profile.css';
 
 const Profile = () => {
@@ -15,6 +16,10 @@ const Profile = () => {
     bio: user?.bio || '',
     profileImage: user?.profileImage || ''
   });
+  const [showPictureModal, setShowPictureModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const handleEditToggle = () => {
     if (isEditing) {
@@ -43,7 +48,7 @@ const Profile = () => {
     setEditLoading(true);
     setEditError('');
 
-    
+
     if (!editData.firstName.trim()) {
       setEditError('First name is required');
       setEditLoading(false);
@@ -76,7 +81,7 @@ const Profile = () => {
       if (result.success) {
         console.log('✅ Profile updated successfully');
         setIsEditing(false);
-        
+
       } else {
         console.error('❌ Profile update failed:', result.error);
         setEditError(result.error || 'Failed to update profile');
@@ -86,6 +91,48 @@ const Profile = () => {
       setEditError(err.message || 'Failed to update profile. Please try again.');
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('Image size must be less than 5MB');
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadProfilePicture = async () => {
+    if (!selectedImage) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('profileImage', selectedImage);
+
+    try {
+      const response = await axios.put('/users/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        // Reload the page to refresh user data from AuthContext
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error);
+      alert(error.response?.data?.message || 'Failed to upload profile picture');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -184,6 +231,17 @@ const Profile = () => {
                    user.email ? user.email[0].toUpperCase() : 'U'}
                 </div>
               )}
+              <button
+                className="edit-avatar-btn"
+                onClick={() => setShowPictureModal(true)}
+                title="Change profile picture"
+                aria-label="Change profile picture"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </button>
             </div>
             <div className="profile-basic-info">
               <h2>{user.fullName || user.username || user.email.split('@')[0]}</h2>
@@ -364,6 +422,54 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Profile Picture Upload Modal */}
+      {showPictureModal && (
+        <div className="profile-picture-modal" onClick={() => setShowPictureModal(false)}>
+          <div className="profile-picture-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Change Profile Picture</h3>
+
+            <div className="upload-area" onClick={() => document.getElementById('profile-image-input').click()}>
+              <input
+                type="file"
+                id="profile-image-input"
+                accept="image/*"
+                onChange={handleImageSelect}
+              />
+              <div className="upload-icon">📸</div>
+              <div className="upload-text">
+                {selectedImage ? selectedImage.name : 'Click to select an image (Max 5MB)'}
+              </div>
+            </div>
+
+            {imagePreview && (
+              <div style={{ textAlign: 'center' }}>
+                <img src={imagePreview} alt="Preview" className="preview-image" />
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button
+                className="cancel-btn"
+                onClick={() => {
+                  setShowPictureModal(false);
+                  setSelectedImage(null);
+                  setImagePreview(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="upload-btn"
+                onClick={handleUploadProfilePicture}
+                disabled={!selectedImage || uploading}
+              >
+                {uploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

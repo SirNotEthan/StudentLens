@@ -480,6 +480,142 @@
   font-weight: 600;
 }
 
+/* Profile Picture Edit Button */
+.edit-avatar-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d5a4d 0%, #1f3e35 100%);
+  color: white;
+  border: 3px solid white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.edit-avatar-btn:hover {
+  background: linear-gradient(135deg, #1f3e35 0%, #14291f 100%);
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+/* Profile Picture Upload Modal */
+.profile-picture-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.profile-picture-modal-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  border: 2px solid #1a1a1a;
+}
+
+.profile-picture-modal h3 {
+  margin: 0 0 1.5rem 0;
+  font-family: 'Playfair Display', serif;
+  color: #2d5a4d;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.upload-area {
+  border: 2px dashed #2d5a4d;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+  background-color: #f9f8f6;
+  border-color: #1f3e35;
+}
+
+.upload-area input[type="file"] {
+  display: none;
+}
+
+.upload-icon {
+  font-size: 3rem;
+  color: #2d5a4d;
+  margin-bottom: 0.5rem;
+}
+
+.upload-text {
+  color: #666;
+  font-family: 'Arial', sans-serif;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 2px solid #e0e0e0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.cancel-btn,
+.upload-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Arial', sans-serif;
+  font-size: 0.9rem;
+}
+
+.cancel-btn {
+  background-color: #f8f9fa;
+  color: #666;
+  border: 2px solid #dee2e6;
+}
+
+.cancel-btn:hover {
+  background-color: #e9ecef;
+}
+
+.upload-btn {
+  background-color: #2d5a4d;
+  color: white;
+  border: none;
+}
+
+.upload-btn:hover:not(:disabled) {
+  background-color: #1f3e35;
+}
+
+.upload-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1024px) {
   .profile-content {
     grid-template-columns: 1fr;
