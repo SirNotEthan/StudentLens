@@ -20,7 +20,14 @@ const UserProfile = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log('🔄 Fetching user profile...');
       const response = await axios.get(`/users/profile/${username}`);
+      console.log('✅ Profile loaded successfully:', response.data);
+      console.log('Profile data structure:', {
+        hasUser: !!response.data?.user,
+        hasData: !!response.data?.data,
+        keys: Object.keys(response.data || {})
+      });
       setProfileData(response.data);
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -70,8 +77,19 @@ const UserProfile = () => {
     );
   }
 
-  if (!profileData) {
-    return null;
+  if (!profileData || !profileData.user) {
+    console.error('Invalid profile data structure:', profileData);
+    return (
+      <div className="user-profile-page">
+        <div className="error-profile">
+          <h2>Error</h2>
+          <p>Invalid profile data received. Please try again.</p>
+          <button onClick={() => navigate('/main')} className="back-button">
+            Back to Main
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const isOwnProfile = currentUser?.id === profileData.user.id;
