@@ -525,7 +525,9 @@ const AdminPanel = () => {
                       {post.category.replace(/_/g, ' ')}
                     </span>
                     <span className={`status-badge ${post.status}`}>
-                      {post.status.replace(/_/g, ' ').toUpperCase()}
+                      {post.status === 'pending_editor' ? 'Pending Review' :
+                       post.status === 'pending_reviewer' ? 'In Review' :
+                       post.status.replace(/_/g, ' ').charAt(0).toUpperCase() + post.status.replace(/_/g, ' ').slice(1)}
                     </span>
                   </div>
 
