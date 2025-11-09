@@ -572,6 +572,59 @@ export const updateProfile = catchAsync(async (
   }
 });
 
+export const updateProfileVisibility = catchAsync(async (
+  req: AuthenticatedRequest,
+  res: Response
+): Promise<void> => {
+  const startTime = Date.now();
+
+  try {
+    const { profileVisibility } = req.body;
+    const userId = req.user.id;
+
+    appLogger.debug('Updating profile visibility', {
+      userId,
+      profileVisibility
+    });
+
+    // Validate input
+    if (typeof profileVisibility !== 'boolean') {
+      throw AppError.badRequest('profileVisibility must be a boolean value');
+    }
+
+    // Update user
+    const user = await User.findById(userId);
+    if (!user) {
+      throw AppError.notFound('User not found');
+    }
+
+    await user.updatePrefs({ profileVisibility });
+
+    const response: ApiResponse = {
+      success: true,
+      message: `Profile is now ${profileVisibility ? 'public' : 'private'}`,
+      data: {
+        profileVisibility: user.profileVisibility
+      }
+    };
+
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('updateProfileVisibility', duration, {
+      userId,
+      profileVisibility
+    });
+
+    res.json(response);
+  } catch (error: any) {
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('updateProfileVisibility', duration, {
+      error: true,
+      userId: req.user.id
+    });
+    throw error;
+  }
+});
+
 export const getPublicProfile = catchAsync(async (
   req: AuthenticatedRequest,
   res: Response
@@ -589,6 +642,11 @@ export const getPublicProfile = catchAsync(async (
     const user = await User.findByUsername(username);
     if (!user || !user.isActive) {
       throw AppError.notFound('User not found');
+    }
+
+    // Check profile visibility
+    if (user.profileVisibility === false && user.id !== req.user.id) {
+      throw AppError.forbidden('This profile is private');
     }
 
     // Get user's posts

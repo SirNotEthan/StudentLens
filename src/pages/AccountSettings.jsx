@@ -8,14 +8,16 @@ const AccountSettings = () => {
   const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
 
-  
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [error, setError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  
+
   const [activeSection, setActiveSection] = useState('Security');
+  const [profileVisibility, setProfileVisibility] = useState(user?.profileVisibility !== false);
+  const [isUpdatingPrivacy, setIsUpdatingPrivacy] = useState(false);
 
   const handleLogoutAllDevices = () => {
     logout();
@@ -77,7 +79,30 @@ const AccountSettings = () => {
 
   const handleSectionChange = (section) => {
     setActiveSection(section);
-    setError(''); 
+    setError('');
+  };
+
+  const handleProfileVisibilityChange = async (isPublic) => {
+    setIsUpdatingPrivacy(true);
+    setError('');
+
+    try {
+      const response = await axios.put('/users/profile-visibility', {
+        profileVisibility: isPublic
+      });
+
+      if (response.data.success) {
+        setProfileVisibility(isPublic);
+        // Update the user context if needed
+      }
+    } catch (error) {
+      console.error('Failed to update profile visibility:', error);
+      setError(error.response?.data?.message || 'Failed to update profile visibility');
+      // Revert the toggle
+      setProfileVisibility(!isPublic);
+    } finally {
+      setIsUpdatingPrivacy(false);
+    }
   };
 
   if (loading) {
@@ -232,14 +257,38 @@ const AccountSettings = () => {
             {activeSection === 'Privacy' && (
               <div>
                 <div className="settings-card">
-                  <h3>Privacy Settings</h3>
-                  <p>Control who can see your information and activities.</p>
-                  <div className="feature-status disabled">
-                    <span>🔒 Profile Visibility</span>
-                    <button className="enable-btn" disabled>
-                      Coming Soon
-                    </button>
+                  <h3>Profile Visibility</h3>
+                  <p>Control who can view your profile page and activities.</p>
+
+                  <div className="privacy-option">
+                    <div className="privacy-info">
+                      <div className="privacy-label">
+                        <strong>{profileVisibility ? '🌐 Public Profile' : '🔒 Private Profile'}</strong>
+                        <p className="privacy-description">
+                          {profileVisibility
+                            ? 'Your profile is visible to all users. Anyone can see your posts, stats, and activity.'
+                            : 'Your profile is private. Only you can access your profile page.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={profileVisibility}
+                        onChange={(e) => handleProfileVisibilityChange(e.target.checked)}
+                        disabled={isUpdatingPrivacy}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
                   </div>
+
+                  {error && activeSection === 'Privacy' && (
+                    <div className="error-message" style={{ marginTop: '1rem' }}>
+                      {error}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

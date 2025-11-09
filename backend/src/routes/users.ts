@@ -10,7 +10,8 @@ import {
   updateUserStreak,
   getProfile,
   updateProfile,
-  getPublicProfile
+  getPublicProfile,
+  updateProfileVisibility
 } from '@/controllers/userController';
 import {
   authenticate,
@@ -38,6 +39,13 @@ router.get('/profile', getProfile);
 router.put('/profile',
   validate(validateProfileUpdate),
   updateProfile
+);
+
+router.put('/profile-visibility',
+  body('profileVisibility')
+    .isBoolean()
+    .withMessage('profileVisibility must be a boolean'),
+  updateProfileVisibility
 );
 
 router.get('/profile/:username', getPublicProfile);

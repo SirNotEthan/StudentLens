@@ -17,6 +17,7 @@ export interface IUser {
   needsSetup: boolean;
   provider: AuthProvider;
   googleId?: string;
+  profileVisibility: boolean;
   createdAt: string;
   updatedAt: string;
   prefs: Record<string, any>;

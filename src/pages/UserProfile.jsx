@@ -58,11 +58,17 @@ const UserProfile = () => {
   }
 
   if (error) {
+    const isPrivateProfile = error.includes('private') || error.includes('Private') || error.includes('visibility');
     return (
       <div className="user-profile-page">
         <div className="error-profile">
-          <h2>Error</h2>
+          <h2>{isPrivateProfile ? '🔒 Private Profile' : 'Error'}</h2>
           <p>{error}</p>
+          {isPrivateProfile && (
+            <p style={{ fontSize: '0.9rem', color: '#888', marginTop: '0.5rem' }}>
+              This user has chosen to keep their profile private.
+            </p>
+          )}
           <button onClick={() => navigate('/main')} className="back-button">
             Back to Main
           </button>
@@ -156,9 +162,9 @@ const UserProfile = () => {
         </div>
 
         {/* Recent Posts Section */}
-        {profileData.recentPosts && profileData.recentPosts.length > 0 && (
-          <div className="profile-posts-section">
-            <h2 className="section-title">Recent Posts</h2>
+        <div className="profile-posts-section">
+          <h2 className="section-title">Recent Articles</h2>
+          {profileData.recentPosts && profileData.recentPosts.length > 0 ? (
             <div className="posts-list">
               {profileData.recentPosts.map(post => (
                 <div
@@ -189,8 +195,12 @@ const UserProfile = () => {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="no-posts-message">
+              No articles published yet.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

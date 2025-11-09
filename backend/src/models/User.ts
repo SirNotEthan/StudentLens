@@ -27,6 +27,7 @@ export class User implements IUser {
   public needsSetup: boolean;
   public provider: 'email' | 'google';
   public googleId?: string;
+  public profileVisibility: boolean;
   public createdAt: string;
   public updatedAt: string;
   public prefs: Record<string, any>;
@@ -48,6 +49,7 @@ export class User implements IUser {
     this.needsSetup = userData.prefs?.needsSetup !== undefined ? userData.prefs.needsSetup : false;
     this.provider = userData.prefs?.provider || 'email';
     this.googleId = userData.prefs?.googleId;
+    this.profileVisibility = userData.prefs?.profileVisibility !== false; // Default to true (public)
     this.createdAt = userData.$createdAt;
     this.updatedAt = userData.$updatedAt;
     this.prefs = userData.prefs || {};
@@ -79,7 +81,8 @@ export class User implements IUser {
         bio: userData.bio || '',
         needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : true,
         provider: userData.provider || 'email',
-        googleId: userData.googleId || undefined
+        googleId: userData.googleId || undefined,
+        profileVisibility: true // Default to public profile
       });
 
       const updatedUser = await users.get(user.$id);

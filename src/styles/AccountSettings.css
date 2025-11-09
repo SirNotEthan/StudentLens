@@ -569,6 +569,92 @@
   font-weight: 600;
 }
 
+/* Privacy Settings Styles */
+.privacy-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+  gap: 2rem;
+}
+
+.privacy-info {
+  flex: 1;
+}
+
+.privacy-label strong {
+  display: block;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.privacy-description {
+  margin: 0.5rem 0 0 0;
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Toggle Switch Styles */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #2d5a4d;
+}
+
+.toggle-switch input:focus + .toggle-slider {
+  box-shadow: 0 0 1px #2d5a4d;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .settings-content {
     grid-template-columns: 1fr;
@@ -597,6 +683,12 @@
   }
 
   .danger-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .privacy-option {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
