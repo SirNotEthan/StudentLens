@@ -47,24 +47,36 @@
 
 /* User Info Section */
 .profile-info-section {
-  background-color: #2d5a4d;
+  background: linear-gradient(135deg, #1a3a2e 0%, #2d5a4d 50%, #1a3a2e 100%);
   color: white;
-  padding: 3rem 2.5rem;
+  padding: 3.5rem 3rem;
   display: flex;
-  gap: 2.5rem;
+  gap: 3rem;
   align-items: center;
-  border-bottom: 3px solid #1a1a1a;
+  border-bottom: 4px solid #1a1a1a;
   position: relative;
+  overflow: hidden;
+}
+
+.profile-info-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2d5a4d, #4a7c6b, #2d5a4d);
 }
 
 .profile-info-section::after {
   content: '';
   position: absolute;
-  bottom: -3px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #2d5a4d, transparent);
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
 }
 
 .profile-avatar {
@@ -74,96 +86,125 @@
 
 .profile-avatar img,
 .avatar-placeholder {
-  width: 150px;
-  height: 150px;
+  width: 160px;
+  height: 160px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center;
-  border: 4px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 2px #1a1a1a;
+  transition: all 0.3s ease;
+}
+
+.profile-avatar img:hover,
+.avatar-placeholder:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 2px #1a1a1a;
 }
 
 .avatar-placeholder {
-  background-color: white;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
   color: #2d5a4d;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 4rem;
+  font-size: 4.5rem;
   font-weight: 700;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Playfair Display', serif;
 }
 
 .edit-avatar-btn {
   position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 40px;
-  height: 40px;
+  bottom: 8px;
+  right: 8px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
-  background-color: #2d5a4d;
+  background: linear-gradient(135deg, #2d5a4d 0%, #1f3e35 100%);
   color: white;
   border: 3px solid white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .edit-avatar-btn:hover {
-  background-color: #1f3e35;
-  transform: scale(1.1);
+  background: linear-gradient(135deg, #1f3e35 0%, #14291f 100%);
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
 }
 
 .profile-details {
   flex: 1;
+  min-width: 0;
 }
 
 .profile-username {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   font-family: 'Playfair Display', serif;
   color: #ffffff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1.2;
 }
 
 .profile-fullname {
-  font-size: 1.2rem;
-  margin: 0 0 1rem 0;
-  opacity: 0.95;
+  font-size: 1.3rem;
+  margin: 0 0 1.25rem 0;
   font-family: 'Arial', sans-serif;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 400;
+  letter-spacing: 0.3px;
 }
 
 .profile-role-badge {
   display: inline-block;
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 25px;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
   font-family: 'Arial', sans-serif;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
 }
 
 .profile-bio {
-  font-size: 1rem;
-  line-height: 1.6;
-  margin: 1rem 0;
-  font-family: 'Arial', sans-serif;
-  color: #ffffff;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 1.25rem 0;
+  font-family: 'Georgia', serif;
+  color: rgba(255, 255, 255, 0.95);
+  font-style: italic;
+  padding-left: 1rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+  max-width: 600px;
 }
 
 .profile-member-since {
-  font-size: 0.9rem;
-  opacity: 0.85;
+  font-size: 0.85rem;
   font-family: 'Arial', sans-serif;
-  margin-top: 1rem;
-  color: #ffffff;
+  margin-top: 1.25rem;
+  color: rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-member-since::before {
+  content: '📅';
+  font-size: 1rem;
 }
 
 /* Stats Section */
@@ -433,15 +474,42 @@
   .profile-info-section {
     flex-direction: column;
     text-align: center;
-    padding: 2rem 1.5rem;
+    padding: 2.5rem 1.5rem;
+    gap: 2rem;
+  }
+
+  .profile-avatar img,
+  .avatar-placeholder {
+    width: 140px;
+    height: 140px;
+  }
+
+  .edit-avatar-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
   }
 
   .profile-username {
-    font-size: 1.75rem;
+    font-size: 2rem;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
   }
 
   .profile-fullname {
+    font-size: 1.1rem;
+  }
+
+  .profile-bio {
+    text-align: left;
     font-size: 1rem;
+    border-left: none;
+    padding-left: 0;
+    border-top: 2px solid rgba(255, 255, 255, 0.3);
+    padding-top: 1rem;
+  }
+
+  .profile-member-since {
+    justify-content: center;
   }
 
   .section-title {
@@ -475,6 +543,46 @@
 }
 
 @media (max-width: 480px) {
+  .profile-info-section {
+    padding: 2rem 1rem;
+  }
+
+  .profile-avatar img,
+  .avatar-placeholder {
+    width: 120px;
+    height: 120px;
+    border-width: 4px;
+  }
+
+  .edit-avatar-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    bottom: 5px;
+    right: 5px;
+  }
+
+  .profile-username {
+    font-size: 1.75rem;
+  }
+
+  .profile-fullname {
+    font-size: 1rem;
+  }
+
+  .profile-role-badge {
+    font-size: 0.7rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .profile-bio {
+    font-size: 0.95rem;
+  }
+
+  .profile-member-since {
+    font-size: 0.8rem;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
