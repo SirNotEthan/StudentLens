@@ -156,7 +156,7 @@
   font-size: 1.3rem;
   margin: 0 0 1.25rem 0;
   font-family: 'Arial', sans-serif;
-  color: #ffffff;
+  color: #ffffff !important;
   font-weight: 400;
   letter-spacing: 0.3px;
 }
@@ -180,7 +180,7 @@
   line-height: 1.7;
   margin: 1.25rem 0;
   font-family: 'Georgia', serif;
-  color: #ffffff;
+  color: #ffffff !important;
   font-style: italic;
   padding-left: 1rem;
   border-left: 3px solid #ffffff;
@@ -191,7 +191,7 @@
   font-size: 0.85rem;
   font-family: 'Arial', sans-serif;
   margin-top: 1.25rem;
-  color: #ffffff;
+  color: #ffffff !important;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 600;
