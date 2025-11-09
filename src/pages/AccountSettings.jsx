@@ -18,6 +18,9 @@ const AccountSettings = () => {
   const [activeSection, setActiveSection] = useState('Security');
   const [profileVisibility, setProfileVisibility] = useState(user?.profileVisibility !== false);
   const [isUpdatingPrivacy, setIsUpdatingPrivacy] = useState(false);
+  const [showBio, setShowBio] = useState(user?.prefs?.showBio !== false);
+  const [showStats, setShowStats] = useState(user?.prefs?.showStats !== false);
+  const [showPosts, setShowPosts] = useState(user?.prefs?.showPosts !== false);
 
   const handleLogoutAllDevices = () => {
     logout();
@@ -93,13 +96,37 @@ const AccountSettings = () => {
 
       if (response.data.success) {
         setProfileVisibility(isPublic);
-        // Update the user context if needed
       }
     } catch (error) {
       console.error('Failed to update profile visibility:', error);
       setError(error.response?.data?.message || 'Failed to update profile visibility');
-      // Revert the toggle
       setProfileVisibility(!isPublic);
+    } finally {
+      setIsUpdatingPrivacy(false);
+    }
+  };
+
+  const handleInfoVisibilityChange = async (field, value) => {
+    setIsUpdatingPrivacy(true);
+    setError('');
+
+    try {
+      const response = await axios.put('/users/profile', {
+        [field]: value
+      });
+
+      if (response.data.success) {
+        if (field === 'showBio') setShowBio(value);
+        else if (field === 'showStats') setShowStats(value);
+        else if (field === 'showPosts') setShowPosts(value);
+      }
+    } catch (error) {
+      console.error('Failed to update information visibility:', error);
+      setError(error.response?.data?.message || 'Failed to update settings');
+      // Revert
+      if (field === 'showBio') setShowBio(!value);
+      else if (field === 'showStats') setShowStats(!value);
+      else if (field === 'showPosts') setShowPosts(!value);
     } finally {
       setIsUpdatingPrivacy(false);
     }
@@ -289,6 +316,80 @@ const AccountSettings = () => {
                       {error}
                     </div>
                   )}
+                </div>
+
+                <div className="settings-card">
+                  <h3>Profile Information Display</h3>
+                  <p>Control what information is shown on your public profile.</p>
+
+                  <div className="privacy-option">
+                    <div className="privacy-info">
+                      <div className="privacy-label">
+                        <strong>{showBio ? '📝 Bio Visible' : '🔒 Bio Hidden'}</strong>
+                        <p className="privacy-description">
+                          {showBio
+                            ? 'Your bio is visible on your profile.'
+                            : 'Your bio is hidden from your profile.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={showBio}
+                        onChange={(e) => handleInfoVisibilityChange('showBio', e.target.checked)}
+                        disabled={isUpdatingPrivacy}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div className="privacy-option">
+                    <div className="privacy-info">
+                      <div className="privacy-label">
+                        <strong>{showStats ? '📊 Stats Visible' : '🔒 Stats Hidden'}</strong>
+                        <p className="privacy-description">
+                          {showStats
+                            ? 'Your statistics (posts, likes, etc.) are visible.'
+                            : 'Your statistics are hidden from your profile.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={showStats}
+                        onChange={(e) => handleInfoVisibilityChange('showStats', e.target.checked)}
+                        disabled={isUpdatingPrivacy}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+
+                  <div className="privacy-option">
+                    <div className="privacy-info">
+                      <div className="privacy-label">
+                        <strong>{showPosts ? '📰 Posts Visible' : '🔒 Posts Hidden'}</strong>
+                        <p className="privacy-description">
+                          {showPosts
+                            ? 'Your recent posts are visible on your profile.'
+                            : 'Your posts list is hidden from your profile.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <label className="toggle-switch">
+                      <input
+                        type="checkbox"
+                        checked={showPosts}
+                        onChange={(e) => handleInfoVisibilityChange('showPosts', e.target.checked)}
+                        disabled={isUpdatingPrivacy}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
                 </div>
               </div>
             )}

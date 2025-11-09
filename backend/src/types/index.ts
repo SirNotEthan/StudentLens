@@ -269,6 +269,9 @@ export interface UpdateUserRequest {
   googleId?: string;
   provider?: AuthProvider;
   profileVisibility?: boolean;
+  showBio?: boolean;
+  showStats?: boolean;
+  showPosts?: boolean;
 }
 
 export interface ChangePasswordRequest {

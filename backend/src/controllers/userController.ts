@@ -706,7 +706,10 @@ export const getPublicProfile = catchAsync(async (
       profileImage: user.profileImage,
       bio: user.bio,
       streak: user.streak,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      showBio: user.prefs?.showBio !== false,
+      showStats: user.prefs?.showStats !== false,
+      showPosts: user.prefs?.showPosts !== false
     };
 
     const stats = {

@@ -11,6 +11,10 @@ const UserProfile = () => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPictureModal, setShowPictureModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchUserProfile();
@@ -47,6 +51,57 @@ const UserProfile = () => {
       Student: '#6c757d'
     };
     return colors[role] || '#6c757d';
+  };
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert('Image size must be less than 5MB');
+        return;
+      }
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadProfilePicture = async () => {
+    if (!selectedImage) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('profileImage', selectedImage);
+
+    try {
+      const response = await axios.put('/users/profile-picture', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.data.success) {
+        // Update profile data with new image
+        setProfileData({
+          ...profileData,
+          user: {
+            ...profileData.user,
+            profileImage: response.data.data.profileImage
+          }
+        });
+        setShowPictureModal(false);
+        setSelectedImage(null);
+        setImagePreview(null);
+      }
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error);
+      alert(error.response?.data?.message || 'Failed to upload profile picture');
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -107,6 +162,15 @@ const UserProfile = () => {
                 {profileData.user.username.charAt(0).toUpperCase()}
               </div>
             )}
+            {isOwnProfile && (
+              <button
+                className="edit-avatar-btn"
+                onClick={() => setShowPictureModal(true)}
+                title="Change profile picture"
+              >
+                📷
+              </button>
+            )}
           </div>
 
           <div className="profile-details">
@@ -120,7 +184,7 @@ const UserProfile = () => {
             >
               {profileData.user.role}
             </div>
-            {profileData.user.bio && (
+            {(profileData.user.showBio !== false && profileData.user.bio) && (
               <p className="profile-bio">{profileData.user.bio}</p>
             )}
             <p className="profile-member-since">
@@ -130,6 +194,7 @@ const UserProfile = () => {
         </div>
 
         {/* Stats Section */}
+        {(profileData.user.showStats !== false || isOwnProfile) && (
         <div className="profile-stats-section">
           <h2 className="section-title">Statistics</h2>
           <div className="stats-grid">
@@ -160,8 +225,10 @@ const UserProfile = () => {
             </div>
           </div>
         </div>
+        )}
 
         {/* Recent Posts Section */}
+        {(profileData.user.showPosts !== false || isOwnProfile) && (
         <div className="profile-posts-section">
           <h2 className="section-title">Recent Articles</h2>
           {profileData.recentPosts && profileData.recentPosts.length > 0 ? (
@@ -201,7 +268,56 @@ const UserProfile = () => {
             </div>
           )}
         </div>
+        )}
       </div>
+
+      {/* Profile Picture Upload Modal */}
+      {showPictureModal && (
+        <div className="profile-picture-modal" onClick={() => setShowPictureModal(false)}>
+          <div className="profile-picture-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Change Profile Picture</h3>
+
+            <div className="upload-area" onClick={() => document.getElementById('profile-image-input').click()}>
+              <input
+                type="file"
+                id="profile-image-input"
+                accept="image/*"
+                onChange={handleImageSelect}
+              />
+              <div className="upload-icon">📸</div>
+              <div className="upload-text">
+                {selectedImage ? selectedImage.name : 'Click to select an image (Max 5MB)'}
+              </div>
+            </div>
+
+            {imagePreview && (
+              <div style={{ textAlign: 'center' }}>
+                <img src={imagePreview} alt="Preview" className="preview-image" />
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <button
+                className="cancel-btn"
+                onClick={() => {
+                  setShowPictureModal(false);
+                  setSelectedImage(null);
+                  setImagePreview(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="upload-btn"
+                onClick={handleUploadProfilePicture}
+                disabled={!selectedImage || uploading}
+              >
+                {uploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
