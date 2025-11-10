@@ -12,6 +12,8 @@ import {
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 import { catchAsync } from '@/middleware/errorHandler';
+import { storage, STORAGE_BUCKET_ID, ID } from '@/config/appwrite';
+const { InputFile } = require('node-appwrite/file');
 
 export const getUsers = catchAsync(async (
   req: AuthenticatedRequest,
@@ -742,6 +744,96 @@ export const getPublicProfile = catchAsync(async (
       error: true,
       requesterId: req.user.id,
       targetUsername: req.params.username
+    });
+    throw error;
+  }
+});
+
+export const uploadProfilePicture = catchAsync(async (
+  req: AuthenticatedRequest & { file?: Express.Multer.File },
+  res: Response
+): Promise<void> => {
+  const startTime = Date.now();
+
+  try {
+    appLogger.debug('Uploading profile picture', {
+      userId: req.user.id,
+      fileSize: req.file?.size,
+      mimeType: req.file?.mimetype
+    });
+
+    if (!req.file) {
+      throw AppError.badRequest('No file uploaded');
+    }
+
+    // Delete old profile image if it exists
+    if (req.user.profileImage) {
+      try {
+        // Extract file ID from URL (Appwrite URLs contain the file ID)
+        const oldImageUrl = req.user.profileImage;
+        const fileIdMatch = oldImageUrl.match(/files\/([^\/]+)\//);
+        if (fileIdMatch && fileIdMatch[1]) {
+          await storage.deleteFile(STORAGE_BUCKET_ID, fileIdMatch[1]);
+          appLogger.debug('Deleted old profile image', {
+            userId: req.user.id,
+            oldFileId: fileIdMatch[1]
+          });
+        }
+      } catch (error) {
+        // Log but don't fail if old image deletion fails
+        appLogger.warn('Failed to delete old profile image', {
+          userId: req.user.id,
+          error
+        });
+      }
+    }
+
+    // Upload new file to Appwrite Storage
+    const fileId = ID.unique();
+    const file = await storage.createFile(
+      STORAGE_BUCKET_ID,
+      fileId,
+      InputFile.fromBuffer(req.file.buffer, req.file.originalname)
+    );
+
+    appLogger.debug('File uploaded to Appwrite Storage', {
+      userId: req.user.id,
+      fileId: file.$id
+    });
+
+    // Get the file URL
+    const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${STORAGE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`;
+
+    // Update user's profile image
+    await req.user.updatePrefs({ profileImage: fileUrl });
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Profile picture uploaded successfully',
+      data: {
+        profileImage: fileUrl,
+        fileId: file.$id
+      }
+    };
+
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('uploadProfilePicture', duration, {
+      userId: req.user.id,
+      fileSize: req.file.size
+    });
+
+    appLogger.info('Profile picture uploaded successfully', {
+      userId: req.user.id,
+      fileId: file.$id,
+      fileSize: req.file.size
+    });
+
+    res.json(response);
+  } catch (error: any) {
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('uploadProfilePicture', duration, {
+      error: true,
+      userId: req.user.id
     });
     throw error;
   }

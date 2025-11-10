@@ -11,7 +11,8 @@ import {
   getProfile,
   updateProfile,
   getPublicProfile,
-  updateProfileVisibility
+  updateProfileVisibility,
+  uploadProfilePicture
 } from '@/controllers/userController';
 import {
   authenticate,
@@ -27,7 +28,8 @@ import {
   validateBusinessRules,
   validate
 } from '@/middleware/validation';
-import { apiLimiter } from '@/middleware/security';
+import { apiLimiter, uploadLimiter } from '@/middleware/security';
+import { uploadProfilePicture as uploadMiddleware } from '@/middleware/upload';
 
 const router = Router();
 
@@ -46,6 +48,12 @@ router.put('/profile-visibility',
     .isBoolean()
     .withMessage('profileVisibility must be a boolean'),
   updateProfileVisibility
+);
+
+router.put('/profile-picture',
+  uploadLimiter,
+  uploadMiddleware,
+  uploadProfilePicture
 );
 
 router.get('/profile/:username', getPublicProfile);

@@ -1,4 +1,4 @@
-import { Client, Account, Databases, Users, ID, Query } from 'node-appwrite';
+import { Client, Account, Databases, Users, Storage, ID, Query } from 'node-appwrite';
 import { EnvironmentVariables } from '@/types';
 import { appLogger } from '@/services/logger';
 
@@ -36,9 +36,11 @@ try {
 const account = new Account(client);
 const databases = new Databases(client);
 const users = new Users(client);
+const storage = new Storage(client);
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
 const USERS_COLLECTION_ID = process.env.APPWRITE_USERS_COLLECTION_ID || 'not-needed-for-appwrite-auth';
+const STORAGE_BUCKET_ID = process.env.APPWRITE_STORAGE_BUCKET_ID || 'profile-pictures';
 
 export const checkAppwriteConnection = async (): Promise<boolean> => {
   try {
@@ -63,8 +65,10 @@ export {
   account,
   databases,
   users,
+  storage,
   DATABASE_ID,
   USERS_COLLECTION_ID,
+  STORAGE_BUCKET_ID,
   ID,
   Query
 };
