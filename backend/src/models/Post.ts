@@ -67,7 +67,12 @@ export class Post implements IPost {
     const startTime = Date.now();
 
     try {
-      appLogger.debug('Creating new post', { title: postData.title, authorId });
+      // Validate required fields
+      if (!authorName || authorName.trim() === '') {
+        throw AppError.badRequest('Author name is required and cannot be empty');
+      }
+
+      appLogger.debug('Creating new post', { title: postData.title, authorId, authorName });
 
       const slug = new Post({ title: postData.title }).generateSlug(postData.title);
       const now = new Date().toISOString();

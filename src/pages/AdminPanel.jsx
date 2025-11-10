@@ -18,6 +18,7 @@ const AdminPanel = () => {
   const [contentSearchQuery, setContentSearchQuery] = useState('');
   const [applicationSearchQuery, setApplicationSearchQuery] = useState('');
   const [applicationFilter, setApplicationFilter] = useState('pending');
+  const [userStatusFilter, setUserStatusFilter] = useState('all');
 
   useEffect(() => {
     // Allow Owner, Teacher, and Editor to access admin panel
@@ -286,6 +287,15 @@ const AdminPanel = () => {
               {userSearchQuery && (
                 <button className="clear-search" onClick={() => setUserSearchQuery('')}>✕</button>
               )}
+              <select
+                value={userStatusFilter}
+                onChange={(e) => setUserStatusFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All Users</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive Only</option>
+              </select>
             </div>
 
             <div className="users-table-container">
@@ -304,15 +314,24 @@ const AdminPanel = () => {
                 <tbody>
                   {users
                     .filter(user => {
-                      if (!userSearchQuery) return true;
-                      const query = userSearchQuery.toLowerCase();
-                      return (
-                        user.username?.toLowerCase().includes(query) ||
-                        user.email?.toLowerCase().includes(query) ||
-                        user.firstName?.toLowerCase().includes(query) ||
-                        user.lastName?.toLowerCase().includes(query) ||
-                        user.role?.toLowerCase().includes(query)
-                      );
+                      // Filter by search query
+                      if (userSearchQuery) {
+                        const query = userSearchQuery.toLowerCase();
+                        const matchesSearch = (
+                          user.username?.toLowerCase().includes(query) ||
+                          user.email?.toLowerCase().includes(query) ||
+                          user.firstName?.toLowerCase().includes(query) ||
+                          user.lastName?.toLowerCase().includes(query) ||
+                          user.role?.toLowerCase().includes(query)
+                        );
+                        if (!matchesSearch) return false;
+                      }
+
+                      // Filter by account status
+                      if (userStatusFilter === 'active' && !user.isActive) return false;
+                      if (userStatusFilter === 'inactive' && user.isActive) return false;
+
+                      return true;
                     })
                     .map(user => (
                     <tr key={user.id} className={!user.isActive ? 'inactive-user' : ''}>

@@ -43,7 +43,11 @@ export const createPost = catchAsync(async (
       category: postData.category
     });
 
-    const post = await Post.create(postData, req.user.id, `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim() || req.user.username, req.user.username);
+    // Construct author name with fallback to email if all fields are empty
+    const fullName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim();
+    const authorName = fullName || req.user.username || req.user.email.split('@')[0] || 'Anonymous';
+
+    const post = await Post.create(postData, req.user.id, authorName, req.user.username);
 
     const response: PostResponse = {
       success: true,
@@ -57,6 +61,14 @@ export const createPost = catchAsync(async (
   } catch (error: any) {
     const duration = Date.now() - startTime;
     appLogger.logPerformance('createPost', duration, { error: true });
+    appLogger.error('Failed to create post', error, {
+      userId: req.user.id,
+      userRole: req.user.role,
+      title: postData?.title,
+      hasUsername: !!req.user.username,
+      hasFirstName: !!req.user.firstName,
+      hasLastName: !!req.user.lastName
+    });
     throw error;
   }
 });

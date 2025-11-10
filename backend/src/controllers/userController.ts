@@ -22,7 +22,7 @@ export const getUsers = catchAsync(async (
   const startTime = Date.now();
 
   try {
-    const { page = 1, limit = 10, role, search, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 10, role, search, sortBy = 'createdAt', sortOrder = 'desc', isActive } = req.query;
 
     appLogger.debug('Getting users', {
       userId: req.user.id,
@@ -31,10 +31,17 @@ export const getUsers = catchAsync(async (
       role,
       search,
       sortBy,
-      sortOrder
+      sortOrder,
+      isActive
     });
 
-    const query: any = { isActive: true };
+    const query: any = {};
+
+    // Only filter by isActive if explicitly provided in query params
+    // This allows admin panel to see all users (active and inactive)
+    if (isActive !== undefined) {
+      query.isActive = isActive === 'true' || isActive === true;
+    }
 
     if (role && role !== 'all') {
       query.role = role;
