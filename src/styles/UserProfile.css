@@ -18,23 +18,24 @@
 .back-button,
 .edit-profile-button {
   padding: 0.6rem 1.25rem;
-  background-color: #2d5a4d;
+  background-color: #1a1a1a;
   color: white;
-  border: none;
-  border-radius: 2px;
+  border: 2px solid #1a1a1a;
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
   font-family: 'Arial', sans-serif;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   transition: all 0.2s ease;
 }
 
 .back-button:hover,
 .edit-profile-button:hover {
-  background-color: #1f3e35;
-  box-shadow: 0 2px 8px rgba(45, 90, 77, 0.3);
+  background-color: transparent;
+  color: #1a1a1a;
+  box-shadow: none;
 }
 
 .profile-container {
@@ -700,32 +701,35 @@
 .cancel-btn,
 .upload-btn {
   padding: 0.75rem 1.5rem;
-  border-radius: 6px;
-  font-weight: 600;
+  border-radius: 0;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: 'Arial', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid #1a1a1a;
 }
 
 .cancel-btn {
-  background-color: #f8f9fa;
-  color: #666;
-  border: 2px solid #dee2e6;
+  background-color: transparent;
+  color: #1a1a1a;
 }
 
 .cancel-btn:hover {
-  background-color: #e9ecef;
+  background-color: #1a1a1a;
+  color: white;
 }
 
 .upload-btn {
-  background-color: #2d5a4d;
+  background-color: #1a1a1a;
   color: white;
-  border: none;
 }
 
 .upload-btn:hover:not(:disabled) {
-  background-color: #1f3e35;
+  background-color: transparent;
+  color: #1a1a1a;
 }
 
 .upload-btn:disabled {

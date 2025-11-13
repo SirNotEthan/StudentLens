@@ -29,21 +29,25 @@
 }
 
 .back-button, .settings-link {
-  background: #2d5a4d;
+  background: #1a1a1a;
   color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 5px;
+  border: 2px solid #1a1a1a;
+  padding: 0.6rem 1.25rem;
+  border-radius: 0;
   text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: 700;
+  transition: all 0.2s ease;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Arial', sans-serif;
 }
 
 .back-button:hover, .settings-link:hover {
-  background: #1f3d33;
-  transform: translateY(-1px);
+  background: transparent;
+  color: #1a1a1a;
+  transform: none;
 }
 
 .profile-content {
