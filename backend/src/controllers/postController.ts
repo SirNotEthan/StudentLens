@@ -64,7 +64,7 @@ export const createPost = catchAsync(async (
     appLogger.error('Failed to create post', error, {
       userId: req.user.id,
       userRole: req.user.role,
-      title: postData?.title,
+      title: req.body?.title,
       hasUsername: !!req.user.username,
       hasFirstName: !!req.user.firstName,
       hasLastName: !!req.user.lastName

@@ -40,7 +40,7 @@ export const getUsers = catchAsync(async (
     // Only filter by isActive if explicitly provided in query params
     // This allows admin panel to see all users (active and inactive)
     if (isActive !== undefined) {
-      query.isActive = isActive === 'true' || isActive === true;
+      query.isActive = isActive === 'true';
     }
 
     if (role && role !== 'all') {
