@@ -77,7 +77,7 @@ export class Post implements IPost {
       const slug = new Post({ title: postData.title }).generateSlug(postData.title);
       const now = new Date().toISOString();
 
-      const documentData = {
+      const documentData: any = {
         title: postData.title,
         content: postData.content,
         excerpt: postData.excerpt || postData.content.substring(0, 150) + '...',
@@ -87,11 +87,16 @@ export class Post implements IPost {
         tags: Array.isArray(postData.tags) ? postData.tags : [],
         status: postData.status || 'draft',
         featuredImage: postData.featuredImage || '',
-        publishedAt: postData.status === 'published' ? now : '',
         viewCount: 0,
         likes: 0,
         slug: slug + '-' + Date.now() // Add timestamp to ensure uniqueness
       };
+
+      // Only set publishedAt if the post is being published
+      // Don't set it to empty string as that can cause issues with datetime fields
+      if (postData.status === 'published') {
+        documentData.publishedAt = now;
+      }
 
       const document = await databases.createDocument(
         DATABASE_ID,
@@ -411,11 +416,17 @@ export class Post implements IPost {
       throw AppError.badRequest('Post must be pending reviewer approval to publish');
     }
 
-    const now = new Date().toISOString();
-    return await this.update({
-      status: 'published',
-      publishedAt: now
-    });
+    // Only set publishedAt if this is the first time being published
+    // This preserves the original publication date
+    const updateData: any = {
+      status: 'published'
+    };
+
+    if (!this.publishedAt) {
+      updateData.publishedAt = new Date().toISOString();
+    }
+
+    return await this.update(updateData);
   }
 
   async rejectForRevision(reason?: string): Promise<Post> {
