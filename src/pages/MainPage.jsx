@@ -280,16 +280,15 @@ const MainPage = () => {
                     </button>
                   )}
 
-                  {hasRole('Writer') && (
-                    <button className="dropdown-link" onClick={() => navigate('/write')}>
-                      Writer Panel
-                    </button>
-                  )}
-
-                  {hasRole('Owner') && (
-                    <button className="dropdown-link" onClick={() => navigate('/write')}>
-                      Writer Panel
-                    </button>
+                  {(hasPermission('write_articles') || hasRole('Writer') || hasRole('Owner')) && (
+                    <>
+                      <button className="dropdown-link" onClick={() => navigate('/my-drafts')}>
+                        My Articles
+                      </button>
+                      <button className="dropdown-link" onClick={() => navigate('/write')}>
+                        Write Article
+                      </button>
+                    </>
                   )}
 
                   <div className="dropdown-divider"></div>

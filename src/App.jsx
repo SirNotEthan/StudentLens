@@ -13,6 +13,7 @@ import Welcome from './pages/Welcome'
 import Analytics from './components/Analytics'
 import AdminPanel from './pages/AdminPanel'
 import WriteArticle from './pages/WriteArticle'
+import MyDrafts from './pages/MyDrafts'
 import PostDetail from './pages/PostDetail'
 import AboutUs from './pages/AboutUs'
 import ContactUs from './pages/ContactUs'
@@ -83,6 +84,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <WriteArticle />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-drafts"
+            element={
+              <ProtectedRoute>
+                <MyDrafts />
               </ProtectedRoute>
             }
           />
