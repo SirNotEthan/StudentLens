@@ -1,10 +1,47 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { AlertModal } from '../components/Modal';
 import '../styles/Login.css';
 
 const Login = () => {
-  const { user, loading, googleSignup, googleLogin } = useAuth();
+  const { user, loading, error, clearError, googleSignup, googleLogin } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorTitle, setErrorTitle] = useState('Authentication Error');
+
+  useEffect(() => {
+    const urlError = searchParams.get('error');
+    if (urlError || error) {
+      const message = urlError || error;
+
+      if (message.includes('inactive') || message.includes('deactivated')) {
+        setErrorTitle('Account Deactivated');
+        setErrorMessage('Your account has been deactivated. Please contact support at support@studentlens.com for assistance.');
+      } else if (message === 'auth_failed') {
+        setErrorTitle('Authentication Failed');
+        setErrorMessage('We could not authenticate your account. Please try again or contact support.');
+      } else if (message === 'no_token') {
+        setErrorTitle('Authentication Error');
+        setErrorMessage('No authentication token received. Please try again.');
+      } else {
+        setErrorTitle('Error');
+        setErrorMessage(message);
+      }
+
+      setShowErrorModal(true);
+
+      if (urlError) {
+        setSearchParams({});
+      }
+    }
+  }, [searchParams, error, setSearchParams]);
+
+  const handleCloseModal = () => {
+    setShowErrorModal(false);
+    clearError();
+  };
 
   if (user && !loading) {
     return <Navigate to="/main" replace />;
@@ -19,7 +56,16 @@ const Login = () => {
   }
 
   return (
-    <div className="login-container">
+    <>
+      <AlertModal
+        isOpen={showErrorModal}
+        onClose={handleCloseModal}
+        title={errorTitle}
+        message={errorMessage}
+        type="error"
+        buttonText="OK"
+      />
+      <div className="login-container">
       <div className="login-left">
         <h1 className="welcome-text">
           WELCOME TO THE<br />
@@ -59,6 +105,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

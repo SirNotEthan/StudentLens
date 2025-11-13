@@ -2,18 +2,12 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import axios from 'axios';
 
 const AuthContext = createContext();
-
-// For API calls, use relative path (works with same-origin deployment)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// For OAuth redirects, we need the full URL
-// In production, the frontend and backend are on the same domain, so use window.location.origin
 const getOAuthRedirectBase = () => {
-  // If we have a backend URL env var, use it
   if (import.meta.env.VITE_BACKEND_URL) {
     return import.meta.env.VITE_BACKEND_URL;
   }
-  // Otherwise, use current origin (works when frontend and backend are same domain)
   return window.location.origin;
 };
 
@@ -80,11 +74,15 @@ export const AuthProvider = ({ children }) => {
 
       console.log('✅ Profile loaded successfully:', completeUser);
       setUser(completeUser);
+      setError(null);
     } catch (error) {
       console.error('❌ Failed to fetch profile:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to load profile';
+      setError(errorMessage);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
       setUser(null);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -158,8 +156,9 @@ export const AuthProvider = ({ children }) => {
       console.error('Token callback error:', error);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
-      setError('Authentication failed');
-      return { success: false, error: 'Authentication failed' };
+      const errorMessage = error.response?.data?.message || 'Authentication failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
     }

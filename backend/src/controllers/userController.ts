@@ -37,8 +37,6 @@ export const getUsers = catchAsync(async (
 
     const query: any = {};
 
-    // Only filter by isActive if explicitly provided in query params
-    // This allows admin panel to see all users (active and inactive)
     if (isActive !== undefined) {
       query.isActive = isActive === 'true';
     }
@@ -223,8 +221,15 @@ export const updateUser = catchAsync(async (
     if (updateData.bio !== undefined) filteredUpdateData.bio = updateData.bio;
     if (updateData.profileImage !== undefined) filteredUpdateData.profileImage = updateData.profileImage;
 
-    if (req.user.hasPermission('manage_users')) {
-      if (updateData.isActive !== undefined) filteredUpdateData.isActive = updateData.isActive;
+    if (req.user.role === 'Owner') {
+      if (updateData.isActive !== undefined) {
+        if (req.user.id === userId && updateData.isActive === false) {
+          throw AppError.badRequest('Cannot deactivate your own account');
+        }
+        filteredUpdateData.isActive = updateData.isActive;
+      }
+    } else if (updateData.isActive !== undefined) {
+      throw AppError.forbidden('Only Owner role can activate or deactivate user accounts');
     }
 
     await user.updatePrefs(filteredUpdateData);
@@ -773,10 +778,8 @@ export const uploadProfilePicture = catchAsync(async (
       throw AppError.badRequest('No file uploaded');
     }
 
-    // Delete old profile image if it exists
     if (req.user.profileImage) {
       try {
-        // Extract file ID from URL (Appwrite URLs contain the file ID)
         const oldImageUrl = req.user.profileImage;
         const fileIdMatch = oldImageUrl.match(/files\/([^\/]+)\//);
         if (fileIdMatch && fileIdMatch[1]) {
@@ -787,7 +790,6 @@ export const uploadProfilePicture = catchAsync(async (
           });
         }
       } catch (error) {
-        // Log but don't fail if old image deletion fails
         appLogger.warn('Failed to delete old profile image', {
           userId: req.user.id,
           error
@@ -795,7 +797,6 @@ export const uploadProfilePicture = catchAsync(async (
       }
     }
 
-    // Upload new file to Appwrite Storage
     const fileId = ID.unique();
     const file = await storage.createFile(
       STORAGE_BUCKET_ID,
@@ -808,10 +809,8 @@ export const uploadProfilePicture = catchAsync(async (
       fileId: file.$id
     });
 
-    // Get the file URL
     const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${STORAGE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`;
 
-    // Update user's profile image
     await req.user.updatePrefs({ profileImage: fileUrl });
 
     const response: ApiResponse = {

@@ -23,15 +23,16 @@ const AuthCallback = () => {
         try {
           const result = await setTokenFromCallback(token);
           if (result.success) {
-            
-            
             navigate('/main', { replace: true });
           } else {
-            navigate('/login?error=auth_failed', { replace: true });
+            // Pass the error message to login page
+            const errorParam = encodeURIComponent(result.error || 'auth_failed');
+            navigate(`/login?error=${errorParam}`, { replace: true });
           }
         } catch (error) {
           console.error('Token callback failed:', error);
-          navigate('/login?error=auth_failed', { replace: true });
+          const errorMsg = error.response?.data?.message || 'auth_failed';
+          navigate(`/login?error=${encodeURIComponent(errorMsg)}`, { replace: true });
         }
       } else {
         navigate('/login?error=no_token', { replace: true });

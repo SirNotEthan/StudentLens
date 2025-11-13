@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { AlertModal, ConfirmModal } from '../components/Modal';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
@@ -20,16 +21,33 @@ const AdminPanel = () => {
   const [applicationFilter, setApplicationFilter] = useState('pending');
   const [userStatusFilter, setUserStatusFilter] = useState('all');
 
+  const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'warning' });
+
+  const showAlert = (title, message, type = 'info') => {
+    setAlertModal({ isOpen: true, title, message, type });
+  };
+
+  const showConfirm = (title, message, onConfirm, type = 'warning') => {
+    setConfirmModal({ isOpen: true, title, message, onConfirm, type });
+  };
+
+  const closeAlert = () => {
+    setAlertModal({ isOpen: false, title: '', message: '', type: 'info' });
+  };
+
+  const closeConfirm = () => {
+    setConfirmModal({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'warning' });
+  };
+
   useEffect(() => {
-    // Allow Owner, Teacher, and Editor to access admin panel
     if (!hasRole('Owner') && !hasRole('Teacher') && !hasRole('Editor')) {
       navigate('/main');
       return;
     }
 
-    // Set default tab based on role
     if (hasRole('Editor')) {
-      setActiveTab('posts'); // Editors can only see Content Management
+      setActiveTab('posts');
     }
 
     fetchData();
@@ -58,13 +76,11 @@ const AdminPanel = () => {
     try {
       const response = await axios.put(`/users/${userId}/role`, { role: newRole });
 
-      // Update the user in the list with the response data
       if (response.data.success && response.data.data?.user) {
         const updatedUser = response.data.data.user;
         setUsers(users.map(u => u.id === userId ? updatedUser : u));
         alert(`Successfully updated role to ${newRole}`);
       } else {
-        // Fallback update if no user data returned
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole, permissions: [] } : u));
         alert(`Role updated to ${newRole}`);
       }
@@ -76,7 +92,6 @@ const AdminPanel = () => {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to update user role';
       alert(`Error: ${errorMessage}`);
 
-      // Log more details for debugging
       if (error.response) {
         console.error('Response status:', error.response.status);
         console.error('Response data:', error.response.data);
@@ -84,10 +99,23 @@ const AdminPanel = () => {
     }
   };
 
-  const handleUserToggle = async (userId, isActive) => {
+  const handleUserToggle = async (userId, isActive, userName) => {
+    if (_user.id === userId && isActive) {
+      alert('You cannot deactivate your own account.');
+      return;
+    }
+
+    const action = isActive ? 'deactivate' : 'activate';
+    const confirmMessage = isActive
+      ? `Are you sure you want to deactivate ${userName}? They will not be able to log in until their account is reactivated.`
+      : `Are you sure you want to activate ${userName}? They will be able to log in again.`;
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
     try {
       const response = await axios.put(`/users/${userId}`, { isActive: !isActive });
-      // Update the user in the list with the response data
       if (response.data.success && response.data.data?.user) {
         setUsers(users.map(u => u.id === userId ? response.data.data.user : u));
       } else {
@@ -119,7 +147,6 @@ const AdminPanel = () => {
     try {
       const response = await axios.put(`/applications/${applicationId}/review`, { status });
       if (response.data.success) {
-        // Refresh applications
         const applicationsRes = await axios.get('/applications');
         setApplications(applicationsRes.data.data?.applications || []);
         alert(`Application ${status} successfully!`);
@@ -314,7 +341,6 @@ const AdminPanel = () => {
                 <tbody>
                   {users
                     .filter(user => {
-                      // Filter by search query
                       if (userSearchQuery) {
                         const query = userSearchQuery.toLowerCase();
                         const matchesSearch = (
@@ -327,7 +353,6 @@ const AdminPanel = () => {
                         if (!matchesSearch) return false;
                       }
 
-                      // Filter by account status
                       if (userStatusFilter === 'active' && !user.isActive) return false;
                       if (userStatusFilter === 'inactive' && user.isActive) return false;
 
@@ -376,12 +401,17 @@ const AdminPanel = () => {
                           >
                             Edit Role
                           </button>
-                          <button
-                            className={`toggle-status-btn ${user.isActive ? 'deactivate' : 'activate'}`}
-                            onClick={() => handleUserToggle(user.id, user.isActive)}
-                          >
-                            {user.isActive ? 'Deactivate' : 'Activate'}
-                          </button>
+                          {/* Only Owner role can activate/deactivate accounts */}
+                          {hasRole('Owner') && (
+                            <button
+                              className={`toggle-status-btn ${user.isActive ? 'deactivate' : 'activate'}`}
+                              onClick={() => handleUserToggle(user.id, user.isActive, user.username || user.name)}
+                              disabled={_user.id === user.id && user.isActive}
+                              title={_user.id === user.id && user.isActive ? 'Cannot deactivate your own account' : ''}
+                            >
+                              {user.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

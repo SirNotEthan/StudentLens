@@ -397,6 +397,19 @@
   border-color: #bd2130;
 }
 
+/* Disabled state for toggle buttons */
+.toggle-status-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.toggle-status-btn:disabled:hover {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
 
 .posts-grid {
   display: grid;

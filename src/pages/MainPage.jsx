@@ -401,7 +401,7 @@ const MainPage = () => {
                 <>
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
                     <div className="articles-grid">
-                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 4) : recentPosts.slice(0, 4)).map((post, index) => (
+                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post, index) => (
                         <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
                           <div className="article-card-content">
                             <span className={`category-tag ${getCategoryColor(post.category)}`}>
