@@ -324,6 +324,7 @@ body {
   border: none;
   border-right: 2px solid #c0c0c0;
   padding-right: 2rem;
+  align-self: start;
 }
 
 .games-section {
@@ -331,13 +332,13 @@ body {
 }
 
 .sidebar-title {
-  font-size: 0.9rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   text-align: left;
   font-family: 'Arial', sans-serif;
-  border-bottom: 2px solid #1a1a1a;
+  border-bottom: 2px solid #000000;
   padding-bottom: 0.5rem;
   letter-spacing: 0.5px;
   text-transform: uppercase;
