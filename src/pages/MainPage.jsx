@@ -402,6 +402,14 @@ const MainPage = () => {
                     <div className="articles-grid">
                       {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post) => (
                         <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
+                          <div className="article-card-image">
+                            {post.featuredImage ? (
+                              <img src={post.featuredImage} alt={post.title} />
+                            ) : (
+                              <div className="placeholder-image"></div>
+                            )}
+                            <button className="enter-text-button">View Article</button>
+                          </div>
                           <div className="article-card-content">
                             <span className={`category-tag ${getCategoryColor(post.category)}`}>
                               {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
@@ -414,14 +422,6 @@ const MainPage = () => {
                                 username={post.authorUsername}
                               />
                             </p>
-                          </div>
-                          <div className="article-card-image">
-                            {post.featuredImage ? (
-                              <img src={post.featuredImage} alt={post.title} />
-                            ) : (
-                              <div className="placeholder-image"></div>
-                            )}
-                            <button className="enter-text-button">View Article</button>
                           </div>
                         </article>
                       ))}
@@ -450,7 +450,6 @@ const MainPage = () => {
             <div className="info-box streak-info">
               <h4>STREAK</h4>
               <div className="streak-display">
-                <div className="streak-flames">🔥🔥🔥</div>
                 <div className="streak-counter">
                   <span className="streak-number">{user?.streak || 5}</span>
                   <span className="streak-label">DAYS<br />NEW STREAK!</span>
@@ -494,27 +493,6 @@ const MainPage = () => {
               onClick={() => setSelectedCategory('SPORTS')}
             >
               SPORTS
-            </span>
-            <span
-              className={`tag tag-events ${selectedCategory === 'EVENTS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('EVENTS')}
-              onClick={() => setSelectedCategory('EVENTS')}
-            >
-              EVENTS
-            </span>
-            <span
-              className={`tag tag-clubs ${selectedCategory === 'CLUBS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('CLUBS')}
-              onClick={() => setSelectedCategory('CLUBS')}
-            >
-              CLUBS
-            </span>
-            <span
-              className={`tag tag-announcements ${selectedCategory === 'ANNOUNCEMENTS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('ANNOUNCEMENTS')}
-              onClick={() => setSelectedCategory('ANNOUNCEMENTS')}
-            >
-              ANNOUNCEMENTS
             </span>
           </div>
         </div>
