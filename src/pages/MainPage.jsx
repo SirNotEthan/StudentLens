@@ -137,7 +137,11 @@ const MainPage = () => {
       SPORTS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
       EVENTS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
       CLUBS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
-      ANNOUNCEMENTS: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' }
+      ANNOUNCEMENTS: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' },
+      WORLD: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
+      SCIENCE_TECH: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
+      CULTURE: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
+      ART: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' }
     };
     return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };
   };
@@ -203,18 +207,23 @@ const MainPage = () => {
     <div className="main-page">
       <header className="header">
         <div className="header-top">
-          <div className="search-container">
-            <span className="search-icon">🔍</span>
-            <input
-              type="text"
-              placeholder="Search"
-              className="search-input"
-              value={searchQuery}
-              onChange={handleSearchInputChange}
-            />
-            {searchQuery && (
-              <button className="search-clear" onClick={clearSearch}>✕</button>
-            )}
+          <div className="header-left">
+            <div className="search-container">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search"
+                className="search-input"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+              />
+              {searchQuery && (
+                <button className="search-clear" onClick={clearSearch}>✕</button>
+              )}
+            </div>
+            <div className="header-date-inline">
+              <span className="date-text">{getCurrentDate()}</span>
+            </div>
           </div>
 
           <h1 className="main-title">STUDENT LENS</h1>
@@ -300,10 +309,6 @@ const MainPage = () => {
               )}
             </div>
           </div>
-        </div>
-
-        <div className="header-date">
-          <span className="date-text">{getCurrentDate()}</span>
         </div>
       </header>
 
@@ -399,33 +404,50 @@ const MainPage = () => {
               ) : (
                 <>
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
-                    <div className="articles-grid">
-                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post) => (
-                        <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
-                          <div className="article-card-image">
-                            {post.featuredImage ? (
-                              <img src={post.featuredImage} alt={post.title} />
+                    <>
+                      <div className="articles-grid">
+                        {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post) => (
+                          <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
+                            <div className="article-card-image">
+                              {post.featuredImage ? (
+                                <img src={post.featuredImage} alt={post.title} />
+                              ) : (
+                                <div className="placeholder-image"></div>
+                              )}
+                              <button className="enter-text-button">View Article</button>
+                            </div>
+                            <div className="article-card-content">
+                              <span className={`category-tag ${getCategoryColor(post.category)}`}>
+                                {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
+                              </span>
+                              <h3 className="article-card-title">{post.title}</h3>
+                              <p className="article-card-author">
+                                <AuthorLink
+                                  authorName={post.authorName}
+                                  authorId={post.authorId}
+                                  username={post.authorUsername}
+                                />
+                              </p>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                      {(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]) && (
+                        <article
+                          className="featured-bottom-article"
+                          onClick={() => navigate(`/post/${(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).id}`)}
+                        >
+                          <div className="featured-bottom-image">
+                            {(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).featuredImage ? (
+                              <img src={(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).featuredImage} alt={(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).title} />
                             ) : (
                               <div className="placeholder-image"></div>
                             )}
-                            <button className="enter-text-button">View Article</button>
-                          </div>
-                          <div className="article-card-content">
-                            <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                              {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
-                            </span>
-                            <h3 className="article-card-title">{post.title}</h3>
-                            <p className="article-card-author">
-                              <AuthorLink
-                                authorName={post.authorName}
-                                authorId={post.authorId}
-                                username={post.authorUsername}
-                              />
-                            </p>
+                            <button className="enter-text-button">Enter Text Here</button>
                           </div>
                         </article>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   ) : (
                     <article className="featured-main">
                       <div className="article-image placeholder-image"></div>
@@ -493,6 +515,27 @@ const MainPage = () => {
               onClick={() => setSelectedCategory('SPORTS')}
             >
               SPORTS
+            </span>
+            <span
+              className={`tag tag-events ${selectedCategory === 'EVENTS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('EVENTS')}
+              onClick={() => setSelectedCategory('EVENTS')}
+            >
+              EVENTS
+            </span>
+            <span
+              className={`tag tag-clubs ${selectedCategory === 'CLUBS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('CLUBS')}
+              onClick={() => setSelectedCategory('CLUBS')}
+            >
+              CLUBS
+            </span>
+            <span
+              className={`tag tag-announcements ${selectedCategory === 'ANNOUNCEMENTS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('ANNOUNCEMENTS')}
+              onClick={() => setSelectedCategory('ANNOUNCEMENTS')}
+            >
+              ANNOUNCEMENTS
             </span>
           </div>
         </div>

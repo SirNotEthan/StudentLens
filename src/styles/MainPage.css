@@ -33,11 +33,23 @@ body {
 .header-top {
   display: grid;
   grid-template-columns: 200px 1fr 200px;
-  align-items: center;
-  padding: 0.5rem 0;
+  align-items: flex-start;
+  padding: 0.5rem 2rem 0.75rem 2rem;
   gap: 2rem;
   max-width: 1400px;
   width: 100%;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+.header-date-inline {
+  text-align: left;
 }
 
 .header-date {
@@ -63,17 +75,18 @@ body {
   padding: 0.25rem 0;
   border: none;
   background: transparent;
-  border-bottom: 1px solid transparent;
+  border-bottom: none;
   font-size: 0.9rem;
   font-family: inherit;
   width: 150px;
   outline: none;
   color: #1a1a1a;
-  transition: border-color 0.2s ease;
+  transition: none;
 }
 
 .search-input:focus {
-  border-bottom-color: #1a1a1a;
+  border-bottom: none;
+  outline: none;
 }
 
 .search-input::placeholder {
@@ -329,6 +342,7 @@ body {
 
 .games-section {
   margin-bottom: 2rem;
+  margin-top: 3.5rem;
 }
 
 .sidebar-title {
@@ -637,6 +651,31 @@ body {
   cursor: pointer;
 }
 
+.featured-bottom-article {
+  margin-top: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.featured-bottom-article:hover {
+  transform: translateY(-2px);
+}
+
+.featured-bottom-image {
+  width: 100%;
+  height: 280px;
+  background-color: #d4d4d4;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.featured-bottom-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .feature-image {
   width: 100%;
   height: 200px;
@@ -806,9 +845,10 @@ body {
   font-size: 0.65rem;
   line-height: 1.5;
   color: #555;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Times New Roman', Times, serif;
   margin-top: 0.75rem;
   text-align: left;
+  text-transform: none;
 }
 
 .contact-button {
@@ -1010,17 +1050,17 @@ body {
 
 /* Footer */
 .footer {
-  background-color: #e89557;
+  background-color: #f5a963;
   color: white;
-  padding: 2.5rem 2rem;
+  padding: 2rem 3rem;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   gap: 4rem;
-  border-top: 1px solid #d6864a;
+  border-top: 1px solid #e89557;
   width: 100%;
   margin-top: auto;
-  min-height: 80px;
+  min-height: 100px;
 }
 
 .footer-title {
