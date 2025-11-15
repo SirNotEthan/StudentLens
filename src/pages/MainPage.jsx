@@ -315,7 +315,7 @@ const MainPage = () => {
       <div className="main-content">
         <aside className="left-sidebar">
           <div className="games-section">
-            <h3 className="sidebar-title">GAMES</h3>
+            <h3 className="sidebar-section-title">GAMES</h3>
             <div className="games-list">
               <div className="game-item spelling-bee">
                 <div className="game-icon">
