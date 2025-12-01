@@ -379,35 +379,33 @@ const MainPage = () => {
               ) : (
                 <>
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
-                    <>
-                      <div className="articles-grid">
-                        {(featuredPosts.length > 0 ? featuredPosts.slice(0, 2) : recentPosts.slice(0, 2)).map((post) => (
-                          <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
-                            <div className="article-card-image">
-                              {post.featuredImage ? (
-                                <img src={post.featuredImage} alt={post.title} />
-                              ) : (
-                                <div className="placeholder-image"></div>
-                              )}
-                              <button className="enter-text-button">View Article</button>
-                            </div>
-                            <div className="article-card-content">
-                              <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                                {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
-                              </span>
-                              <h3 className="article-card-title">{post.title}</h3>
-                              <p className="article-card-author">
-                                <AuthorLink
-                                  authorName={post.authorName}
-                                  authorId={post.authorId}
-                                  username={post.authorUsername}
-                                />
-                              </p>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    </>
+                    <div className="articles-grid">
+                      {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post) => (
+                        <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
+                          <div className="article-card-content">
+                            <span className={`category-tag ${getCategoryColor(post.category)}`}>
+                              {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
+                            </span>
+                            <h3 className="article-card-title">{post.title}</h3>
+                            <p className="article-card-author">
+                              <AuthorLink
+                                authorName={post.authorName}
+                                authorId={post.authorId}
+                                username={post.authorUsername}
+                              />
+                            </p>
+                          </div>
+                          <div className="article-card-image">
+                            {post.featuredImage ? (
+                              <img src={post.featuredImage} alt={post.title} />
+                            ) : (
+                              <div className="placeholder-image"></div>
+                            )}
+                            <button className="enter-text-button">View Article</button>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
                   ) : (
                     <article className="featured-main">
                       <div className="article-image placeholder-image"></div>

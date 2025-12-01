@@ -486,8 +486,8 @@ body {
 
 .articles-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
 }
 
 .article-card {
