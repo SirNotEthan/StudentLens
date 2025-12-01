@@ -306,15 +306,16 @@ body {
 
 .main-title {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 400;
   color: #1a1a1a;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   margin: 0;
   font-family: 'Playfair Display', serif;
   text-align: center;
   justify-self: center;
-  border-bottom: 2px solid #1a1a1a;
-  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #1a1a1a;
+  padding-bottom: 0.5rem;
+  font-style: normal;
 }
 
 /* Main Content Layout */
@@ -349,6 +350,41 @@ body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.games-coming-soon {
+  background-color: #fff;
+  border: 2px dashed #d0d0d0;
+  border-radius: 8px;
+  padding: 2rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.coming-soon-icon {
+  font-size: 3rem;
+  opacity: 0.6;
+}
+
+.coming-soon-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #666;
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.coming-soon-text {
+  font-size: 0.7rem;
+  color: #999;
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  line-height: 1.4;
 }
 
 .game-item {
@@ -429,11 +465,11 @@ body {
   font-size: 1.1rem;
   font-weight: 700;
   color: #1a1a1a;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
   text-align: left;
   font-family: 'Arial', sans-serif;
-  border-bottom: 2px solid #1a1a1a;
-  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 0.75rem;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -450,9 +486,8 @@ body {
 
 .articles-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 1.25rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
 }
 
 .article-card {
@@ -477,15 +512,6 @@ body {
   flex-direction: column;
 }
 
-/* First article card spans both rows to create featured layout */
-.articles-grid .article-card:first-child {
-  grid-row: 1 / 3;
-}
-
-.articles-grid .article-card:first-child .article-card-image {
-  min-height: 200px;
-  height: 200px;
-}
 
 .article-card-image {
   background-color: #d4d4d4;
@@ -720,7 +746,7 @@ body {
   letter-spacing: 0.5px;
   text-transform: uppercase;
   background-color: transparent;
-  border-bottom: 2px solid #1a1a1a;
+  border-bottom: 2px solid #000000;
 }
 
 .info-box {
@@ -769,16 +795,19 @@ body {
 }
 
 .streak-number {
-  font-size: 3.5rem;
+  font-size: 4rem;
   font-weight: 700;
-  color: #2d5a4d;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-family: 'Georgia', serif;
   line-height: 1;
 }
 
 .streak-label {
   font-size: 0.6rem;
-  color: #555;
+  color: #666;
   line-height: 1.4;
   text-transform: uppercase;
   font-weight: 700;
@@ -808,24 +837,27 @@ body {
 
 .writer-button {
   width: 100%;
-  background-color: #2d5a4dd9;
+  background-color: #1a1a1a;
   color: #ffffff;
-  border: 2px solid #2d5a4dd9;
-  padding: 0.75rem;
+  border: 2px solid #1a1a1a;
+  padding: 0.85rem;
   font-size: 0.7rem;
   font-weight: 700;
   cursor: pointer;
   margin-bottom: 1rem;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   font-family: 'Arial', sans-serif;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   text-align: center;
+  border-radius: 2px;
 }
 
 .writer-button:hover {
   background-color: transparent;
-  color: #2d5a4dd9;
+  color: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .info-text {
@@ -836,6 +868,17 @@ body {
   margin-top: 0.75rem;
   text-align: left;
   text-transform: none;
+}
+
+.info-email-link {
+  color: #2d5a4d;
+  text-decoration: underline;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.info-email-link:hover {
+  color: #1a3329;
 }
 
 .contact-button {
@@ -929,8 +972,8 @@ body {
 
 .news-grid-container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
   padding: 2rem;
   background-color: transparent;
 }
@@ -1037,44 +1080,50 @@ body {
 
 /* Footer */
 .footer {
-  background-color: #f5a963;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffc857 100%);
   color: white;
-  padding: 2rem 3rem;
+  padding: 2.5rem 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 4rem;
-  border-top: 1px solid #e89557;
+  border-top: 3px solid #ff5722;
   width: 100%;
   margin-top: auto;
-  min-height: 100px;
+  min-height: 120px;
+  box-shadow: 0 -4px 10px rgba(255, 107, 53, 0.2);
 }
 
 .footer-title {
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: 700;
   font-family: 'Playfair Display', serif;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .footer-links {
   display: flex;
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .footer-links a {
   color: white;
   text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   font-family: 'Arial', sans-serif;
-  transition: opacity 0.2s ease;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  padding: 0.5rem 0;
+  border-bottom: 2px solid transparent;
 }
 
 .footer-links a:hover {
-  opacity: 0.8;
+  border-bottom-color: white;
+  transform: translateY(-2px);
 }
 
 /* Search Results */
@@ -1299,19 +1348,9 @@ body {
     font-size: 2rem;
   }
 
-  /* Tablet: Keep featured layout but adjust proportions */
+  /* Tablet: Keep 2-column layout */
   .articles-grid {
-    grid-template-columns: 1.5fr 1fr;
-    grid-template-rows: 1fr 1fr;
-  }
-
-  .articles-grid .article-card:first-child {
-    grid-row: 1 / 3;
-  }
-
-  .articles-grid .article-card:first-child .article-card-image {
-    min-height: 250px;
-    height: 250px;
+    grid-template-columns: 1fr 1fr;
   }
 }
 

@@ -2,9 +2,11 @@ export const APP_CONFIG = {
   name: "STUDENT LENS",
   tagline: "Your Student News Hub",
   contact: {
-    email: "contact@studentlens.edu",
-    location: "DOC 21",
-    phone: "(555) 123-4567"
+    email: "contact@studentlens.com",
+    location: "S-21",
+    locationFullName: "Room S-21",
+    phone: "(555) 123-4567",
+    officeHours: "Monday-Friday 9AM-5PM"
   },
   social: {
     twitter: "@studentlens",

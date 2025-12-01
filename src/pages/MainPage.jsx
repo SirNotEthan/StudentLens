@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PostCreator from '../components/PostCreator';
 import AuthorLink from '../components/AuthorLink';
 import axios from 'axios';
+import { APP_CONFIG } from '../data/constants';
 import '../styles/MainPage.css';
 
 const MainPage = () => {
@@ -316,36 +317,10 @@ const MainPage = () => {
         <aside className="left-sidebar">
           <div className="games-section">
             <h3 className="sidebar-section-title">GAMES</h3>
-            <div className="games-list">
-              <div className="game-item spelling-bee">
-                <div className="game-icon">
-                  <span className="bee-icon">🐝</span>
-                </div>
-                <span className="game-name">Spelling Bee</span>
-              </div>
-              <div className="game-item wordle">
-                <div className="game-icon">
-                  <div className="wordle-grid">
-                    <div className="wordle-square"></div>
-                    <div className="wordle-square"></div>
-                    <div className="wordle-square"></div>
-                    <div className="wordle-square"></div>
-                  </div>
-                </div>
-                <span className="game-name">Wordle</span>
-              </div>
-              <div className="game-item strands">
-                <div className="game-icon">
-                  <span className="strands-icon">🎯</span>
-                </div>
-                <span className="game-name">Strands</span>
-              </div>
-              <div className="game-item strands-alt">
-                <div className="game-icon">
-                  <span className="strands-icon">🎯</span>
-                </div>
-                <span className="game-name">Strands</span>
-              </div>
+            <div className="games-coming-soon">
+              <div className="coming-soon-icon">🎮</div>
+              <h4 className="coming-soon-title">COMING SOON</h4>
+              <p className="coming-soon-text">Exciting games will be available here soon!</p>
             </div>
           </div>
         </aside>
@@ -406,7 +381,7 @@ const MainPage = () => {
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
                     <>
                       <div className="articles-grid">
-                        {(featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3)).map((post) => (
+                        {(featuredPosts.length > 0 ? featuredPosts.slice(0, 2) : recentPosts.slice(0, 2)).map((post) => (
                           <article key={post.id} className="article-card large" onClick={() => navigate(`/post/${post.id}`)}>
                             <div className="article-card-image">
                               {post.featuredImage ? (
@@ -432,21 +407,6 @@ const MainPage = () => {
                           </article>
                         ))}
                       </div>
-                      {(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]) && (
-                        <article
-                          className="featured-bottom-article"
-                          onClick={() => navigate(`/post/${(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).id}`)}
-                        >
-                          <div className="featured-bottom-image">
-                            {(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).featuredImage ? (
-                              <img src={(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).featuredImage} alt={(featuredPosts.length > 0 ? featuredPosts[3] : recentPosts[3]).title} />
-                            ) : (
-                              <div className="placeholder-image"></div>
-                            )}
-                            <button className="enter-text-button">Enter Text Here</button>
-                          </div>
-                        </article>
-                      )}
                     </>
                   ) : (
                     <article className="featured-main">
@@ -484,7 +444,7 @@ const MainPage = () => {
               <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
               <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               <p className="info-text">
-                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US OR FIND US ON [S-21]
+                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US AT <a href={`mailto:${APP_CONFIG.contact.email}`} className="info-email-link">{APP_CONFIG.contact.email}</a> OR FIND US IN {APP_CONFIG.contact.locationFullName}
               </p>
             </div>
           </section>
