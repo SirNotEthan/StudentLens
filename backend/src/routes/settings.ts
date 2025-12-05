@@ -1,7 +1,6 @@
 import express from 'express';
 import { getSettings, updateSettings } from '../controllers/settingsController';
-import { authenticateToken } from '../middleware/auth';
-import { requireRole } from '../middleware/security';
+import { authenticate, authorizeRole } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -9,6 +8,6 @@ const router = express.Router();
 router.get('/', getSettings);
 
 // Owner-only route - update settings
-router.put('/', authenticateToken, requireRole('Owner'), updateSettings);
+router.put('/', authenticate, authorizeRole('Owner'), updateSettings);
 
 export default router;
