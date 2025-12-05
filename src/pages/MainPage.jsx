@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import PostCreator from '../components/PostCreator';
 import AuthorLink from '../components/AuthorLink';
 import axios from 'axios';
-import { APP_CONFIG } from '../data/constants';
 import '../styles/MainPage.css';
 
 const MainPage = () => {
@@ -391,6 +390,14 @@ const MainPage = () => {
                           <>
                             {mainPost && (
                               <article key={mainPost.id} className="article-card main-feature" onClick={() => navigate(`/post/${mainPost.id}`)}>
+                                <div className="article-card-image">
+                                  {mainPost.featuredImage ? (
+                                    <img src={mainPost.featuredImage} alt={mainPost.title} />
+                                  ) : (
+                                    <div className="placeholder-image"></div>
+                                  )}
+                                  <button className="enter-text-button">View Article</button>
+                                </div>
                                 <div className="article-card-content">
                                   <span className={`category-tag ${getCategoryColor(mainPost.category)}`}>
                                     {mainPost.category?.replace(/_/g, ' ') || 'CATEGORY'}
@@ -404,19 +411,19 @@ const MainPage = () => {
                                     />
                                   </p>
                                 </div>
-                                <div className="article-card-image">
-                                  {mainPost.featuredImage ? (
-                                    <img src={mainPost.featuredImage} alt={mainPost.title} />
-                                  ) : (
-                                    <div className="placeholder-image"></div>
-                                  )}
-                                  <button className="enter-text-button">View Article</button>
-                                </div>
                               </article>
                             )}
                             <div className="side-articles">
                               {sidePosts.map((post) => (
                                 <article key={post.id} className="article-card side-feature" onClick={() => navigate(`/post/${post.id}`)}>
+                                  <div className="article-card-image">
+                                    {post.featuredImage ? (
+                                      <img src={post.featuredImage} alt={post.title} />
+                                    ) : (
+                                      <div className="placeholder-image"></div>
+                                    )}
+                                    <button className="enter-text-button">View Article</button>
+                                  </div>
                                   <div className="article-card-content">
                                     <span className={`category-tag ${getCategoryColor(post.category)}`}>
                                       {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
@@ -429,14 +436,6 @@ const MainPage = () => {
                                         username={post.authorUsername}
                                       />
                                     </p>
-                                  </div>
-                                  <div className="article-card-image">
-                                    {post.featuredImage ? (
-                                      <img src={post.featuredImage} alt={post.title} />
-                                    ) : (
-                                      <div className="placeholder-image"></div>
-                                    )}
-                                    <button className="enter-text-button">View Article</button>
                                   </div>
                                 </article>
                               ))}
@@ -481,7 +480,7 @@ const MainPage = () => {
               <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
               <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               <p className="info-text">
-                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US AT <a href={`mailto:${settings?.contact?.email || APP_CONFIG.contact.email}`} className="info-email-link">{settings?.contact?.email || APP_CONFIG.contact.email}</a> OR FIND US IN {settings?.contact?.roomFullName || APP_CONFIG.contact.locationFullName}
+                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US OR FIND US ON [S-21]
               </p>
             </div>
           </section>

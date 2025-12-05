@@ -75,17 +75,17 @@ body {
   padding: 0.25rem 0;
   border: none;
   background: transparent;
-  border-bottom: none;
+  border-bottom: 1px solid #d0d0d0;
   font-size: 0.9rem;
   font-family: inherit;
   width: 150px;
   outline: none;
   color: #1a1a1a;
-  transition: none;
+  transition: border-bottom 0.2s ease;
 }
 
 .search-input:focus {
-  border-bottom: none;
+  border-bottom: 1px solid #1a1a1a;
   outline: none;
 }
 
@@ -305,16 +305,17 @@ body {
 }
 
 .main-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 400;
   color: #1a1a1a;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   margin: 0;
   font-family: 'Playfair Display', serif;
   text-align: center;
   justify-self: center;
   border-bottom: 1px solid #1a1a1a;
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.75rem;
+  padding-top: 0.5rem;
   font-style: normal;
 }
 
@@ -792,9 +793,9 @@ body {
   margin: 0 0 1rem 0;
   text-transform: uppercase;
   font-family: 'Arial', sans-serif;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: none;
 }
 
 .streak-display {
@@ -981,11 +982,11 @@ body {
 
 /* Category-specific colors */
 .tag.tag-all { background-color: #dc3545 !important; color: white !important; } /* ALL - Red */
-.tag.tag-academic { background-color: #4a90e2 !important; color: white !important; } /* ACADEMIC - Blue */
-.tag.tag-sports { background-color: #28a745 !important; color: white !important; } /* SPORTS - Green */
-.tag.tag-events { background-color: #fd7e14 !important; color: white !important; } /* EVENTS - Orange */
-.tag.tag-clubs { background-color: #28a745 !important; color: white !important; } /* CLUBS - Green */
-.tag.tag-announcements { background-color: #e83e8c !important; color: white !important; } /* ANNOUNCEMENTS - Pink */
+.tag.tag-academic { background-color: #5ba3f5 !important; color: white !important; } /* ACADEMIC - Bright Blue */
+.tag.tag-sports { background-color: #32cd32 !important; color: white !important; } /* SPORTS - Lime Green */
+.tag.tag-events { background-color: #ff8c00 !important; color: white !important; } /* EVENTS - Dark Orange */
+.tag.tag-clubs { background-color: #32cd32 !important; color: white !important; } /* CLUBS - Lime Green */
+.tag.tag-announcements { background-color: #ff1493 !important; color: white !important; } /* ANNOUNCEMENTS - Deep Pink */
 
 .tag.active {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -995,7 +996,7 @@ body {
 
 .news-grid-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   padding: 2rem;
   background-color: transparent;
