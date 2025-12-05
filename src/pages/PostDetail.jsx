@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import PostInteractions from '../components/PostInteractions';
 import { formatInlineText as formatInlineTextUtil, formatMathExpression as formatMathExpressionUtil } from '../utils/textFormatters';
-import { formatContent as formatContentUtil } from '../utils/contentFormatters';
+import { formatContent as formatContentUtil } from '../utils/contentFormatters.jsx';
 import '../styles/PostDetail.css';
 
 const PostDetail = () => {
