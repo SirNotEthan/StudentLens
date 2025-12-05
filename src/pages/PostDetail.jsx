@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import PostInteractions from '../components/PostInteractions';
-import Comments from '../components/Comments';
 import '../styles/PostDetail.css';
 
 const PostDetail = () => {
@@ -657,12 +656,6 @@ const PostDetail = () => {
         </aside>
       </div>
 
-      {/* Comments Section */}
-      {user && (
-        <section className="comments-wrapper">
-          <Comments postId={post.id} />
-        </section>
-      )}
     </div>
   );
 };
