@@ -1,0 +1,306 @@
+import React from 'react';
+
+/**
+ * Formatting patterns configuration for inline text
+ */
+const INLINE_PATTERNS = [
+  {
+    regex: /\$([^$]+)\$/g,
+    component: 'span',
+    className: 'content-inline-math',
+    isMath: true
+  },
+  {
+    regex: /\*\*(.*?)\*\*/g,
+    component: 'strong',
+    className: 'content-bold'
+  },
+  {
+    regex: /__(.*?)__/g,
+    component: 'strong',
+    className: 'content-bold'
+  },
+  {
+    regex: /\*(.*?)\*/g,
+    component: 'em',
+    className: 'content-italic'
+  },
+  {
+    regex: /_(.*?)_/g,
+    component: 'em',
+    className: 'content-italic'
+  },
+  {
+    regex: /~~(.*?)~~/g,
+    component: 'del',
+    className: 'content-strikethrough'
+  },
+  {
+    regex: /`(.*?)`/g,
+    component: 'code',
+    className: 'content-inline-code'
+  },
+  {
+    regex: /\[([^\]]+)\]\(([^)]+)\)/g,
+    component: 'a',
+    className: 'content-link',
+    href: true
+  },
+  {
+    regex: /==(.*?)==/g,
+    component: 'mark',
+    className: 'content-highlight'
+  },
+  {
+    regex: /\+\+(.*?)\+\+/g,
+    component: 'u',
+    className: 'content-underline'
+  }
+];
+
+/**
+ * Extracts all matches from text for a given pattern
+ */
+const extractMatches = (text, pattern) => {
+  const matches = [];
+  let match;
+
+  while ((match = pattern.regex.exec(text)) !== null) {
+    matches.push({
+      beforeText: text.slice(matches.length > 0 ? matches[matches.length - 1].endIndex : 0, match.index),
+      matchText: match[1],
+      fullMatch: match[0],
+      url: match[2], // for links
+      index: match.index,
+      endIndex: pattern.regex.lastIndex
+    });
+  }
+
+  pattern.regex.lastIndex = 0;
+  return matches;
+};
+
+/**
+ * Creates React element props for a pattern match
+ */
+const createElementProps = (pattern, match, keyCounter) => {
+  const props = {
+    key: `${pattern.component}-${keyCounter}`,
+    className: pattern.className
+  };
+
+  if (pattern.href && match.url) {
+    props.href = match.url;
+    props.target = '_blank';
+    props.rel = 'noopener noreferrer';
+  }
+
+  return props;
+};
+
+/**
+ * Processes a text part with a specific pattern
+ */
+const processPartWithPattern = (part, pattern, keyCounter, formatMathFn) => {
+  if (typeof part !== 'string') {
+    return [part];
+  }
+
+  const matches = extractMatches(part, pattern);
+
+  if (matches.length === 0) {
+    return [part];
+  }
+
+  const result = [];
+  let currentIndex = 0;
+
+  matches.forEach((match) => {
+    // Add text before match
+    if (match.index > currentIndex) {
+      const beforeText = part.slice(currentIndex, match.index);
+      if (beforeText) {
+        result.push(beforeText);
+      }
+    }
+
+    // Create element for match
+    const props = createElementProps(pattern, match, keyCounter.value++);
+    let content = match.matchText;
+
+    if (pattern.isMath && formatMathFn) {
+      content = formatMathFn(match.matchText);
+    }
+
+    result.push(React.createElement(pattern.component, props, content));
+    currentIndex = match.index + match.fullMatch.length;
+  });
+
+  // Add remaining text
+  const remainingText = part.slice(currentIndex);
+  if (remainingText) {
+    result.push(remainingText);
+  }
+
+  return result;
+};
+
+/**
+ * Processes all parts with a specific pattern
+ */
+const processPattern = (parts, pattern, keyCounter, formatMathFn) => {
+  const newParts = [];
+
+  parts.forEach(part => {
+    const processed = processPartWithPattern(part, pattern, keyCounter, formatMathFn);
+    newParts.push(...processed);
+  });
+
+  return newParts;
+};
+
+/**
+ * Main function to format inline text with markdown-like syntax
+ * Supports: bold, italic, strikethrough, code, links, highlight, underline, and inline math
+ */
+export const formatInlineText = (text, formatMathFn = null) => {
+  if (!text) return '';
+
+  const keyCounter = { value: 0 };
+  let parts = [text];
+
+  // Process each pattern sequentially
+  INLINE_PATTERNS.forEach(pattern => {
+    parts = processPattern(parts, pattern, keyCounter, formatMathFn);
+  });
+
+  return parts;
+};
+
+/**
+ * Math expression formatting patterns
+ */
+const MATH_PATTERNS = [
+  {
+    regex: /(\w+)\^(\d+)/g,
+    replacement: (match, base, exp) => (
+      <span key={Math.random()} className="math-expression-inline">
+        {base}<sup className="math-superscript">{exp}</sup>
+      </span>
+    )
+  },
+  {
+    regex: /(\w+)_(\d+)/g,
+    replacement: (match, base, sub) => (
+      <span key={Math.random()} className="math-expression-inline">
+        {base}<sub className="math-subscript">{sub}</sub>
+      </span>
+    )
+  },
+  {
+    regex: /(\w+|\([^)]+\))\/(\w+|\([^)]+\))/g,
+    replacement: (match, num, den) => (
+      <span key={Math.random()} className="math-fraction">
+        <span className="math-numerator">{num.replace(/[()]/g, '')}</span>
+        <span className="math-denominator">{den.replace(/[()]/g, '')}</span>
+      </span>
+    )
+  },
+  {
+    regex: /sqrt\(([^)]+)\)/g,
+    replacement: (match, content) => (
+      <span key={Math.random()} className="math-sqrt">
+        <span className="sqrt-symbol">√</span>
+        <span className="sqrt-content">{content}</span>
+      </span>
+    )
+  }
+];
+
+/**
+ * Math symbol replacements
+ */
+const MATH_SYMBOLS = {
+  '+-': '±',
+  'pi': 'π',
+  'alpha': 'α',
+  'beta': 'β',
+  'gamma': 'γ',
+  'delta': 'δ',
+  'theta': 'θ',
+  'lambda': 'λ',
+  'mu': 'μ',
+  'sigma': 'σ',
+  'infinity': '∞',
+  'integral': '∫',
+  'sum': '∑',
+  'product': '∏',
+  'partial': '∂',
+  'nabla': '∇',
+  '<=': '≤',
+  '>=': '≥',
+  '!=': '≠',
+  '~=': '≈',
+  'degree': '°'
+};
+
+/**
+ * Replaces text symbols with mathematical symbols
+ */
+const replaceSymbols = (text) => {
+  let formatted = text;
+
+  Object.entries(MATH_SYMBOLS).forEach(([key, value]) => {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    formatted = formatted.replace(new RegExp(escapedKey, 'g'), value);
+  });
+
+  return formatted;
+};
+
+/**
+ * Processes math patterns in text
+ */
+const processMathPatterns = (text) => {
+  let remaining = text;
+
+  MATH_PATTERNS.forEach(pattern => {
+    const newParts = [];
+
+    if (typeof remaining === 'string') {
+      let lastIndex = 0;
+      let match;
+
+      while ((match = pattern.regex.exec(remaining)) !== null) {
+        if (match.index > lastIndex) {
+          newParts.push(remaining.slice(lastIndex, match.index));
+        }
+
+        newParts.push(pattern.replacement(match[0], match[1], match[2]));
+        lastIndex = pattern.regex.lastIndex;
+      }
+
+      if (lastIndex < remaining.length) {
+        newParts.push(remaining.slice(lastIndex));
+      }
+
+      pattern.regex.lastIndex = 0;
+
+      if (newParts.length > 0) {
+        remaining = newParts;
+      }
+    }
+  });
+
+  return Array.isArray(remaining) ? remaining : [remaining];
+};
+
+/**
+ * Formats mathematical expressions with proper symbols and formatting
+ */
+export const formatMathExpression = (mathText) => {
+  if (!mathText) return '';
+
+  const symbolsReplaced = replaceSymbols(mathText);
+  return processMathPatterns(symbolsReplaced);
+};

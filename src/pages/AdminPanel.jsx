@@ -919,6 +919,28 @@ const AdminPanel = () => {
                   </div>
                 </div>
 
+                <div className="settings-section">
+                  <h3 className="settings-section-title">Games Section</h3>
+                  <div className="form-grid">
+                    <div className="form-group full-width">
+                      <label htmlFor="gamesImage">Games Section Image URL</label>
+                      <input
+                        type="url"
+                        id="gamesImage"
+                        value={settingsForm.gamesImage || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, gamesImage: e.target.value })}
+                        placeholder="https://example.com/image.jpg"
+                      />
+                      <small className="form-help">Optional: Image displayed below the "Coming Soon" games section</small>
+                      {settingsForm.gamesImage && (
+                        <div className="image-preview">
+                          <img src={settingsForm.gamesImage} alt="Games section preview" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="settings-actions">
                   <button
                     type="submit"

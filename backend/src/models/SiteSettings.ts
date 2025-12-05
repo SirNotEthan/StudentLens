@@ -16,6 +16,7 @@ export interface ISiteSettings {
   socialTwitter: string;
   socialInstagram: string;
   socialFacebook: string;
+  gamesImage?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -114,6 +115,7 @@ export class SiteSettings {
       socialTwitter: doc.socialTwitter || '@studentlens',
       socialInstagram: doc.socialInstagram || '@studentlens_official',
       socialFacebook: doc.socialFacebook || 'StudentLensOfficial',
+      gamesImage: doc.gamesImage || '',
       createdAt: doc.$createdAt,
       updatedAt: doc.$updatedAt,
     };

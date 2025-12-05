@@ -118,16 +118,12 @@ const MainPage = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      ACADEMIC: 'academic',
-      SPORTS: 'sports',
-      EVENTS: 'events',
-      CLUBS: 'clubs',
-      ANNOUNCEMENTS: 'announcements',
-      NEWS: 'gray',
-      STUDENT_LIFE: 'pink',
-      TECHNOLOGY: 'teal',
-      ARTS: 'indigo',
-      SCIENCE: 'cyan'
+      ICS: 'ics',
+      WORLD: 'world',
+      SCIENCE_TECH: 'science-tech',
+      SPORT: 'sport',
+      CULTURE: 'culture',
+      ART: 'art'
     };
     return colors[category] || 'gray';
   };
@@ -135,13 +131,10 @@ const MainPage = () => {
   const getCategoryButtonStyle = (category) => {
     const styles = {
       ALL: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
-      ACADEMIC: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
-      SPORTS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
-      EVENTS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
-      CLUBS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
-      ANNOUNCEMENTS: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' },
+      ICS: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
       WORLD: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
       SCIENCE_TECH: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
+      SPORT: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
       CULTURE: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
       ART: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' }
     };
@@ -323,6 +316,11 @@ const MainPage = () => {
               <h4 className="coming-soon-title">COMING SOON</h4>
               <p className="coming-soon-text">Exciting games will be available here soon!</p>
             </div>
+            {settings?.gamesImage && (
+              <div className="games-image">
+                <img src={settings.gamesImage} alt="Games section" />
+              </div>
+            )}
           </div>
         </aside>
 
@@ -396,7 +394,6 @@ const MainPage = () => {
                                   ) : (
                                     <div className="placeholder-image"></div>
                                   )}
-                                  <button className="enter-text-button">View Article</button>
                                 </div>
                                 <div className="article-card-content">
                                   <span className={`category-tag ${getCategoryColor(mainPost.category)}`}>
@@ -422,7 +419,6 @@ const MainPage = () => {
                                     ) : (
                                       <div className="placeholder-image"></div>
                                     )}
-                                    <button className="enter-text-button">View Article</button>
                                   </div>
                                   <div className="article-card-content">
                                     <span className={`category-tag ${getCategoryColor(post.category)}`}>
@@ -477,10 +473,10 @@ const MainPage = () => {
 
             <div className="info-box student-lens-info">
               <h4>STUDENT LENS</h4>
-              <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
+              <button className="info-button" onClick={() => navigate('/about')}>ABOUT US</button>
               <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               <p className="info-text">
-                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US OR FIND US ON [S-21]
+                FOR ANY INQUIRIES, CONTACT US VIA EMAIL OR FIND US IN DSC 21
               </p>
             </div>
           </section>
@@ -499,39 +495,46 @@ const MainPage = () => {
               ALL
             </span>
             <span
-              className={`tag tag-academic ${selectedCategory === 'ACADEMIC' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('ACADEMIC')}
-              onClick={() => setSelectedCategory('ACADEMIC')}
+              className={`tag tag-ics ${selectedCategory === 'ICS' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('ICS')}
+              onClick={() => setSelectedCategory('ICS')}
             >
-              ACADEMIC
+              ICS
             </span>
             <span
-              className={`tag tag-sports ${selectedCategory === 'SPORTS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('SPORTS')}
-              onClick={() => setSelectedCategory('SPORTS')}
+              className={`tag tag-world ${selectedCategory === 'WORLD' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('WORLD')}
+              onClick={() => setSelectedCategory('WORLD')}
             >
-              SPORTS
+              WORLD
             </span>
             <span
-              className={`tag tag-events ${selectedCategory === 'EVENTS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('EVENTS')}
-              onClick={() => setSelectedCategory('EVENTS')}
+              className={`tag tag-science-tech ${selectedCategory === 'SCIENCE_TECH' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('SCIENCE_TECH')}
+              onClick={() => setSelectedCategory('SCIENCE_TECH')}
             >
-              EVENTS
+              SCIENCE / TECH
             </span>
             <span
-              className={`tag tag-clubs ${selectedCategory === 'CLUBS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('CLUBS')}
-              onClick={() => setSelectedCategory('CLUBS')}
+              className={`tag tag-sport ${selectedCategory === 'SPORT' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('SPORT')}
+              onClick={() => setSelectedCategory('SPORT')}
             >
-              CLUBS
+              SPORT
             </span>
             <span
-              className={`tag tag-announcements ${selectedCategory === 'ANNOUNCEMENTS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('ANNOUNCEMENTS')}
-              onClick={() => setSelectedCategory('ANNOUNCEMENTS')}
+              className={`tag tag-culture ${selectedCategory === 'CULTURE' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('CULTURE')}
+              onClick={() => setSelectedCategory('CULTURE')}
             >
-              ANNOUNCEMENTS
+              CULTURE
+            </span>
+            <span
+              className={`tag tag-art ${selectedCategory === 'ART' ? 'active' : ''}`}
+              style={getCategoryButtonStyle('ART')}
+              onClick={() => setSelectedCategory('ART')}
+            >
+              ART
             </span>
           </div>
         </div>

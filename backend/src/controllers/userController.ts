@@ -653,94 +653,13 @@ export const getPublicProfile = catchAsync(async (
       targetUsername: username
     });
 
-    const user = await User.findByUsername(username);
-    if (!user || !user.isActive) {
-      throw AppError.notFound('User not found');
-    }
-
-    // Check profile visibility
-    if (user.profileVisibility === false && user.id !== req.user.id) {
-      throw AppError.forbidden('This profile is private');
-    }
-
-    // Get user's posts
-    const { databases, DATABASE_ID, Query } = require('@/config/appwrite');
-    const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
-    const COMMENTS_COLLECTION_ID = process.env.APPWRITE_COMMENTS_COLLECTION_ID || 'comments';
-
-    // Get posts by this user
-    const postsResponse = await databases.listDocuments(
-      DATABASE_ID,
-      POSTS_COLLECTION_ID,
-      [
-        Query.equal('authorId', user.id),
-        Query.equal('status', 'published'),
-        Query.orderDesc('$createdAt'),
-        Query.limit(5)
-      ]
-    );
-
-    // Get all published posts to calculate likes
-    const allUserPosts = await databases.listDocuments(
-      DATABASE_ID,
-      POSTS_COLLECTION_ID,
-      [
-        Query.equal('authorId', user.id),
-        Query.equal('status', 'published')
-      ]
-    );
-
-    // Count total likes received
-    const totalLikes = allUserPosts.documents.reduce((sum: number, post: any) => {
-      return sum + (post.likes || 0);
-    }, 0);
-
-    // Get comments by this user
-    const commentsResponse = await databases.listDocuments(
-      DATABASE_ID,
-      COMMENTS_COLLECTION_ID,
-      [
-        Query.equal('authorId', user.id)
-      ]
-    );
-
-    // Get bookmarks (if they have bookmarks stored on posts)
-    // For now we'll count bookmarks from the posts they've created
-    const totalBookmarks = allUserPosts.documents.reduce((sum: number, post: any) => {
-      return sum + (post.bookmarksCount || 0);
-    }, 0);
-
-    // Public user data (exclude sensitive information)
-    const publicUserData = {
-      id: user.id,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      profileImage: user.profileImage,
-      bio: user.bio,
-      streak: user.streak,
-      createdAt: user.createdAt,
-      showBio: user.prefs?.showBio !== false,
-      showStats: user.prefs?.showStats !== false,
-      showPosts: user.prefs?.showPosts !== false
-    };
-
-    const stats = {
-      totalPosts: allUserPosts.total,
-      totalLikes: totalLikes,
-      totalComments: commentsResponse.total,
-      totalBookmarks: totalBookmarks
-    };
+    const { ProfileService } = require('@/services/profileService');
+    const profileData = await ProfileService.getPublicProfileData(username, req.user.id);
 
     const response: ApiResponse = {
       success: true,
       message: 'Public profile retrieved successfully',
-      data: {
-        user: publicUserData,
-        stats,
-        recentPosts: postsResponse.documents
-      }
+      data: profileData
     };
 
     const duration = Date.now() - startTime;
