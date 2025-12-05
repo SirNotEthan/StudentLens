@@ -20,6 +20,9 @@ const AdminPanel = () => {
   const [applicationSearchQuery, setApplicationSearchQuery] = useState('');
   const [applicationFilter, setApplicationFilter] = useState('pending');
   const [userStatusFilter, setUserStatusFilter] = useState('all');
+  const [settings, setSettings] = useState(null);
+  const [settingsForm, setSettingsForm] = useState({});
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: () => {}, type: 'warning' });
@@ -56,15 +59,21 @@ const AdminPanel = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersRes, postsRes, applicationsRes] = await Promise.all([
+      const [usersRes, postsRes, applicationsRes, settingsRes] = await Promise.all([
         axios.get('/users'),
         axios.get('/posts?limit=50'),
-        axios.get('/applications').catch(() => ({ data: { data: { applications: [] } } }))
+        axios.get('/applications').catch(() => ({ data: { data: { applications: [] } } })),
+        axios.get('/settings').catch(() => ({ data: { data: { settings: null } } }))
       ]);
 
       setUsers(usersRes.data.users || []);
       setPosts(postsRes.data.posts || []);
       setApplications(applicationsRes.data.data?.applications || []);
+
+      if (settingsRes.data.success && settingsRes.data.data?.settings) {
+        setSettings(settingsRes.data.data.settings);
+        setSettingsForm(settingsRes.data.data.settings);
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
@@ -187,6 +196,37 @@ const AdminPanel = () => {
     }
   };
 
+  const handleSettingsUpdate = async (e) => {
+    e.preventDefault();
+    setSettingsSaving(true);
+
+    try {
+      const response = await axios.put('/settings', {
+        siteName: settingsForm.siteName,
+        tagline: settingsForm.tagline,
+        contactEmail: settingsForm.contact?.email,
+        contactRoom: settingsForm.contact?.room,
+        contactRoomFullName: settingsForm.contact?.roomFullName,
+        contactPhone: settingsForm.contact?.phone,
+        officeHours: settingsForm.contact?.officeHours,
+        socialTwitter: settingsForm.social?.twitter,
+        socialInstagram: settingsForm.social?.instagram,
+        socialFacebook: settingsForm.social?.facebook,
+      });
+
+      if (response.data.success) {
+        setSettings(response.data.data.settings);
+        setSettingsForm(response.data.data.settings);
+        alert('Site settings updated successfully!');
+      }
+    } catch (error) {
+      console.error('Error updating settings:', error);
+      alert(error.response?.data?.message || 'Failed to update settings');
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   const getRoleBadgeColor = (role) => {
     const colors = {
       Student: '#4a90e2',
@@ -293,6 +333,16 @@ const AdminPanel = () => {
         >
           📄 Content Management
         </button>
+
+        {/* Site Settings - Only visible to Owner */}
+        {hasRole('Owner') && (
+          <button
+            className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            ⚙️ Site Settings
+          </button>
+        )}
       </div>
 
       <div className="admin-content">
@@ -710,6 +760,180 @@ const AdminPanel = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Site Settings Tab - Only accessible by Owner */}
+        {activeTab === 'settings' && hasRole('Owner') && (
+          <div className="settings-management">
+            <div className="section-header">
+              <h2>Site Settings</h2>
+              <p>Manage site-wide information and contact details</p>
+            </div>
+
+            {settings ? (
+              <form onSubmit={handleSettingsUpdate} className="settings-form">
+                <div className="settings-section">
+                  <h3 className="settings-section-title">General Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="siteName">Site Name</label>
+                      <input
+                        type="text"
+                        id="siteName"
+                        value={settingsForm.siteName || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, siteName: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="tagline">Tagline</label>
+                      <input
+                        type="text"
+                        id="tagline"
+                        value={settingsForm.tagline || ''}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, tagline: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-section">
+                  <h3 className="settings-section-title">Contact Information</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="contactEmail">Contact Email</label>
+                      <input
+                        type="email"
+                        id="contactEmail"
+                        value={settingsForm.contact?.email || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          contact: { ...settingsForm.contact, email: e.target.value }
+                        })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="contactPhone">Phone Number</label>
+                      <input
+                        type="tel"
+                        id="contactPhone"
+                        value={settingsForm.contact?.phone || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          contact: { ...settingsForm.contact, phone: e.target.value }
+                        })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="contactRoom">Room Number</label>
+                      <input
+                        type="text"
+                        id="contactRoom"
+                        value={settingsForm.contact?.room || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          contact: { ...settingsForm.contact, room: e.target.value }
+                        })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="contactRoomFullName">Full Room Name</label>
+                      <input
+                        type="text"
+                        id="contactRoomFullName"
+                        value={settingsForm.contact?.roomFullName || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          contact: { ...settingsForm.contact, roomFullName: e.target.value }
+                        })}
+                        required
+                      />
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="officeHours">Office Hours</label>
+                      <input
+                        type="text"
+                        id="officeHours"
+                        value={settingsForm.contact?.officeHours || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          contact: { ...settingsForm.contact, officeHours: e.target.value }
+                        })}
+                        placeholder="e.g., Monday-Friday 9AM-5PM"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-section">
+                  <h3 className="settings-section-title">Social Media</h3>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="socialTwitter">Twitter Handle</label>
+                      <input
+                        type="text"
+                        id="socialTwitter"
+                        value={settingsForm.social?.twitter || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          social: { ...settingsForm.social, twitter: e.target.value }
+                        })}
+                        placeholder="@studentlens"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="socialInstagram">Instagram Handle</label>
+                      <input
+                        type="text"
+                        id="socialInstagram"
+                        value={settingsForm.social?.instagram || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          social: { ...settingsForm.social, instagram: e.target.value }
+                        })}
+                        placeholder="@studentlens_official"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="socialFacebook">Facebook Page</label>
+                      <input
+                        type="text"
+                        id="socialFacebook"
+                        value={settingsForm.social?.facebook || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          social: { ...settingsForm.social, facebook: e.target.value }
+                        })}
+                        placeholder="StudentLensOfficial"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-actions">
+                  <button
+                    type="submit"
+                    className="save-settings-btn"
+                    disabled={settingsSaving}
+                  >
+                    {settingsSaving ? 'Saving...' : 'Save Settings'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="no-settings">
+                <p>Loading settings...</p>
+              </div>
+            )}
           </div>
         )}
       </div>

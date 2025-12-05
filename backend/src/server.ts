@@ -53,6 +53,7 @@ import applicationRoutes from '@/routes/applications';
 import postRoutes from '@/routes/posts';
 import commentRoutes from '@/routes/comments';
 import analyticsRoutes from '@/routes/analytics';
+import settingsRoutes from '@/routes/settings';
 console.log('LOADING: all routes loaded');
 
 import { EnvironmentVariables } from '@/types';
@@ -440,6 +441,8 @@ const startServer = async (): Promise<void> => {
     console.log('STARTUP: - Comment routes added');
     app.use('/api/analytics', analyticsRoutes);
     console.log('STARTUP: - Analytics routes added');
+    app.use('/api/settings', settingsRoutes);
+    console.log('STARTUP: - Settings routes added');
     console.log('STARTUP: ✅ All API routes configured');
 
     // Set up SPA fallback route (must be after all API routes)

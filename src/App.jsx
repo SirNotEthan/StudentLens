@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import { AnalyticsProvider } from './contexts/AnalyticsContext'
+import { SettingsProvider } from './contexts/SettingsContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Login from './pages/Login'
 import MainPage from './pages/MainPage'
@@ -24,8 +25,9 @@ import NotFound from './pages/NotFound'
 function App() {
   return (
     <AuthProvider>
-      <AnalyticsProvider>
-        <Router>
+      <SettingsProvider>
+        <AnalyticsProvider>
+          <Router>
           <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/welcome" element={<Welcome />} />
@@ -146,8 +148,9 @@ function App() {
           <Route path="/" element={<Navigate to="/main" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </Router>
-      </AnalyticsProvider>
+          </Router>
+        </AnalyticsProvider>
+      </SettingsProvider>
     </AuthProvider>
   )
 }

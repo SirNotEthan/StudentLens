@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { useNavigate } from 'react-router-dom';
 import PostCreator from '../components/PostCreator';
 import AuthorLink from '../components/AuthorLink';
@@ -9,6 +10,7 @@ import '../styles/MainPage.css';
 
 const MainPage = () => {
   const { user, logout, hasPermission, hasRole, getUserDisplayName } = useAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const [featuredPosts, setFeaturedPosts] = useState([]);
   const [recentPosts, setRecentPosts] = useState([]);
@@ -227,7 +229,7 @@ const MainPage = () => {
             </div>
           </div>
 
-          <h1 className="main-title">STUDENT LENS</h1>
+          <h1 className="main-title">{settings?.siteName || 'STUDENT LENS'}</h1>
 
           <div className="header-right">
             <button className="home-icon-btn" onClick={() => navigate('/main')}>
@@ -479,7 +481,7 @@ const MainPage = () => {
               <a href="#about" className="info-link" onClick={(e) => { e.preventDefault(); navigate('/about'); }}>ABOUT US</a>
               <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               <p className="info-text">
-                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US AT <a href={`mailto:${APP_CONFIG.contact.email}`} className="info-email-link">{APP_CONFIG.contact.email}</a> OR FIND US IN {APP_CONFIG.contact.locationFullName}
+                FOR ANY INQUIRIES, FEEL FREE TO EMAIL US AT <a href={`mailto:${settings?.contact?.email || APP_CONFIG.contact.email}`} className="info-email-link">{settings?.contact?.email || APP_CONFIG.contact.email}</a> OR FIND US IN {settings?.contact?.roomFullName || APP_CONFIG.contact.locationFullName}
               </p>
             </div>
           </section>

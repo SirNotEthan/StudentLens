@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../contexts/SettingsContext';
 import axios from 'axios';
 import '../styles/InfoPage.css';
 
 const ContactUs = () => {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -74,7 +76,7 @@ const ContactUs = () => {
               <h3>Visit Us</h3>
               <p>
                 <strong>Location:</strong><br />
-                DOC 21<br />
+                {settings?.contact?.roomFullName || 'Room S-21'}<br />
                 Student Lens Office
               </p>
             </section>
@@ -83,19 +85,20 @@ const ContactUs = () => {
               <h3>Email Us</h3>
               <p>
                 <strong>General Inquiries:</strong><br />
-                <a href="mailto:contact@studentlens.com">contact@studentlens.com</a>
+                <a href={`mailto:${settings?.contact?.email || 'contact@studentlens.com'}`}>
+                  {settings?.contact?.email || 'contact@studentlens.com'}
+                </a>
               </p>
               <p>
-                <strong>Editorial Team:</strong><br />
-                <a href="mailto:editorial@studentlens.com">editorial@studentlens.com</a>
+                <strong>Phone:</strong><br />
+                {settings?.contact?.phone || '(555) 123-4567'}
               </p>
             </section>
 
             <section className="info-section">
               <h3>Office Hours</h3>
               <p>
-                Monday - Friday: 9:00 AM - 5:00 PM<br />
-                Saturday - Sunday: Closed
+                {settings?.contact?.officeHours || 'Monday-Friday 9AM-5PM'}
               </p>
             </section>
           </div>
