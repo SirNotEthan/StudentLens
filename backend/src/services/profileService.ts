@@ -1,7 +1,7 @@
 import { Query } from 'node-appwrite';
 import { databases, DATABASE_ID } from '@/config/appwrite';
 import { User } from '@/models/User';
-import AppError from '@/utils/AppError';
+import { AppError } from '@/utils/AppError';
 
 const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
 const COMMENTS_COLLECTION_ID = process.env.APPWRITE_COMMENTS_COLLECTION_ID || 'comments';
