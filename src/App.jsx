@@ -20,6 +20,7 @@ import AboutUs from './pages/AboutUs'
 import ContactUs from './pages/ContactUs'
 import TermsPrivacy from './pages/TermsPrivacy'
 import ApplyWriter from './pages/ApplyWriter'
+import WordlePage from './pages/WordlePage'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -142,6 +143,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ApplyWriter />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wordle"
+            element={
+              <ProtectedRoute>
+                <WordlePage />
               </ProtectedRoute>
             }
           />

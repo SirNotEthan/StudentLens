@@ -28,6 +28,10 @@ export class User implements IUser {
   public provider: 'email' | 'google';
   public googleId?: string;
   public profileVisibility: boolean;
+  public wordleGamesPlayed: number;
+  public wordleCurrentStreak: number;
+  public wordleBestStreak: number;
+  public wordleWins: number;
   public createdAt: string;
   public updatedAt: string;
   public prefs: Record<string, any>;
@@ -50,6 +54,10 @@ export class User implements IUser {
     this.provider = userData.prefs?.provider || 'email';
     this.googleId = userData.prefs?.googleId;
     this.profileVisibility = userData.prefs?.profileVisibility !== false; // Default to true (public)
+    this.wordleGamesPlayed = userData.prefs?.wordleGamesPlayed || 0;
+    this.wordleCurrentStreak = userData.prefs?.wordleCurrentStreak || 0;
+    this.wordleBestStreak = userData.prefs?.wordleBestStreak || 0;
+    this.wordleWins = userData.prefs?.wordleWins || 0;
     this.createdAt = userData.$createdAt;
     this.updatedAt = userData.$updatedAt;
     this.prefs = userData.prefs || {};
@@ -82,7 +90,11 @@ export class User implements IUser {
         needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : true,
         provider: userData.provider || 'email',
         googleId: userData.googleId || undefined,
-        profileVisibility: true // Default to public profile
+        profileVisibility: true, // Default to public profile
+        wordleGamesPlayed: 0,
+        wordleCurrentStreak: 0,
+        wordleBestStreak: 0,
+        wordleWins: 0
       });
 
       const updatedUser = await users.get(user.$id);
@@ -703,6 +715,10 @@ export class User implements IUser {
       needsSetup: this.needsSetup,
       provider: this.provider,
       profileVisibility: this.profileVisibility,
+      wordleGamesPlayed: this.wordleGamesPlayed,
+      wordleCurrentStreak: this.wordleCurrentStreak,
+      wordleBestStreak: this.wordleBestStreak,
+      wordleWins: this.wordleWins,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

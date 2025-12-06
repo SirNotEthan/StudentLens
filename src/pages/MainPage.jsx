@@ -364,17 +364,8 @@ const MainPage = () => {
         <aside className="left-sidebar">
           <section className="games-section">
             <h3 className="sidebar-section-title">GAMES</h3>
-            <div className="games-coming-soon">
-              <div className="coming-soon-icon">🎮</div>
-              <h4 className="coming-soon-title">COMING SOON</h4>
-              <p className="coming-soon-text">Exciting games will be available here soon!</p>
-            </div>
             <div className="games-list">
-              <div className="game-item spelling-bee">
-                <div className="game-icon">🐝</div>
-                <span className="game-name">Spelling Bee</span>
-              </div>
-              <div className="game-item wordle">
+              <div className="game-item wordle" onClick={() => navigate('/wordle')}>
                 <div className="game-icon">
                   <div className="wordle-grid">
                     <div className="wordle-square"></div>
@@ -385,14 +376,11 @@ const MainPage = () => {
                 </div>
                 <span className="game-name">Wordle</span>
               </div>
-              <div className="game-item strands">
-                <div className="game-icon">🧩</div>
-                <span className="game-name">Strands</span>
-              </div>
-              <div className="game-item strands-alt">
-                <div className="game-icon">🎯</div>
-                <span className="game-name">Connections</span>
-              </div>
+            </div>
+            <div className="games-coming-soon">
+              <div className="coming-soon-icon">🎮</div>
+              <h4 className="coming-soon-title">MORE COMING SOON</h4>
+              <p className="coming-soon-text">More games coming soon!</p>
             </div>
           </section>
         </aside>

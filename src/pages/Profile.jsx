@@ -355,6 +355,36 @@ const Profile = () => {
                 </div>
               </div>
 
+              <div className="form-section">
+                <h3>Wordle Statistics</h3>
+                <div className="readonly-info wordle-stats">
+                  <div className="info-item">
+                    <label>Games Played</label>
+                    <p className="stat-value">{user.wordleGamesPlayed || 0}</p>
+                  </div>
+                  <div className="info-item">
+                    <label>Games Won</label>
+                    <p className="stat-value">{user.wordleWins || 0}</p>
+                  </div>
+                  <div className="info-item">
+                    <label>Win Rate</label>
+                    <p className="stat-value">
+                      {user.wordleGamesPlayed > 0
+                        ? `${Math.round((user.wordleWins / user.wordleGamesPlayed) * 100)}%`
+                        : '0%'}
+                    </p>
+                  </div>
+                  <div className="info-item">
+                    <label>Current Streak</label>
+                    <p className="stat-value streak">{user.wordleCurrentStreak || 0}</p>
+                  </div>
+                  <div className="info-item">
+                    <label>Best Streak</label>
+                    <p className="stat-value best-streak">{user.wordleBestStreak || 0}</p>
+                  </div>
+                </div>
+              </div>
+
               {editError && (
                 <div className="error-message">
                   {editError}

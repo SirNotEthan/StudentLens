@@ -18,6 +18,10 @@ export interface IUser {
   provider: AuthProvider;
   googleId?: string;
   profileVisibility: boolean;
+  wordleGamesPlayed: number;
+  wordleCurrentStreak: number;
+  wordleBestStreak: number;
+  wordleWins: number;
   createdAt: string;
   updatedAt: string;
   prefs: Record<string, any>;
@@ -272,6 +276,10 @@ export interface UpdateUserRequest {
   showBio?: boolean;
   showStats?: boolean;
   showPosts?: boolean;
+  wordleGamesPlayed?: number;
+  wordleCurrentStreak?: number;
+  wordleBestStreak?: number;
+  wordleWins?: number;
 }
 
 export interface ChangePasswordRequest {
