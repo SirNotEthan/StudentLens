@@ -16,6 +16,10 @@ export const getNewWord = async (
 
     const word = generateRandomWord([]);
 
+    if (!word) {
+      throw AppError.badRequest('Failed to generate a valid word');
+    }
+
     res.json({
       success: true,
       word: word
