@@ -14,7 +14,7 @@ export const getNewWord = async (
       throw AppError.unauthorized('User not authenticated');
     }
 
-    const word = generateRandomWord([]);
+    const word = await generateRandomWord();
 
     if (!word) {
       throw AppError.badRequest('Failed to generate a valid word');
