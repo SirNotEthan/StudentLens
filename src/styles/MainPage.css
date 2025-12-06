@@ -343,6 +343,11 @@ body {
 }
 
 .games-section {
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
   margin-bottom: 0;
   margin-top: 0;
 }
@@ -490,7 +495,20 @@ body {
 }
 
 .latest-news {
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
+}
+
+.games-image-section {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.games-main-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .news-articles {
@@ -523,10 +541,20 @@ body {
   min-height: 400px;
 }
 
+.article-card.main-feature .article-card-image {
+  min-height: 280px;
+  height: 280px;
+}
+
 .article-card.side-feature {
   display: flex;
   flex-direction: column;
   flex: 1;
+}
+
+.article-card.side-feature .article-card-image {
+  min-height: 160px;
+  height: 160px;
 }
 
 .article-card {
@@ -842,6 +870,80 @@ body {
 }
 
 .streak-label {
+  font-size: 0.6rem;
+  color: #666;
+  line-height: 1.4;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: 'Arial', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.articles-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.articles-counter {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background-color: transparent;
+  padding: 0;
+  border: none;
+}
+
+.articles-number {
+  font-size: 4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #4a90e2 0%, #2d5a8f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'Georgia', serif;
+  line-height: 1;
+}
+
+.articles-label {
+  font-size: 0.6rem;
+  color: #666;
+  line-height: 1.4;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: 'Arial', sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.applications-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.applications-counter {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  background-color: transparent;
+  padding: 0;
+  border: none;
+}
+
+.applications-number {
+  font-size: 4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6f42c1 0%, #4a2d7f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-family: 'Georgia', serif;
+  line-height: 1;
+}
+
+.applications-label {
   font-size: 0.6rem;
   color: #666;
   line-height: 1.4;

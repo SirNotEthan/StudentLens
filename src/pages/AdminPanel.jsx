@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AlertModal, ConfirmModal } from '../components/Modal';
@@ -7,6 +8,7 @@ import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
   const { user: _user, hasPermission, hasRole } = useAuth();
+  const { refreshSettings } = useSettings();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -212,11 +214,14 @@ const AdminPanel = () => {
         socialTwitter: settingsForm.social?.twitter,
         socialInstagram: settingsForm.social?.instagram,
         socialFacebook: settingsForm.social?.facebook,
+        gamesImage: settingsForm.gamesImage,
       });
 
       if (response.data.success) {
         setSettings(response.data.data.settings);
         setSettingsForm(response.data.data.settings);
+        // Refresh the global settings context
+        refreshSettings();
         alert('Site settings updated successfully!');
       }
     } catch (error) {

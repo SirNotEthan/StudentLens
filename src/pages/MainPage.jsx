@@ -309,19 +309,14 @@ const MainPage = () => {
 
       <div className="main-content">
         <aside className="left-sidebar">
-          <div className="games-section">
+          <section className="games-section">
             <h3 className="sidebar-section-title">GAMES</h3>
             <div className="games-coming-soon">
               <div className="coming-soon-icon">🎮</div>
               <h4 className="coming-soon-title">COMING SOON</h4>
               <p className="coming-soon-text">Exciting games will be available here soon!</p>
             </div>
-            {settings?.gamesImage && (
-              <div className="games-image">
-                <img src={settings.gamesImage} alt="Games section" />
-              </div>
-            )}
-          </div>
+          </section>
         </aside>
 
         <main className="center-content">
@@ -455,6 +450,12 @@ const MainPage = () => {
               )}
             </div>
           </section>
+
+          {settings?.gamesImage && (
+            <section className="games-image-section">
+              <img src={settings.gamesImage} alt="Games section" className="games-main-image" />
+            </section>
+          )}
         </main>
 
         <aside className="right-sidebar">
@@ -474,11 +475,72 @@ const MainPage = () => {
             <div className="info-box student-lens-info">
               <h4>STUDENT LENS</h4>
               <button className="info-button" onClick={() => navigate('/about')}>ABOUT US</button>
-              <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
+
+              {/* Browser/Student Role - Show "Become a Writer" */}
+              {user?.role === 'Student' && (
+                <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
+              )}
+
               <p className="info-text">
                 FOR ANY INQUIRIES, CONTACT US VIA EMAIL OR FIND US IN DSC 21
               </p>
             </div>
+
+            {/* Writer Role - Show Articles Section */}
+            {user?.role === 'Writer' && (
+              <div className="info-box articles-info">
+                <h4>ARTICLES</h4>
+                <div className="articles-display">
+                  <div className="articles-counter">
+                    <span className="articles-number">3</span>
+                    <span className="articles-label">ARTICLES<br />PENDING REVIEW</span>
+                  </div>
+                </div>
+                <button className="info-button" onClick={() => navigate('/write')}>WRITE ARTICLE</button>
+              </div>
+            )}
+
+            {/* Editor Role - Show Articles Section */}
+            {user?.role === 'Editor' && (
+              <div className="info-box articles-info">
+                <h4>ARTICLES</h4>
+                <div className="articles-display">
+                  <div className="articles-counter">
+                    <span className="articles-number">3</span>
+                    <span className="articles-label">ARTICLES<br />TO EDIT AND REVIEW</span>
+                  </div>
+                </div>
+                <button className="info-button" onClick={() => navigate('/my-drafts')}>TO ARTICLES</button>
+              </div>
+            )}
+
+            {/* Reviewer Role - Show Articles Section */}
+            {user?.role === 'Reviewer' && (
+              <div className="info-box articles-info">
+                <h4>ARTICLES</h4>
+                <div className="articles-display">
+                  <div className="articles-counter">
+                    <span className="articles-number">3</span>
+                    <span className="articles-label">ARTICLES<br />TO REVIEW AND PUBLISH</span>
+                  </div>
+                </div>
+                <button className="info-button" onClick={() => navigate('/my-drafts')}>TO ARTICLES</button>
+              </div>
+            )}
+
+            {/* Owner Role - Show Applications Section */}
+            {user?.role === 'Owner' && (
+              <div className="info-box applications-info">
+                <h4>APPLICATIONS</h4>
+                <div className="applications-display">
+                  <div className="applications-counter">
+                    <span className="applications-number">3</span>
+                    <span className="applications-label">APPLICATIONS<br />TO REVIEW</span>
+                  </div>
+                </div>
+                <button className="info-button" onClick={() => navigate('/admin')}>TO APPLICATIONS</button>
+              </div>
+            )}
           </section>
         </aside>
       </div>
