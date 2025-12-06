@@ -183,37 +183,43 @@ export const formatInlineText = (text, formatMathFn = null) => {
 const MATH_PATTERNS = [
   {
     regex: /(\w+)\^(\d+)/g,
-    replacement: (match, base, exp) => (
-      <span key={Math.random()} className="math-expression-inline">
-        {base}<sup className="math-superscript">{exp}</sup>
-      </span>
-    )
+    replacement: (match, base, exp) =>
+      React.createElement(
+        'span',
+        { key: Math.random(), className: 'math-expression-inline' },
+        base,
+        React.createElement('sup', { className: 'math-superscript' }, exp)
+      )
   },
   {
     regex: /(\w+)_(\d+)/g,
-    replacement: (match, base, sub) => (
-      <span key={Math.random()} className="math-expression-inline">
-        {base}<sub className="math-subscript">{sub}</sub>
-      </span>
-    )
+    replacement: (match, base, sub) =>
+      React.createElement(
+        'span',
+        { key: Math.random(), className: 'math-expression-inline' },
+        base,
+        React.createElement('sub', { className: 'math-subscript' }, sub)
+      )
   },
   {
     regex: /(\w+|\([^)]+\))\/(\w+|\([^)]+\))/g,
-    replacement: (match, num, den) => (
-      <span key={Math.random()} className="math-fraction">
-        <span className="math-numerator">{num.replace(/[()]/g, '')}</span>
-        <span className="math-denominator">{den.replace(/[()]/g, '')}</span>
-      </span>
-    )
+    replacement: (match, num, den) =>
+      React.createElement(
+        'span',
+        { key: Math.random(), className: 'math-fraction' },
+        React.createElement('span', { className: 'math-numerator' }, num.replace(/[()]/g, '')),
+        React.createElement('span', { className: 'math-denominator' }, den.replace(/[()]/g, ''))
+      )
   },
   {
     regex: /sqrt\(([^)]+)\)/g,
-    replacement: (match, content) => (
-      <span key={Math.random()} className="math-sqrt">
-        <span className="sqrt-symbol">√</span>
-        <span className="sqrt-content">{content}</span>
-      </span>
-    )
+    replacement: (match, content) =>
+      React.createElement(
+        'span',
+        { key: Math.random(), className: 'math-sqrt' },
+        React.createElement('span', { className: 'sqrt-symbol' }, '√'),
+        React.createElement('span', { className: 'sqrt-content' }, content)
+      )
   }
 ];
 
