@@ -184,13 +184,23 @@ const WordlePage = () => {
     if (isPastRow && guesses[rowIndex]) {
       letter = guesses[rowIndex][colIndex];
       status = getLetterStatus(guesses[rowIndex], colIndex);
-    } else if (isCurrentRow && currentGuess[colIndex]) {
+    } else if (isCurrentRow && gameStatus === 'playing' && currentGuess[colIndex]) {
       letter = currentGuess[colIndex];
       status = 'tbd';
+    } else if (isCurrentRow && gameStatus === 'won' && guesses[rowIndex]) {
+      // Show the winning word in green
+      letter = guesses[rowIndex][colIndex];
+      status = 'correct';
     }
 
+    const animationDelay = isPastRow && guesses[rowIndex] ? `${colIndex * 0.1}s` : '0s';
+
     return (
-      <div key={colIndex} className={`wordle-tile ${status}`}>
+      <div
+        key={colIndex}
+        className={`wordle-tile ${status}`}
+        style={{ animationDelay }}
+      >
         {letter}
       </div>
     );

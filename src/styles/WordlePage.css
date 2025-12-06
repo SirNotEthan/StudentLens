@@ -146,18 +146,17 @@
   font-weight: 700;
   text-transform: uppercase;
   background-color: #fff;
-  transition: all 0.3s ease;
   color: #1a1a1a;
 }
 
 .wordle-tile.tbd {
   border-color: #878a8c;
-  animation: pop 0.1s;
+  animation: pop 0.15s ease-in-out;
 }
 
 @keyframes pop {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
 
@@ -165,18 +164,33 @@
   background-color: #6aaa64;
   border-color: #6aaa64;
   color: #fff;
+  animation: flip 0.5s ease-in-out;
 }
 
 .wordle-tile.present {
   background-color: #c9b458;
   border-color: #c9b458;
   color: #fff;
+  animation: flip 0.5s ease-in-out;
 }
 
 .wordle-tile.absent {
   background-color: #787c7e;
   border-color: #787c7e;
   color: #fff;
+  animation: flip 0.5s ease-in-out;
+}
+
+@keyframes flip {
+  0% {
+    transform: rotateX(0);
+  }
+  50% {
+    transform: rotateX(-90deg);
+  }
+  100% {
+    transform: rotateX(0);
+  }
 }
 
 /* Keyboard */
