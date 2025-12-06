@@ -31,7 +31,7 @@ const WordlePage = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('/api/wordle/stats');
+      const response = await axios.get('/wordle/stats');
       if (response.data.success) {
         setStats(response.data.data);
       }
@@ -42,7 +42,7 @@ const WordlePage = () => {
 
   const startNewGame = async () => {
     try {
-      const response = await axios.get('/api/wordle/new-word');
+      const response = await axios.get('/wordle/new-word');
       if (response.data.success) {
         setTargetWord(response.data.word.toUpperCase());
         setGuesses([]);
@@ -78,7 +78,7 @@ const WordlePage = () => {
     }
 
     try {
-      const response = await axios.post('/api/wordle/validate-word', {
+      const response = await axios.post('/wordle/validate-word', {
         word: currentGuess.toLowerCase()
       });
 
@@ -130,7 +130,7 @@ const WordlePage = () => {
 
   const submitGameResult = async (won) => {
     try {
-      await axios.post('/api/wordle/submit-result', { won });
+      await axios.post('/wordle/submit-result', { won });
       await fetchStats();
     } catch (error) {
       console.error('Error submitting game result:', error);
