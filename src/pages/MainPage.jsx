@@ -23,11 +23,21 @@ const MainPage = () => {
   const [error, setError] = useState(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
     fetchFeaturedPosts();
     fetchRecentPosts();
+    fetchPendingStats();
   }, []);
+
+  useEffect(() => {
+    // Refresh stats when user role changes
+    if (user) {
+      fetchPendingStats();
+    }
+  }, [user?.role]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -70,6 +80,49 @@ const MainPage = () => {
       setError('Failed to load articles');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPendingStats = async () => {
+    if (!user) return;
+
+    setLoadingStats(true);
+    try {
+      let count = 0;
+
+      if (user.role === 'Writer') {
+        // Fetch pending articles for writers
+        const response = await axios.get('/posts/my?status=pending_review');
+        if (response.data.success) {
+          const posts = response.data.data?.posts || response.data.posts || [];
+          count = posts.filter(post => post.status === 'pending_review').length;
+        }
+      } else if (user.role === 'Editor') {
+        // Fetch pending articles for editors
+        const response = await axios.get('/posts/pending/editor');
+        if (response.data.success) {
+          count = response.data.data?.total || response.data.total || 0;
+        }
+      } else if (user.role === 'Reviewer') {
+        // Fetch pending articles for reviewers
+        const response = await axios.get('/posts/pending/reviewer');
+        if (response.data.success) {
+          count = response.data.data?.total || response.data.total || 0;
+        }
+      } else if (user.role === 'Owner') {
+        // Fetch pending applications for owners
+        const response = await axios.get('/applications/stats');
+        if (response.data.success) {
+          count = response.data.data?.stats?.pending || 0;
+        }
+      }
+
+      setPendingCount(count);
+    } catch (error) {
+      console.error('Error fetching pending stats:', error);
+      setPendingCount(0);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -316,6 +369,31 @@ const MainPage = () => {
               <h4 className="coming-soon-title">COMING SOON</h4>
               <p className="coming-soon-text">Exciting games will be available here soon!</p>
             </div>
+            <div className="games-list">
+              <div className="game-item spelling-bee">
+                <div className="game-icon">🐝</div>
+                <span className="game-name">Spelling Bee</span>
+              </div>
+              <div className="game-item wordle">
+                <div className="game-icon">
+                  <div className="wordle-grid">
+                    <div className="wordle-square"></div>
+                    <div className="wordle-square"></div>
+                    <div className="wordle-square"></div>
+                    <div className="wordle-square"></div>
+                  </div>
+                </div>
+                <span className="game-name">Wordle</span>
+              </div>
+              <div className="game-item strands">
+                <div className="game-icon">🧩</div>
+                <span className="game-name">Strands</span>
+              </div>
+              <div className="game-item strands-alt">
+                <div className="game-icon">🎯</div>
+                <span className="game-name">Connections</span>
+              </div>
+            </div>
           </section>
         </aside>
 
@@ -466,8 +544,8 @@ const MainPage = () => {
               <h4>STREAK</h4>
               <div className="streak-display">
                 <div className="streak-counter">
-                  <span className="streak-number">{user?.streak || 5}</span>
-                  <span className="streak-label">DAYS<br />NEW STREAK!</span>
+                  <span className="streak-number">{user?.streak || 0}</span>
+                  <span className="streak-label">DAYS{user?.streak > 0 ? <><br />NEW STREAK!</> : ''}</span>
                 </div>
               </div>
             </div>
@@ -492,7 +570,7 @@ const MainPage = () => {
                 <h4>ARTICLES</h4>
                 <div className="articles-display">
                   <div className="articles-counter">
-                    <span className="articles-number">3</span>
+                    <span className="articles-number">{loadingStats ? '...' : pendingCount}</span>
                     <span className="articles-label">ARTICLES<br />PENDING REVIEW</span>
                   </div>
                 </div>
@@ -506,7 +584,7 @@ const MainPage = () => {
                 <h4>ARTICLES</h4>
                 <div className="articles-display">
                   <div className="articles-counter">
-                    <span className="articles-number">3</span>
+                    <span className="articles-number">{loadingStats ? '...' : pendingCount}</span>
                     <span className="articles-label">ARTICLES<br />TO EDIT AND REVIEW</span>
                   </div>
                 </div>
@@ -520,7 +598,7 @@ const MainPage = () => {
                 <h4>ARTICLES</h4>
                 <div className="articles-display">
                   <div className="articles-counter">
-                    <span className="articles-number">3</span>
+                    <span className="articles-number">{loadingStats ? '...' : pendingCount}</span>
                     <span className="articles-label">ARTICLES<br />TO REVIEW AND PUBLISH</span>
                   </div>
                 </div>
@@ -534,7 +612,7 @@ const MainPage = () => {
                 <h4>APPLICATIONS</h4>
                 <div className="applications-display">
                   <div className="applications-counter">
-                    <span className="applications-number">3</span>
+                    <span className="applications-number">{loadingStats ? '...' : pendingCount}</span>
                     <span className="applications-label">APPLICATIONS<br />TO REVIEW</span>
                   </div>
                 </div>

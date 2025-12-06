@@ -350,12 +350,14 @@ body {
   flex-direction: column;
   margin-bottom: 0;
   margin-top: 0;
+  gap: 1.5rem;
 }
 
 .games-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  width: 100%;
 }
 
 .games-coming-soon {
@@ -399,17 +401,20 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 1rem;
+  padding: 1rem 0.75rem;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.3s ease;
   border: none;
   background-color: #fff;
-  min-height: 90px;
-  border-radius: 4px;
+  min-height: 80px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  gap: 0.5rem;
 }
 
 .game-item:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .spelling-bee {
@@ -429,36 +434,38 @@ body {
 }
 
 .game-icon {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2.5rem;
-  margin-bottom: 0.75rem;
+  font-size: 2rem;
+  margin-bottom: 0;
 }
 
 .wordle-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
+  gap: 3px;
 }
 
 .wordle-square {
-  width: 18px;
-  height: 18px;
+  width: 15px;
+  height: 15px;
   background-color: white;
   border: 2px solid rgba(0,0,0,0.3);
+  border-radius: 2px;
 }
 
 .game-name {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: #1a1a1a;
   text-align: center;
   font-family: 'Arial', sans-serif;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   text-transform: capitalize;
+  line-height: 1.2;
 }
 
 .games-image {
