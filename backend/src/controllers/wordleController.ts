@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { User } from '@/models/User';
 import { AppError } from '@/utils/AppError';
-import { getRandomWord, isValidWord } from '@/data/wordleWords';
+import { generateRandomWord, isValidEnglishWord } from '@/data/wordleWords';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 
 export const getNewWord = async (
@@ -14,7 +14,7 @@ export const getNewWord = async (
       throw AppError.unauthorized('User not authenticated');
     }
 
-    const word = getRandomWord();
+    const word = generateRandomWord([]);
 
     res.json({
       success: true,
@@ -45,7 +45,7 @@ export const validateWord = async (
       throw AppError.badRequest('Word must be 5 letters');
     }
 
-    const isValid = isValidWord(word);
+    const isValid = isValidEnglishWord(word);
 
     res.json({
       success: true,
@@ -54,6 +54,31 @@ export const validateWord = async (
   } catch (error) {
     next(error);
   }
+};
+
+const updateWordleStats = async (user: User, won: boolean) => {
+  const newGamesPlayed = (user.wordleGamesPlayed || 0) + 1;
+  const newWins = won ? (user.wordleWins || 0) + 1 : (user.wordleWins || 0);
+
+  let newCurrentStreak: number;
+  let newBestStreak: number;
+
+  if (won) {
+    newCurrentStreak = (user.wordleCurrentStreak || 0) + 1;
+    newBestStreak = Math.max(newCurrentStreak, user.wordleBestStreak || 0);
+  } else {
+    newCurrentStreak = 0;
+    newBestStreak = user.wordleBestStreak || 0;
+  }
+
+  await user.updatePrefs({
+    wordleGamesPlayed: newGamesPlayed,
+    wordleCurrentStreak: newCurrentStreak,
+    wordleBestStreak: newBestStreak,
+    wordleWins: newWins
+  } as Partial<UpdateUserRequest>);
+
+  return { newGamesPlayed, newWins, newCurrentStreak, newBestStreak };
 };
 
 export const submitGameResult = async (
@@ -77,29 +102,7 @@ export const submitGameResult = async (
       throw AppError.notFound('User not found');
     }
 
-    // Update stats
-    const newGamesPlayed = (user.wordleGamesPlayed || 0) + 1;
-    const newWins = won ? (user.wordleWins || 0) + 1 : (user.wordleWins || 0);
-
-    let newCurrentStreak: number;
-    let newBestStreak: number;
-
-    if (won) {
-      // Increment streak on win
-      newCurrentStreak = (user.wordleCurrentStreak || 0) + 1;
-      newBestStreak = Math.max(newCurrentStreak, user.wordleBestStreak || 0);
-    } else {
-      // Reset streak on loss
-      newCurrentStreak = 0;
-      newBestStreak = user.wordleBestStreak || 0;
-    }
-
-    await user.updatePrefs({
-      wordleGamesPlayed: newGamesPlayed,
-      wordleCurrentStreak: newCurrentStreak,
-      wordleBestStreak: newBestStreak,
-      wordleWins: newWins
-    } as Partial<UpdateUserRequest>);
+    const { newGamesPlayed, newWins, newCurrentStreak, newBestStreak } = await updateWordleStats(user, won);
 
     res.json({
       success: true,
