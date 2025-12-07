@@ -11,12 +11,12 @@ export interface ISiteSettings {
   contactEmail: string;
   contactRoom: string;
   contactRoomFullName: string;
-  contactPhone: string;
   officeHours: string;
-  socialTwitter: string;
-  socialInstagram: string;
-  socialFacebook: string;
   gamesImage?: string;
+  featuredNewsImage?: string;
+  aboutMission?: string;
+  aboutWhatWeDo?: string;
+  aboutValues?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,11 +61,10 @@ export class SiteSettings {
           contactEmail: 'contact@studentlens.com',
           contactRoom: 'S-21',
           contactRoomFullName: 'Room S-21',
-          contactPhone: '(555) 123-4567',
           officeHours: 'Monday-Friday 9AM-5PM',
-          socialTwitter: '@studentlens',
-          socialInstagram: '@studentlens_official',
-          socialFacebook: 'StudentLensOfficial',
+          aboutMission: 'Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.',
+          aboutWhatWeDo: 'We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.',
+          aboutValues: 'Authenticity, Community, Growth, Inclusivity',
         }
       );
 
@@ -110,12 +109,12 @@ export class SiteSettings {
       contactEmail: doc.contactEmail || 'contact@studentlens.com',
       contactRoom: doc.contactRoom || 'S-21',
       contactRoomFullName: doc.contactRoomFullName || 'Room S-21',
-      contactPhone: doc.contactPhone || '(555) 123-4567',
       officeHours: doc.officeHours || 'Monday-Friday 9AM-5PM',
-      socialTwitter: doc.socialTwitter || '@studentlens',
-      socialInstagram: doc.socialInstagram || '@studentlens_official',
-      socialFacebook: doc.socialFacebook || 'StudentLensOfficial',
       gamesImage: doc.gamesImage || '',
+      featuredNewsImage: doc.featuredNewsImage || '',
+      aboutMission: doc.aboutMission || 'Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.',
+      aboutWhatWeDo: doc.aboutWhatWeDo || 'We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.',
+      aboutValues: doc.aboutValues || 'Authenticity, Community, Growth, Inclusivity',
       createdAt: doc.$createdAt,
       updatedAt: doc.$updatedAt,
     };

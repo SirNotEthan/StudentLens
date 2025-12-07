@@ -19,13 +19,16 @@ export const getSettings = async (_req: Request, res: Response) => {
             email: settings.contactEmail,
             room: settings.contactRoom,
             roomFullName: settings.contactRoomFullName,
-            phone: settings.contactPhone,
             officeHours: settings.officeHours,
           },
-          social: {
-            twitter: settings.socialTwitter,
-            instagram: settings.socialInstagram,
-            facebook: settings.socialFacebook,
+          images: {
+            games: settings.gamesImage,
+            featuredNews: settings.featuredNewsImage,
+          },
+          about: {
+            mission: settings.aboutMission,
+            whatWeDo: settings.aboutWhatWeDo,
+            values: settings.aboutValues,
           },
         },
       },
@@ -50,11 +53,12 @@ export const updateSettings = async (req: Request, res: Response) => {
       contactEmail,
       contactRoom,
       contactRoomFullName,
-      contactPhone,
       officeHours,
-      socialTwitter,
-      socialInstagram,
-      socialFacebook,
+      gamesImage,
+      featuredNewsImage,
+      aboutMission,
+      aboutWhatWeDo,
+      aboutValues,
     } = req.body;
 
     const settings = await SiteSettings.update({
@@ -63,11 +67,12 @@ export const updateSettings = async (req: Request, res: Response) => {
       ...(contactEmail !== undefined && { contactEmail }),
       ...(contactRoom !== undefined && { contactRoom }),
       ...(contactRoomFullName !== undefined && { contactRoomFullName }),
-      ...(contactPhone !== undefined && { contactPhone }),
       ...(officeHours !== undefined && { officeHours }),
-      ...(socialTwitter !== undefined && { socialTwitter }),
-      ...(socialInstagram !== undefined && { socialInstagram }),
-      ...(socialFacebook !== undefined && { socialFacebook }),
+      ...(gamesImage !== undefined && { gamesImage }),
+      ...(featuredNewsImage !== undefined && { featuredNewsImage }),
+      ...(aboutMission !== undefined && { aboutMission }),
+      ...(aboutWhatWeDo !== undefined && { aboutWhatWeDo }),
+      ...(aboutValues !== undefined && { aboutValues }),
     });
 
     appLogger.info(`Site settings updated by user ${(req as any).user?.id || 'unknown'}`);
@@ -83,13 +88,16 @@ export const updateSettings = async (req: Request, res: Response) => {
             email: settings.contactEmail,
             room: settings.contactRoom,
             roomFullName: settings.contactRoomFullName,
-            phone: settings.contactPhone,
             officeHours: settings.officeHours,
           },
-          social: {
-            twitter: settings.socialTwitter,
-            instagram: settings.socialInstagram,
-            facebook: settings.socialFacebook,
+          images: {
+            games: settings.gamesImage,
+            featuredNews: settings.featuredNewsImage,
+          },
+          about: {
+            mission: settings.aboutMission,
+            whatWeDo: settings.aboutWhatWeDo,
+            values: settings.aboutValues,
           },
         },
       },

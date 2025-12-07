@@ -209,12 +209,12 @@ const AdminPanel = () => {
         contactEmail: settingsForm.contact?.email,
         contactRoom: settingsForm.contact?.room,
         contactRoomFullName: settingsForm.contact?.roomFullName,
-        contactPhone: settingsForm.contact?.phone,
         officeHours: settingsForm.contact?.officeHours,
-        socialTwitter: settingsForm.social?.twitter,
-        socialInstagram: settingsForm.social?.instagram,
-        socialFacebook: settingsForm.social?.facebook,
-        gamesImage: settingsForm.gamesImage,
+        gamesImage: settingsForm.images?.games,
+        featuredNewsImage: settingsForm.images?.featuredNews,
+        aboutMission: settingsForm.about?.mission,
+        aboutWhatWeDo: settingsForm.about?.whatWeDo,
+        aboutValues: settingsForm.about?.values,
       });
 
       if (response.data.success) {
@@ -821,19 +821,6 @@ const AdminPanel = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="contactPhone">Phone Number</label>
-                      <input
-                        type="tel"
-                        id="contactPhone"
-                        value={settingsForm.contact?.phone || ''}
-                        onChange={(e) => setSettingsForm({
-                          ...settingsForm,
-                          contact: { ...settingsForm.contact, phone: e.target.value }
-                        })}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
                       <label htmlFor="contactRoom">Room Number</label>
                       <input
                         type="text"
@@ -877,69 +864,89 @@ const AdminPanel = () => {
                 </div>
 
                 <div className="settings-section">
-                  <h3 className="settings-section-title">Social Media</h3>
+                  <h3 className="settings-section-title">About Us Content</h3>
                   <div className="form-grid">
-                    <div className="form-group">
-                      <label htmlFor="socialTwitter">Twitter Handle</label>
-                      <input
-                        type="text"
-                        id="socialTwitter"
-                        value={settingsForm.social?.twitter || ''}
+                    <div className="form-group full-width">
+                      <label htmlFor="aboutMission">Mission Statement</label>
+                      <textarea
+                        id="aboutMission"
+                        value={settingsForm.about?.mission || ''}
                         onChange={(e) => setSettingsForm({
                           ...settingsForm,
-                          social: { ...settingsForm.social, twitter: e.target.value }
+                          about: { ...settingsForm.about, mission: e.target.value }
                         })}
-                        placeholder="@studentlens"
-                        required
+                        placeholder="Our mission statement..."
+                        rows="3"
                       />
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="socialInstagram">Instagram Handle</label>
-                      <input
-                        type="text"
-                        id="socialInstagram"
-                        value={settingsForm.social?.instagram || ''}
+                    <div className="form-group full-width">
+                      <label htmlFor="aboutWhatWeDo">What We Do</label>
+                      <textarea
+                        id="aboutWhatWeDo"
+                        value={settingsForm.about?.whatWeDo || ''}
                         onChange={(e) => setSettingsForm({
                           ...settingsForm,
-                          social: { ...settingsForm.social, instagram: e.target.value }
+                          about: { ...settingsForm.about, whatWeDo: e.target.value }
                         })}
-                        placeholder="@studentlens_official"
-                        required
+                        placeholder="Description of what we do..."
+                        rows="4"
                       />
                     </div>
-                    <div className="form-group">
-                      <label htmlFor="socialFacebook">Facebook Page</label>
-                      <input
-                        type="text"
-                        id="socialFacebook"
-                        value={settingsForm.social?.facebook || ''}
+                    <div className="form-group full-width">
+                      <label htmlFor="aboutValues">Our Values</label>
+                      <textarea
+                        id="aboutValues"
+                        value={settingsForm.about?.values || ''}
                         onChange={(e) => setSettingsForm({
                           ...settingsForm,
-                          social: { ...settingsForm.social, facebook: e.target.value }
+                          about: { ...settingsForm.about, values: e.target.value }
                         })}
-                        placeholder="StudentLensOfficial"
-                        required
+                        placeholder="Our core values (comma-separated)"
+                        rows="2"
                       />
+                      <small className="form-help">Enter values separated by commas (e.g., Authenticity, Community, Growth, Inclusivity)</small>
                     </div>
                   </div>
                 </div>
 
                 <div className="settings-section">
-                  <h3 className="settings-section-title">Games Section</h3>
+                  <h3 className="settings-section-title">Images</h3>
                   <div className="form-grid">
+                    <div className="form-group full-width">
+                      <label htmlFor="featuredNewsImage">Featured News Image URL</label>
+                      <input
+                        type="url"
+                        id="featuredNewsImage"
+                        value={settingsForm.images?.featuredNews || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          images: { ...settingsForm.images, featuredNews: e.target.value }
+                        })}
+                        placeholder="https://example.com/news-image.jpg"
+                      />
+                      <small className="form-help">Optional: Image displayed in the Latest News section</small>
+                      {settingsForm.images?.featuredNews && (
+                        <div className="image-preview">
+                          <img src={settingsForm.images.featuredNews} alt="Featured news preview" />
+                        </div>
+                      )}
+                    </div>
                     <div className="form-group full-width">
                       <label htmlFor="gamesImage">Games Section Image URL</label>
                       <input
                         type="url"
                         id="gamesImage"
-                        value={settingsForm.gamesImage || ''}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, gamesImage: e.target.value })}
-                        placeholder="https://example.com/image.jpg"
+                        value={settingsForm.images?.games || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          images: { ...settingsForm.images, games: e.target.value }
+                        })}
+                        placeholder="https://example.com/games-image.jpg"
                       />
-                      <small className="form-help">Optional: Image displayed below the "Coming Soon" games section</small>
-                      {settingsForm.gamesImage && (
+                      <small className="form-help">Optional: Image displayed below the games section</small>
+                      {settingsForm.images?.games && (
                         <div className="image-preview">
-                          <img src={settingsForm.gamesImage} alt="Games section preview" />
+                          <img src={settingsForm.images.games} alt="Games section preview" />
                         </div>
                       )}
                     </div>

@@ -256,19 +256,6 @@ const MainPage = () => {
       <header className="header">
         <div className="header-top">
           <div className="header-left">
-            <div className="search-container">
-              <span className="search-icon">🔍</span>
-              <input
-                type="text"
-                placeholder="Search"
-                className="search-input"
-                value={searchQuery}
-                onChange={handleSearchInputChange}
-              />
-              {searchQuery && (
-                <button className="search-clear" onClick={clearSearch}>✕</button>
-              )}
-            </div>
             <div className="header-date-inline">
               <span className="date-text">{getCurrentDate()}</span>
             </div>
@@ -277,10 +264,6 @@ const MainPage = () => {
           <h1 className="main-title">{settings?.siteName || 'STUDENT LENS'}</h1>
 
           <div className="header-right">
-            <button className="home-icon-btn" onClick={() => navigate('/main')}>
-              <span className="icon-house">🏠</span>
-              <span className="icon-label">HOME</span>
-            </button>
             <div
               className="user-dropdown-wrapper"
               ref={dropdownRef}
@@ -613,7 +596,22 @@ const MainPage = () => {
 
       <section className="news-grid">
         <div className="news-header">
-          <h2 className="section-title">NEWS</h2>
+          <div className="news-title-search">
+            <h2 className="section-title">NEWS</h2>
+            <div className="search-container-inline">
+              <span className="search-icon">🔍</span>
+              <input
+                type="text"
+                placeholder="Search articles..."
+                className="search-input"
+                value={searchQuery}
+                onChange={handleSearchInputChange}
+              />
+              {searchQuery && (
+                <button className="search-clear" onClick={clearSearch}>✕</button>
+              )}
+            </div>
+          </div>
           <div className="category-tags">
             <span
               className={`tag tag-all ${selectedCategory === 'ALL' ? 'active' : ''}`}

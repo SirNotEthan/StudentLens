@@ -22,6 +22,7 @@ export interface IUser {
   wordleCurrentStreak: number;
   wordleBestStreak: number;
   wordleWins: number;
+  wordleLastPlayedDate?: string;
   createdAt: string;
   updatedAt: string;
   prefs: Record<string, any>;
@@ -280,6 +281,7 @@ export interface UpdateUserRequest {
   wordleCurrentStreak?: number;
   wordleBestStreak?: number;
   wordleWins?: number;
+  wordleLastPlayedDate?: string;
 }
 
 export interface ChangePasswordRequest {

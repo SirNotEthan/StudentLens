@@ -32,6 +32,7 @@ export class User implements IUser {
   public wordleCurrentStreak: number;
   public wordleBestStreak: number;
   public wordleWins: number;
+  public wordleLastPlayedDate?: string;
   public createdAt: string;
   public updatedAt: string;
   public prefs: Record<string, any>;
@@ -58,6 +59,7 @@ export class User implements IUser {
     this.wordleCurrentStreak = userData.prefs?.wordleCurrentStreak || 0;
     this.wordleBestStreak = userData.prefs?.wordleBestStreak || 0;
     this.wordleWins = userData.prefs?.wordleWins || 0;
+    this.wordleLastPlayedDate = userData.prefs?.wordleLastPlayedDate;
     this.createdAt = userData.$createdAt;
     this.updatedAt = userData.$updatedAt;
     this.prefs = userData.prefs || {};
@@ -94,7 +96,8 @@ export class User implements IUser {
         wordleGamesPlayed: 0,
         wordleCurrentStreak: 0,
         wordleBestStreak: 0,
-        wordleWins: 0
+        wordleWins: 0,
+        wordleLastPlayedDate: undefined
       });
 
       const updatedUser = await users.get(user.$id);
@@ -719,6 +722,7 @@ export class User implements IUser {
       wordleCurrentStreak: this.wordleCurrentStreak,
       wordleBestStreak: this.wordleBestStreak,
       wordleWins: this.wordleWins,
+      wordleLastPlayedDate: this.wordleLastPlayedDate,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

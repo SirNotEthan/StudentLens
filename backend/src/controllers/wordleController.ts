@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { User } from '@/models/User';
 import { AppError } from '@/utils/AppError';
-import { generateRandomWord, isValidEnglishWord } from '@/data/wordleWords';
+import { getDailyWord, getTodayDateString, validateWordSubmission } from '@/data/wordleWords';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 
 export const getNewWord = async (
@@ -14,11 +14,18 @@ export const getNewWord = async (
       throw AppError.unauthorized('User not authenticated');
     }
 
-    const word = await generateRandomWord();
-
-    if (!word) {
-      throw AppError.badRequest('Failed to generate a valid word');
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      throw AppError.notFound('User not found');
     }
+
+    const today = getTodayDateString();
+
+    if (user.wordleLastPlayedDate === today) {
+      throw AppError.badRequest('You have already played today. Come back tomorrow for a new word!');
+    }
+
+    const word = getDailyWord();
 
     res.json({
       success: true,
@@ -45,15 +52,12 @@ export const validateWord = async (
       throw AppError.badRequest('Word is required');
     }
 
-    if (word.length !== 5) {
-      throw AppError.badRequest('Word must be 5 letters');
-    }
-
-    const isValid = isValidEnglishWord(word);
+    const validationResult = await validateWordSubmission(word);
 
     res.json({
       success: true,
-      isValid
+      isValid: validationResult.isValid,
+      reason: validationResult.reason
     });
   } catch (error) {
     next(error);
@@ -61,6 +65,7 @@ export const validateWord = async (
 };
 
 const updateWordleStats = async (user: User, won: boolean) => {
+  const today = getTodayDateString();
   const newGamesPlayed = (user.wordleGamesPlayed || 0) + 1;
   const newWins = won ? (user.wordleWins || 0) + 1 : (user.wordleWins || 0);
 
@@ -79,7 +84,8 @@ const updateWordleStats = async (user: User, won: boolean) => {
     wordleGamesPlayed: newGamesPlayed,
     wordleCurrentStreak: newCurrentStreak,
     wordleBestStreak: newBestStreak,
-    wordleWins: newWins
+    wordleWins: newWins,
+    wordleLastPlayedDate: today
   } as Partial<UpdateUserRequest>);
 
   return { newGamesPlayed, newWins, newCurrentStreak, newBestStreak };

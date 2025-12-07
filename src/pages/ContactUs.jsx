@@ -30,7 +30,6 @@ const ContactUs = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      // In a real application, you would send this to your backend
       await axios.post('/contact', formData);
       setStatus({
         type: 'success',
@@ -88,10 +87,6 @@ const ContactUs = () => {
                 <a href={`mailto:${settings?.contact?.email || 'contact@studentlens.com'}`}>
                   {settings?.contact?.email || 'contact@studentlens.com'}
                 </a>
-              </p>
-              <p>
-                <strong>Phone:</strong><br />
-                {settings?.contact?.phone || '(555) 123-4567'}
               </p>
             </section>
 

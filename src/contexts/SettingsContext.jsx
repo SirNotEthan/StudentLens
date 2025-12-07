@@ -36,13 +36,16 @@ export const SettingsProvider = ({ children }) => {
           email: 'contact@studentlens.com',
           room: 'S-21',
           roomFullName: 'Room S-21',
-          phone: '(555) 123-4567',
           officeHours: 'Monday-Friday 9AM-5PM',
         },
-        social: {
-          twitter: '@studentlens',
-          instagram: '@studentlens_official',
-          facebook: 'StudentLensOfficial',
+        images: {
+          games: '',
+          featuredNews: '',
+        },
+        about: {
+          mission: 'Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.',
+          whatWeDo: 'We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.',
+          values: 'Authenticity, Community, Growth, Inclusivity',
         },
       });
     } finally {
