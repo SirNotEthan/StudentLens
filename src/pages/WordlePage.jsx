@@ -54,7 +54,14 @@ const WordlePage = () => {
       }
     } catch (error) {
       console.error('Error fetching new word:', error);
-      setMessage('Error loading game. Please try again.');
+
+      // Handle "already played today" error gracefully
+      if (error.response?.status === 400 && error.response?.data?.message?.includes('already played')) {
+        setGameStatus('already-played');
+        setMessage(error.response.data.message || 'You have already played today. Come back tomorrow!');
+      } else {
+        setMessage('Error loading game. Please try again.');
+      }
     }
   };
 
@@ -264,13 +271,23 @@ const WordlePage = () => {
           ))}
         </div>
 
-        {gameStatus !== 'playing' && (
+        {gameStatus !== 'playing' && gameStatus !== 'already-played' && (
           <div className="game-over">
             <h2>{gameStatus === 'won' ? '🎉 You Won!' : '😔 Better Luck Next Time'}</h2>
             {gameStatus === 'lost' && <p>The word was: <strong>{targetWord}</strong></p>}
             <button className="play-again-button" onClick={startNewGame}>
               Play Again
             </button>
+          </div>
+        )}
+
+        {gameStatus === 'already-played' && (
+          <div className="game-over">
+            <h2>✅ Already Played Today</h2>
+            <p>You've already completed today's puzzle. Come back tomorrow for a new word!</p>
+            <p className="stats-preview">
+              Your streak: <strong>{stats.currentStreak}</strong> | Games played: <strong>{stats.gamesPlayed}</strong>
+            </p>
           </div>
         )}
       </main>
