@@ -55,6 +55,7 @@ import commentRoutes from '@/routes/comments';
 import analyticsRoutes from '@/routes/analytics';
 import settingsRoutes from '@/routes/settings';
 import wordleRoutes from '@/routes/wordle';
+import versionRoutes from '@/routes/version';
 console.log('LOADING: all routes loaded');
 
 import { EnvironmentVariables } from '@/types';
@@ -446,6 +447,8 @@ const startServer = async (): Promise<void> => {
     console.log('STARTUP: - Settings routes added');
     app.use('/api/wordle', wordleRoutes);
     console.log('STARTUP: - Wordle routes added');
+    app.use('/api/version', versionRoutes);
+    console.log('STARTUP: - Version routes added');
     console.log('STARTUP: ✅ All API routes configured');
 
     // Set up SPA fallback route (must be after all API routes)

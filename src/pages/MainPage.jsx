@@ -4,6 +4,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useNavigate } from 'react-router-dom';
 import PostCreator from '../components/PostCreator';
 import AuthorLink from '../components/AuthorLink';
+import Footer from '../components/Footer';
 import axios from 'axios';
 import '../styles/MainPage.css';
 
@@ -719,6 +720,8 @@ const MainPage = () => {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

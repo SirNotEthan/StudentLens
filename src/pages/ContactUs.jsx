@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import Footer from '../components/Footer';
 import axios from 'axios';
 import '../styles/InfoPage.css';
 
@@ -170,6 +171,8 @@ const ContactUs = () => {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };

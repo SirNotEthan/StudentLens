@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import Footer from '../components/Footer';
 import '../styles/InfoPage.css';
 
 const AboutUs = () => {
@@ -117,6 +118,8 @@ const AboutUs = () => {
           </p>
         </section>
       </div>
+
+      <Footer />
     </div>
   );
 };
