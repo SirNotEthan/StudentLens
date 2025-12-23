@@ -54,7 +54,7 @@ export class User implements IUser {
     this.needsSetup = userData.prefs?.needsSetup !== undefined ? userData.prefs.needsSetup : false;
     this.provider = userData.prefs?.provider || 'email';
     this.googleId = userData.prefs?.googleId;
-    this.profileVisibility = userData.prefs?.profileVisibility !== false; // Default to true (public)
+    this.profileVisibility = userData.prefs?.profileVisibility !== false; 
     this.wordleGamesPlayed = userData.prefs?.wordleGamesPlayed || 0;
     this.wordleCurrentStreak = userData.prefs?.wordleCurrentStreak || 0;
     this.wordleBestStreak = userData.prefs?.wordleBestStreak || 0;
@@ -74,9 +74,9 @@ export class User implements IUser {
       const user = await users.create(
         ID.unique(),
         userData.email,
-        undefined, // phone (optional)
-        userData.password || ID.unique(), // Generate random password for OAuth users
-        userData.username || userData.email.split('@')[0] // Use username for the name field
+        undefined, 
+        userData.password || ID.unique(), 
+        userData.username || userData.email.split('@')[0] 
       );
 
       await users.updatePrefs(user.$id, {
@@ -92,7 +92,7 @@ export class User implements IUser {
         needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : true,
         provider: userData.provider || 'email',
         googleId: userData.googleId || undefined,
-        profileVisibility: true, // Default to public profile
+        profileVisibility: true, 
         wordleGamesPlayed: 0,
         wordleCurrentStreak: 0,
         wordleBestStreak: 0,
@@ -190,7 +190,7 @@ export class User implements IUser {
       const user = usersList.users.find(u =>
         u.email === email &&
         !u.prefs?.isDeleted &&
-        !u.email.startsWith('DELETED_') // Extra check for scrambled emails
+        !u.email.startsWith('DELETED_') 
       );
 
       const duration = Date.now() - startTime;
@@ -342,7 +342,6 @@ export class User implements IUser {
     }
   }
 
-
   private static prepareDatabaseData(data: any): any {
     const cleanData = { ...data };
 
@@ -472,28 +471,27 @@ export class User implements IUser {
       const now = new Date();
       const nowISO = now.toISOString();
 
-      // Calculate streak
       let newStreak = this.streak || 0;
       if (this.lastLogin) {
         const lastLoginDate = new Date(this.lastLogin);
         const daysDifference = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
 
         if (daysDifference === 0) {
-          // Same day login, keep streak
+          
           newStreak = this.streak || 1;
         } else if (daysDifference === 1) {
-          // Consecutive day login, increment streak
+          
           newStreak = (this.streak || 0) + 1;
           appLogger.info('Login streak increased', { userId: this.id, newStreak, previousStreak: this.streak });
         } else {
-          // Streak broken, reset to 1
+          
           if (this.streak && this.streak > 1) {
             appLogger.info('Login streak broken', { userId: this.id, previousStreak: this.streak, daysMissed: daysDifference });
           }
           newStreak = 1;
         }
       } else {
-        // First login, start streak
+        
         newStreak = 1;
         appLogger.info('Login streak started', { userId: this.id });
       }
@@ -587,9 +585,9 @@ export class User implements IUser {
           ...this.prefs,
           isDeleted: true,
           deletedAt: new Date().toISOString(),
-          email: deletedEmail, // Keep consistent with actual email
-          googleId: null, // Explicitly set to null instead of undefined
-          username: deletedUsername // Modify username too
+          email: deletedEmail, 
+          googleId: null, 
+          username: deletedUsername 
         });
         appLogger.info('User marked as deleted in preferences', { userId: this.id });
       } catch (prefsError: any) {

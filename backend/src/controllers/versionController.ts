@@ -2,12 +2,9 @@ import { Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-/**
- * Get application version information
- */
 export const getVersion = (_req: Request, res: Response) => {
   try {
-    // Read version from package.json
+    
     const packageJsonPath = join(__dirname, '../../package.json');
     const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
 

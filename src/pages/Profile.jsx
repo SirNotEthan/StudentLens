@@ -48,7 +48,6 @@ const Profile = () => {
     setEditLoading(true);
     setEditError('');
 
-
     if (!editData.firstName.trim()) {
       setEditError('First name is required');
       setEditLoading(false);
@@ -97,7 +96,7 @@ const Profile = () => {
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) { 
         alert('Image size must be less than 5MB');
         return;
       }
@@ -125,7 +124,7 @@ const Profile = () => {
       });
 
       if (response.data.success) {
-        // Reload the page to refresh user data from AuthContext
+        
         window.location.reload();
       }
     } catch (error) {
@@ -453,7 +452,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Profile Picture Upload Modal */}
+      {}
       {showPictureModal && (
         <div className="profile-picture-modal" onClick={() => setShowPictureModal(false)}>
           <div className="profile-picture-modal-content" onClick={(e) => e.stopPropagation()}>

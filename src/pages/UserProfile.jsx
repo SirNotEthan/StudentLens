@@ -25,7 +25,7 @@ const UserProfile = () => {
       setLoading(true);
       setError(null);
       const response = await axios.get(`/users/profile/${username}`);
-      // API returns { success, message, data: { user, stats, recentPosts } }
+      
       setProfileData(response.data.data || response.data);
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -56,7 +56,7 @@ const UserProfile = () => {
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) { 
         alert('Image size must be less than 5MB');
         return;
       }
@@ -84,7 +84,7 @@ const UserProfile = () => {
       });
 
       if (response.data.success) {
-        // Update profile data with new image
+        
         setProfileData({
           ...profileData,
           user: {
@@ -152,7 +152,7 @@ const UserProfile = () => {
       </div>
 
       <div className="profile-container">
-        {/* User Info Section */}
+        {}
         <div className="profile-info-section">
           <div className="profile-avatar">
             {profileData.user.profileImage ? (
@@ -197,7 +197,7 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {}
         {(profileData.user.showStats !== false || isOwnProfile) && (
         <div className="profile-stats-section">
           <h2 className="section-title">Statistics</h2>
@@ -231,7 +231,7 @@ const UserProfile = () => {
         </div>
         )}
 
-        {/* Recent Posts Section */}
+        {}
         {(profileData.user.showPosts !== false || isOwnProfile) && (
         <div className="profile-posts-section">
           <h2 className="section-title">Recent Articles</h2>
@@ -275,7 +275,7 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* Profile Picture Upload Modal */}
+      {}
       {showPictureModal && (
         <div className="profile-picture-modal" onClick={() => setShowPictureModal(false)}>
           <div className="profile-picture-modal-content" onClick={(e) => e.stopPropagation()}>

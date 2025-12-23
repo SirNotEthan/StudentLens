@@ -128,7 +128,7 @@ const PostDetail = () => {
 
   return (
     <div className="post-detail">
-      {/* Navigation Header */}
+      {}
       <nav className="post-navigation">
         <button className="nav-button back-button" onClick={() => navigate('/main')}>
           <span className="nav-icon">←</span>
@@ -146,10 +146,10 @@ const PostDetail = () => {
         )}
       </nav>
 
-      {/* Main Content Area */}
+      {}
       <div className="post-container">
         <main className="post-main">
-          {/* Article Header */}
+          {}
           <header className="article-header">
             <div className="article-meta">
               <div className="meta-primary">
@@ -174,7 +174,7 @@ const PostDetail = () => {
               <p className="article-subtitle">{post.excerpt}</p>
             )}
 
-            {/* Author Section */}
+            {}
             <div className="author-section">
               <div className="author-avatar-large">
                 {post.authorName.charAt(0).toUpperCase()}
@@ -196,7 +196,7 @@ const PostDetail = () => {
             </div>
           </header>
 
-          {/* Featured Image */}
+          {}
           {post.featuredImage && (
             <div className="featured-image-container">
               <img
@@ -207,13 +207,13 @@ const PostDetail = () => {
             </div>
           )}
 
-          {/* Article Content */}
+          {}
           <article className="article-content">
             <div className="content-body">
               {formatContent(post.content)}
             </div>
 
-            {/* Tags Section */}
+            {}
             {post.tags && post.tags.length > 0 && (
               <div className="tags-section">
                 <h4 className="tags-title">Related Topics</h4>
@@ -228,7 +228,7 @@ const PostDetail = () => {
             )}
           </article>
 
-          {/* Article Footer */}
+          {}
           <footer className="article-footer">
             {user ? (
               <PostInteractions
@@ -252,7 +252,7 @@ const PostDetail = () => {
               </div>
             )}
 
-            {/* Author Bio */}
+            {}
             <div className="author-bio">
               <div className="bio-header">
                 <div className="author-avatar">
@@ -270,7 +270,7 @@ const PostDetail = () => {
           </footer>
         </main>
 
-        {/* Sidebar */}
+        {}
         <aside className="post-sidebar">
           <div className="sidebar-card">
             <h3 className="sidebar-title">Article Details</h3>
@@ -300,7 +300,7 @@ const PostDetail = () => {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {}
           <div className="sidebar-card">
             <h3 className="sidebar-title">Quick Actions</h3>
             <div className="quick-actions">

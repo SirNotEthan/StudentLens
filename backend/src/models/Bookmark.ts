@@ -142,7 +142,7 @@ export class Bookmark implements IBookmark {
 
       const bookmark = await this.findByUserAndPost(userId, postId);
       if (!bookmark) {
-        return false; // Bookmark doesn't exist
+        return false; 
       }
 
       await databases.deleteDocument(
@@ -176,7 +176,7 @@ export class Bookmark implements IBookmark {
 
       const queries = [
         Query.equal('postId', postId),
-        Query.limit(1) // We only need the count
+        Query.limit(1) 
       ];
 
       const documents = await databases.listDocuments(

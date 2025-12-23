@@ -2,16 +2,10 @@ import { useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
-/**
- * Analytics tracking hook
- */
 export const useAnalytics = () => {
   const { user } = useAuth();
   const sessionStartTime = useRef(Date.now());
 
-  /**
-   * Track a custom event
-   */
   const trackEvent = async (eventType, eventData = {}) => {
     try {
       await axios.post('/analytics/track', {
@@ -22,14 +16,11 @@ export const useAnalytics = () => {
         referrer: document.referrer
       });
     } catch (error) {
-      // Silently fail - analytics errors shouldn't break the app
+      
       console.debug('Analytics tracking failed:', error);
     }
   };
 
-  /**
-   * Track page view
-   */
   const trackPageView = async (pagePath) => {
     await trackEvent('page_view', {
       path: pagePath || window.location.pathname,
@@ -37,9 +28,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track post view
-   */
   const trackPostView = async (postId, postTitle) => {
     await trackEvent('post_view', {
       postId,
@@ -48,9 +36,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track post like
-   */
   const trackPostLike = async (postId) => {
     await trackEvent('post_like', {
       postId,
@@ -58,9 +43,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track post unlike
-   */
   const trackPostUnlike = async (postId) => {
     await trackEvent('post_unlike', {
       postId,
@@ -68,9 +50,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track bookmark
-   */
   const trackBookmark = async (postId) => {
     await trackEvent('post_bookmark', {
       postId,
@@ -78,9 +57,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track unbookmark
-   */
   const trackUnbookmark = async (postId) => {
     await trackEvent('post_unbookmark', {
       postId,
@@ -88,9 +64,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track comment creation
-   */
   const trackCommentCreate = async (postId, commentId) => {
     await trackEvent('comment_create', {
       postId,
@@ -99,9 +72,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track comment like
-   */
   const trackCommentLike = async (commentId) => {
     await trackEvent('comment_like', {
       commentId,
@@ -109,9 +79,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track search
-   */
   const trackSearch = async (searchQuery, resultsCount) => {
     await trackEvent('search', {
       query: searchQuery,
@@ -120,9 +87,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track feature usage
-   */
   const trackFeatureUse = async (featureName, metadata = {}) => {
     await trackEvent('feature_use', {
       feature: featureName,
@@ -131,18 +95,12 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track profile update
-   */
   const trackProfileUpdate = async () => {
     await trackEvent('profile_update', {
       timestamp: new Date().toISOString()
     });
   };
 
-  /**
-   * Track post creation
-   */
   const trackPostCreate = async (postId, category) => {
     await trackEvent('post_create', {
       postId,
@@ -151,9 +109,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track post edit
-   */
   const trackPostEdit = async (postId) => {
     await trackEvent('post_edit', {
       postId,
@@ -161,9 +116,6 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track post delete
-   */
   const trackPostDelete = async (postId) => {
     await trackEvent('post_delete', {
       postId,
@@ -171,18 +123,12 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track login
-   */
   const trackLogin = async () => {
     await trackEvent('login', {
       timestamp: new Date().toISOString()
     });
   };
 
-  /**
-   * Track logout
-   */
   const trackLogout = async () => {
     const sessionDuration = Date.now() - sessionStartTime.current;
     await trackEvent('logout', {
@@ -191,25 +137,20 @@ export const useAnalytics = () => {
     });
   };
 
-  /**
-   * Track signup
-   */
   const trackSignup = async () => {
     await trackEvent('signup', {
       timestamp: new Date().toISOString()
     });
   };
 
-  // Track page view on route changes
   useEffect(() => {
     trackPageView();
   }, [window.location.pathname]);
 
-  // Track session duration on unmount
   useEffect(() => {
     return () => {
       const sessionDuration = Date.now() - sessionStartTime.current;
-      if (sessionDuration > 1000) { // Only track if session was longer than 1 second
+      if (sessionDuration > 1000) { 
         trackEvent('session_end', {
           sessionDuration,
           timestamp: new Date().toISOString()

@@ -170,7 +170,7 @@ class Logger {
       timestamp: new Date().toISOString(),
     };
 
-    if (duration > 1000) { // Log slow operations (>1s)
+    if (duration > 1000) { 
       logger.warn(`SLOW OPERATION: ${operation}`, perfLog);
     } else {
       logger.debug(`PERFORMANCE: ${operation}`, perfLog);

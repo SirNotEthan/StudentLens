@@ -24,7 +24,6 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
 }
 
-
 .post-image {
   position: relative;
   width: 100%;
@@ -56,7 +55,6 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
 }
-
 
 .post-content {
   padding: 1.5rem;
@@ -132,7 +130,6 @@
   filter: drop-shadow(0 1px 2px rgba(255, 140, 0, 0.4));
 }
 
-
 .post-actions {
   display: flex;
   gap: 0.5rem;
@@ -165,7 +162,6 @@
   transform: scale(1.05);
 }
 
-
 .post-title {
   margin: 0 0 0.75rem 0;
   font-size: 1.25rem;
@@ -178,7 +174,6 @@
   overflow: hidden;
 }
 
-
 .post-excerpt {
   margin: 0 0 1rem 0;
   color: #6c757d;
@@ -189,7 +184,6 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
 
 .post-footer {
   display: flex;
@@ -232,7 +226,6 @@
   font-weight: 500;
 }
 
-
 .post-tags {
   margin-top: 1rem;
   padding-top: 1rem;
@@ -263,7 +256,6 @@
   font-style: italic;
   font-size: 0.75rem;
 }
-
 
 @media (max-width: 768px) {
   .post-content {

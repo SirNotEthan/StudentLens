@@ -81,7 +81,7 @@ export interface IComment {
   authorId: string;
   authorName: string;
   content: string;
-  parentId?: string; // For nested comments/replies
+  parentId?: string; 
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
@@ -256,7 +256,7 @@ export interface RegisterUserRequest {
 }
 
 export interface LoginRequest {
-  login: string; // can be username or email
+  login: string; 
   password: string;
 }
 
@@ -344,7 +344,6 @@ export interface LoggerContext {
   userRole?: string;
 }
 
-// Analytics Types
 export type AnalyticsEventType =
   | 'page_view'
   | 'post_view'
@@ -371,7 +370,6 @@ export interface IAnalyticsEvent {
   eventType: AnalyticsEventType;
   eventData?: Record<string, any>;
 
-  // User Technical Data
   ipAddress?: string;
   browser?: string;
   browserVersion?: string;
@@ -380,18 +378,15 @@ export interface IAnalyticsEvent {
   osVersion?: string;
   userAgent?: string;
 
-  // Page/Content Data
   pageUrl?: string;
   pageTitle?: string;
   referrer?: string;
 
-  // Interaction Data
   postId?: string;
   commentId?: string;
   searchQuery?: string;
   featureName?: string;
 
-  // Metadata
   timestamp: string;
   createdAt: string;
 }

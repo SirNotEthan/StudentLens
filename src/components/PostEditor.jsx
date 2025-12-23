@@ -188,7 +188,6 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
     );
   }
 
-  
   const isAuthor = originalPost.authorId === user.id;
   const canEditAny = user.hasPermission('edit_articles');
   const canEdit = isAuthor || canEditAny;
@@ -320,7 +319,7 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
               name="featuredImage"
               value={formData.featuredImage}
               onChange={handleInputChange}
-              placeholder="https://example.com/image.jpg"
+              placeholder="https:
             />
           </div>
         </div>

@@ -22,6 +22,6 @@ router.get('/', authorizePermission('manage_applications'), getAllApplications);
 router.get('/stats', authorizePermission('manage_applications'), getApplicationStats);
 router.get('/:id', authorizePermission('manage_applications'), getApplicationById);
 router.put('/:id/review', authorizePermission('manage_applications'), validateReviewApplication, reviewApplication);
-router.delete('/:id', deleteApplication); // Users can delete their own, admins can delete any
+router.delete('/:id', deleteApplication); 
 
 export default router;

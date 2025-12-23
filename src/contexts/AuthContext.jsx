@@ -13,7 +13,6 @@ const getOAuthRedirectBase = () => {
 
 axios.defaults.baseURL = API_BASE_URL;
 
-
 axios.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -40,7 +39,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  
   const normalizeUserData = (userData) => {
     if (!userData) return null;
 
@@ -243,7 +241,6 @@ export const AuthProvider = ({ children }) => {
 
   const clearError = () => setError(null);
 
-
   const googleSignup = () => {
     const baseUrl = getOAuthRedirectBase();
     console.log('🔵 OAuth Signup - Base URL:', baseUrl);
@@ -258,7 +255,6 @@ export const AuthProvider = ({ children }) => {
     window.location.href = `${baseUrl}/api/auth/google/signin`;
   };
 
-  
   const getUserDisplayName = () => {
     if (!user) return 'Guest';
     return user.firstName || user.username || user.email.split('@')[0];

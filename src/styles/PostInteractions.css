@@ -63,7 +63,6 @@
   font-weight: 500;
 }
 
-
 .like-btn.active {
   background-color: #fce4ec;
   border-color: #e91e63;
@@ -75,7 +74,6 @@
   border-color: #e91e63;
 }
 
-
 .bookmark-btn.active {
   background-color: #fff3e0;
   border-color: #ff9800;
@@ -86,7 +84,6 @@
   background-color: #fff3e0;
   border-color: #ff9800;
 }
-
 
 .share-container {
   position: relative;
@@ -158,7 +155,6 @@
   text-align: center;
 }
 
-
 .interaction-prompt {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
@@ -170,7 +166,6 @@
   color: #6c757d;
   font-style: italic;
 }
-
 
 .interaction-error {
   margin-top: 0.75rem;
@@ -200,7 +195,6 @@
   font-size: 0.85rem;
 }
 
-
 .interaction-btn:disabled.loading {
   position: relative;
   color: transparent;
@@ -218,7 +212,6 @@
   border-top: 2px solid #007bff;
   border-radius: 50%;
 }
-
 
 @media (max-width: 768px) {
   .post-interactions {
@@ -259,7 +252,6 @@
     font-size: 1rem;
   }
 }
-
 
 @media (prefers-color-scheme: dark) {
   .post-interactions {

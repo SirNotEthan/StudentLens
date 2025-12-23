@@ -39,12 +39,10 @@ const Analytics = () => {
   useEffect(() => {
     fetchAnalytics();
 
-    // Auto-refresh every 30 seconds
     const intervalId = setInterval(() => {
       fetchAnalytics();
     }, 30000);
 
-    // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, [timeRange]);
 
@@ -103,7 +101,6 @@ const Analytics = () => {
         userGrowth: []
       });
 
-      // Fetch user behavior data
       if (hasPermission('view_analytics')) {
         try {
           const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
@@ -234,7 +231,7 @@ const Analytics = () => {
       </div>
 
       <div className="analytics-grid">
-        {/* Overview Stats */}
+        {}
         <div className="analytics-card overview-stats">
           <h3>Platform Overview</h3>
           <div className="stats-grid">
@@ -271,7 +268,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Personal Stats */}
+        {}
         <div className="analytics-card personal-stats">
           <h3>Your Statistics</h3>
           <div className="stats-grid">
@@ -306,7 +303,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* User Behavior Data (if available) */}
+        {}
         {behaviorData && (
           <div className="analytics-card user-behavior">
             <h3>🔍 Your Activity Insights</h3>
@@ -341,10 +338,10 @@ const Analytics = () => {
           </div>
         )}
 
-        {/* System Analytics (for admins) */}
+        {}
         {systemStats && hasPermission('view_analytics') && (
           <>
-            {/* Device Stats */}
+            {}
             <div className="analytics-card device-stats">
               <h3>📱 Device Distribution</h3>
               <div className="device-breakdown">
@@ -372,7 +369,7 @@ const Analytics = () => {
               </div>
             </div>
 
-            {/* Browser Stats */}
+            {}
             <div className="analytics-card browser-stats">
               <h3>🌐 Browser Usage</h3>
               <div className="browser-list">
@@ -388,7 +385,7 @@ const Analytics = () => {
               </div>
             </div>
 
-            {/* OS Stats */}
+            {}
             <div className="analytics-card os-stats">
               <h3>💻 Operating Systems</h3>
               <div className="os-list">
@@ -406,7 +403,7 @@ const Analytics = () => {
           </>
         )}
 
-        {/* Top Posts */}
+        {}
         <div className="analytics-card top-posts">
           <h3>🏆 Top Performing Posts</h3>
           <div className="top-posts-list">
@@ -426,7 +423,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Category Distribution */}
+        {}
         <div className="analytics-card category-stats">
           <h3>📊 Posts by Category</h3>
           <div className="category-list">
@@ -449,7 +446,7 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {}
         <div className="analytics-card recent-activity">
           <h3>🕒 Recent Activity</h3>
           <div className="activity-list">

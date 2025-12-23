@@ -37,7 +37,7 @@ const StudentDashboard = ({ activeTab, setActiveTab }) => {
   const handleSubmitApplication = async () => {
     try {
       await axios.post('/applications', applicationForm);
-      await loadDashboardData(); // Refresh to get the new application
+      await loadDashboardData(); 
       setApplicationForm({ reason: '', writingSample: '' });
       setActiveTab('application');
     } catch (error) {

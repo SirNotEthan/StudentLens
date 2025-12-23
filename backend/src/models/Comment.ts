@@ -214,7 +214,6 @@ export class Comment implements IComment {
     try {
       appLogger.debug('Toggling comment like', { commentId: this.id, userId, currentLikes: this.likes });
 
-
       const currentDoc = await databases.getDocument(DATABASE_ID, COMMENTS_COLLECTION_ID, this.id);
       const likedUsers = currentDoc.likedUsers || [];
 

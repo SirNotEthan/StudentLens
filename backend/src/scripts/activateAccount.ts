@@ -8,7 +8,6 @@ async function activateAccount(email: string) {
   try {
     console.log(`🔍 Searching for user with email: ${email}`);
 
-    // List all users and find the one with the matching email
     const usersList = await users.list();
     const user = usersList.users.find(u => u.email === email);
 
@@ -20,7 +19,6 @@ async function activateAccount(email: string) {
     console.log(`✅ Found user: ${user.name} (ID: ${user.$id})`);
     console.log(`📊 Current status: isActive = ${user.prefs?.isActive !== false}`);
 
-    // Update user preferences to set isActive to true
     await users.updatePrefs(user.$id, {
       ...user.prefs,
       isActive: true
@@ -37,7 +35,6 @@ async function activateAccount(email: string) {
   }
 }
 
-// Get email from command line arguments or use default
 const email = process.argv[2] || 'ethn.bannister15@gmail.com';
 
 if (require.main === module) {

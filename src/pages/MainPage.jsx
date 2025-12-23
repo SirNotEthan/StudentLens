@@ -34,7 +34,7 @@ const MainPage = () => {
   }, []);
 
   useEffect(() => {
-    // Refresh stats when user role changes
+    
     if (user) {
       fetchPendingStats();
     }
@@ -92,26 +92,26 @@ const MainPage = () => {
       let count = 0;
 
       if (user.role === 'Writer') {
-        // Fetch pending articles for writers
+        
         const response = await axios.get('/posts/my?status=pending_review');
         if (response.data.success) {
           const posts = response.data.data?.posts || response.data.posts || [];
           count = posts.filter(post => post.status === 'pending_review').length;
         }
       } else if (user.role === 'Editor') {
-        // Fetch pending articles for editors
+        
         const response = await axios.get('/posts/pending/editor');
         if (response.data.success) {
           count = response.data.data?.total || response.data.total || 0;
         }
       } else if (user.role === 'Reviewer') {
-        // Fetch pending articles for reviewers
+        
         const response = await axios.get('/posts/pending/reviewer');
         if (response.data.success) {
           count = response.data.data?.total || response.data.total || 0;
         }
       } else if (user.role === 'Owner') {
-        // Fetch pending applications for owners
+        
         const response = await axios.get('/applications/stats');
         if (response.data.success) {
           count = response.data.data?.stats?.pending || 0;
@@ -204,9 +204,9 @@ const MainPage = () => {
 
   const handlePostCreated = (newPost) => {
     if (newPost) {
-      // Add new post to the beginning of recent posts
+      
       setRecentPosts(prev => [newPost, ...prev]);
-      // Refresh featured posts in case it should be featured
+      
       fetchFeaturedPosts();
     }
     setShowPostCreator(false);
@@ -239,7 +239,6 @@ const MainPage = () => {
     const query = e.target.value;
     setSearchQuery(query);
 
-    
     clearTimeout(window.searchTimeout);
     window.searchTimeout = setTimeout(() => {
       handleSearch(query);
@@ -526,7 +525,7 @@ const MainPage = () => {
               <h4>STUDENT LENS</h4>
               <button className="info-button" onClick={() => navigate('/about')}>ABOUT US</button>
 
-              {/* Browser/Student Role - Show "Become a Writer" */}
+              {}
               {user?.role === 'Student' && (
                 <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               )}
@@ -536,7 +535,7 @@ const MainPage = () => {
               </p>
             </div>
 
-            {/* Writer Role - Show Articles Section */}
+            {}
             {user?.role === 'Writer' && (
               <div className="info-box articles-info">
                 <h4>ARTICLES</h4>
@@ -550,7 +549,7 @@ const MainPage = () => {
               </div>
             )}
 
-            {/* Editor Role - Show Articles Section */}
+            {}
             {user?.role === 'Editor' && (
               <div className="info-box articles-info">
                 <h4>ARTICLES</h4>
@@ -564,7 +563,7 @@ const MainPage = () => {
               </div>
             )}
 
-            {/* Reviewer Role - Show Articles Section */}
+            {}
             {user?.role === 'Reviewer' && (
               <div className="info-box articles-info">
                 <h4>ARTICLES</h4>
@@ -578,7 +577,7 @@ const MainPage = () => {
               </div>
             )}
 
-            {/* Owner Role - Show Applications Section */}
+            {}
             {user?.role === 'Owner' && (
               <div className="info-box applications-info">
                 <h4>APPLICATIONS</h4>

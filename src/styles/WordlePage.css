@@ -12,7 +12,6 @@
   font-family: 'Arial', sans-serif;
 }
 
-/* Header */
 .wordle-header {
   background-color: #fff;
   border-bottom: 2px solid #d0d0d0;
@@ -76,7 +75,6 @@
   letter-spacing: 0.5px;
 }
 
-/* Main Content */
 .wordle-main {
   flex: 1;
   display: flex;
@@ -112,7 +110,6 @@
   }
 }
 
-/* Game Board */
 .wordle-board {
   display: flex;
   flex-direction: column;
@@ -193,7 +190,6 @@
   }
 }
 
-/* Keyboard */
 .wordle-keyboard {
   width: 100%;
   max-width: 500px;
@@ -260,7 +256,6 @@
   color: #fff;
 }
 
-/* Game Over */
 .game-over {
   text-align: center;
   padding: 2rem;
@@ -323,7 +318,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .wordle-header {
     flex-direction: column;

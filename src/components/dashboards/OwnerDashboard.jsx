@@ -36,7 +36,7 @@ const OwnerDashboard = ({ activeTab, setActiveTab }) => {
   const handleRoleChange = async (userId, newRole) => {
     try {
       await axios.put(`/users/${userId}/role`, { role: newRole });
-      await loadDashboardData(); // Refresh data
+      await loadDashboardData(); 
     } catch (error) {
       console.error('Failed to update user role:', error);
     }
@@ -45,7 +45,7 @@ const OwnerDashboard = ({ activeTab, setActiveTab }) => {
   const handleApplicationReview = async (applicationId, status) => {
     try {
       await axios.put(`/applications/${applicationId}/review`, { status });
-      await loadDashboardData(); // Refresh data
+      await loadDashboardData(); 
     } catch (error) {
       console.error('Failed to review application:', error);
     }

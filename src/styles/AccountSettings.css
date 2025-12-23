@@ -577,7 +577,6 @@
   font-weight: 600;
 }
 
-/* Privacy Settings Styles */
 .privacy-option {
   display: flex;
   justify-content: space-between;
@@ -607,7 +606,6 @@
   line-height: 1.5;
 }
 
-/* Toggle Switch Styles */
 .toggle-switch {
   position: relative;
   display: inline-block;

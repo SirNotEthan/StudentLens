@@ -1,8 +1,5 @@
 import React from 'react';
 
-/**
- * Content type detectors
- */
 const isMathBlock = (paragraph) => {
   return paragraph.trim().startsWith('[') && paragraph.trim().endsWith(']');
 };
@@ -23,9 +20,6 @@ const isCodeBlock = (paragraph) => {
   return paragraph.startsWith('```');
 };
 
-/**
- * Formats a heading with appropriate level
- */
 export const formatHeading = (text, index, formatInlineTextFn) => {
   const headingMatch = text.match(/^(#{1,6})\s(.+)/);
   if (!headingMatch) return <p key={index}>{text}</p>;
@@ -41,9 +35,6 @@ export const formatHeading = (text, index, formatInlineTextFn) => {
   );
 };
 
-/**
- * Extracts list items from text
- */
 const extractListItems = (lines) => {
   const listItems = [];
   let currentParagraph = '';
@@ -69,9 +60,6 @@ const extractListItems = (lines) => {
   return { listItems, currentParagraph };
 };
 
-/**
- * Formats a list (ordered or unordered)
- */
 export const formatList = (text, index, formatInlineTextFn) => {
   const lines = text.split('\n');
   const { listItems, currentParagraph } = extractListItems(lines);
@@ -105,9 +93,6 @@ export const formatList = (text, index, formatInlineTextFn) => {
   );
 };
 
-/**
- * Formats a blockquote
- */
 export const formatBlockquote = (text, index, formatInlineTextFn) => {
   const content = text.replace(/^>\s?/gm, '');
   return (
@@ -117,9 +102,6 @@ export const formatBlockquote = (text, index, formatInlineTextFn) => {
   );
 };
 
-/**
- * Formats a code block
- */
 export const formatCodeBlock = (text, index) => {
   const codeMatch = text.match(/^```(\w+)?\n([\s\S]*?)\n```$/);
   if (!codeMatch) return <p key={index}>{text}</p>;
@@ -139,9 +121,6 @@ export const formatCodeBlock = (text, index) => {
   );
 };
 
-/**
- * Formats a math block
- */
 export const formatMathBlock = (text, index, formatMathExpressionFn) => {
   const mathContent = text.trim().slice(1, -1).trim();
   const formattedMath = formatMathExpressionFn(mathContent);
@@ -155,9 +134,6 @@ export const formatMathBlock = (text, index, formatMathExpressionFn) => {
   );
 };
 
-/**
- * Formats a regular paragraph
- */
 export const formatParagraph = (paragraph, index, formatInlineTextFn) => {
   return (
     <p key={index} className="content-paragraph">
@@ -171,10 +147,6 @@ export const formatParagraph = (paragraph, index, formatInlineTextFn) => {
   );
 };
 
-/**
- * Main content formatter
- * Detects content type and delegates to appropriate formatter
- */
 export const formatContent = (content, formatInlineTextFn, formatMathExpressionFn) => {
   return content.split('\n\n').map((paragraph, index) => {
     if (isMathBlock(paragraph)) {

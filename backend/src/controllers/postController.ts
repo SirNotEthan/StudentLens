@@ -43,7 +43,6 @@ export const createPost = catchAsync(async (
       category: postData.category
     });
 
-    // Construct author name with fallback to email if all fields are empty
     const fullName = `${req.user.firstName || ''} ${req.user.lastName || ''}`.trim();
     const authorName = fullName || req.user.username || req.user.email.split('@')[0] || 'Anonymous';
 
@@ -430,7 +429,6 @@ export const getMyPosts = catchAsync(async (
   }
 });
 
-
 export const submitForReview = catchAsync(async (
   req: AuthenticatedRequest,
   res: Response
@@ -691,7 +689,7 @@ export const getPublicPosts = catchAsync(async (
       limit: Number(limit),
       offset,
       orderBy: orderBy as string,
-      status: 'published' // Only show published posts for public access
+      status: 'published'
     };
 
     if (category && category !== 'ALL') {
@@ -740,7 +738,7 @@ export const getFeaturedPosts = catchAsync(async (
     const options: any = {
       limit: Number(limit),
       offset: 0,
-      orderBy: 'viewCount', // Featured posts ordered by view count
+      orderBy: 'viewCount',
       status: 'published'
     };
 
@@ -811,7 +809,7 @@ export const searchPosts = catchAsync(async (
       limit: Number(limit),
       offset,
       orderBy: orderBy as string,
-      status: 'published' // Only search published posts for public access
+      status: 'published'
     };
 
     if (category && typeof category === 'string') {

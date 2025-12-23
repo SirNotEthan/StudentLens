@@ -75,7 +75,6 @@ const PostList = ({
         params.search = searchTerm;
       }
 
-      
       const endpoint = !user || status === 'published' ? '/posts/public' : '/posts';
       const response = await axios.get(endpoint, { params });
 

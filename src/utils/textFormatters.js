@@ -1,8 +1,5 @@
 import React from 'react';
 
-/**
- * Formatting patterns configuration for inline text
- */
 const INLINE_PATTERNS = [
   {
     regex: /\$([^$]+)\$/g,
@@ -58,9 +55,6 @@ const INLINE_PATTERNS = [
   }
 ];
 
-/**
- * Extracts all matches from text for a given pattern
- */
 const extractMatches = (text, pattern) => {
   const matches = [];
   let match;
@@ -70,7 +64,7 @@ const extractMatches = (text, pattern) => {
       beforeText: text.slice(matches.length > 0 ? matches[matches.length - 1].endIndex : 0, match.index),
       matchText: match[1],
       fullMatch: match[0],
-      url: match[2], // for links
+      url: match[2], 
       index: match.index,
       endIndex: pattern.regex.lastIndex
     });
@@ -80,9 +74,6 @@ const extractMatches = (text, pattern) => {
   return matches;
 };
 
-/**
- * Creates React element props for a pattern match
- */
 const createElementProps = (pattern, match, keyCounter) => {
   const props = {
     key: `${pattern.component}-${keyCounter}`,
@@ -98,9 +89,6 @@ const createElementProps = (pattern, match, keyCounter) => {
   return props;
 };
 
-/**
- * Processes a text part with a specific pattern
- */
 const processPartWithPattern = (part, pattern, keyCounter, formatMathFn) => {
   if (typeof part !== 'string') {
     return [part];
@@ -116,7 +104,7 @@ const processPartWithPattern = (part, pattern, keyCounter, formatMathFn) => {
   let currentIndex = 0;
 
   matches.forEach((match) => {
-    // Add text before match
+    
     if (match.index > currentIndex) {
       const beforeText = part.slice(currentIndex, match.index);
       if (beforeText) {
@@ -124,7 +112,6 @@ const processPartWithPattern = (part, pattern, keyCounter, formatMathFn) => {
       }
     }
 
-    // Create element for match
     const props = createElementProps(pattern, match, keyCounter.value++);
     let content = match.matchText;
 
@@ -136,7 +123,6 @@ const processPartWithPattern = (part, pattern, keyCounter, formatMathFn) => {
     currentIndex = match.index + match.fullMatch.length;
   });
 
-  // Add remaining text
   const remainingText = part.slice(currentIndex);
   if (remainingText) {
     result.push(remainingText);
@@ -145,9 +131,6 @@ const processPartWithPattern = (part, pattern, keyCounter, formatMathFn) => {
   return result;
 };
 
-/**
- * Processes all parts with a specific pattern
- */
 const processPattern = (parts, pattern, keyCounter, formatMathFn) => {
   const newParts = [];
 
@@ -159,17 +142,12 @@ const processPattern = (parts, pattern, keyCounter, formatMathFn) => {
   return newParts;
 };
 
-/**
- * Main function to format inline text with markdown-like syntax
- * Supports: bold, italic, strikethrough, code, links, highlight, underline, and inline math
- */
 export const formatInlineText = (text, formatMathFn = null) => {
   if (!text) return '';
 
   const keyCounter = { value: 0 };
   let parts = [text];
 
-  // Process each pattern sequentially
   INLINE_PATTERNS.forEach(pattern => {
     parts = processPattern(parts, pattern, keyCounter, formatMathFn);
   });
@@ -177,9 +155,6 @@ export const formatInlineText = (text, formatMathFn = null) => {
   return parts;
 };
 
-/**
- * Math expression formatting patterns
- */
 const MATH_PATTERNS = [
   {
     regex: /(\w+)\^(\d+)/g,
@@ -223,9 +198,6 @@ const MATH_PATTERNS = [
   }
 ];
 
-/**
- * Math symbol replacements
- */
 const MATH_SYMBOLS = {
   '+-': '±',
   'pi': 'π',
@@ -250,9 +222,6 @@ const MATH_SYMBOLS = {
   'degree': '°'
 };
 
-/**
- * Replaces text symbols with mathematical symbols
- */
 const replaceSymbols = (text) => {
   let formatted = text;
 
@@ -264,9 +233,6 @@ const replaceSymbols = (text) => {
   return formatted;
 };
 
-/**
- * Processes math patterns in text
- */
 const processMathPatterns = (text) => {
   let remaining = text;
 
@@ -301,9 +267,6 @@ const processMathPatterns = (text) => {
   return Array.isArray(remaining) ? remaining : [remaining];
 };
 
-/**
- * Formats mathematical expressions with proper symbols and formatting
- */
 export const formatMathExpression = (mathText) => {
   if (!mathText) return '';
 

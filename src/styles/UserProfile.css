@@ -46,7 +46,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-/* User Info Section */
 .profile-info-section {
   background: linear-gradient(135deg, #1a3a2e 0%, #2d5a4d 50%, #1a3a2e 100%);
   color: white;
@@ -207,7 +206,6 @@
   color: #ffffff;
 }
 
-/* Stats Section */
 .profile-stats-section {
   padding: 2.5rem;
   border-bottom: 2px solid #1a1a1a;
@@ -301,7 +299,6 @@
   margin-top: 0.5rem;
 }
 
-/* Recent Posts Section */
 .profile-posts-section {
   padding: 2.5rem;
   background-color: white;
@@ -419,7 +416,6 @@
   gap: 0.35rem;
 }
 
-/* Empty state for no posts */
 .no-posts-message {
   text-align: center;
   padding: 3rem 2rem;
@@ -429,7 +425,6 @@
   font-style: italic;
 }
 
-/* Loading and Error States */
 .loading-profile,
 .error-profile,
 .no-search-results {
@@ -467,7 +462,6 @@
   color: #666;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .user-profile-page {
     padding: 1rem 0.5rem;
@@ -613,7 +607,6 @@
   }
 }
 
-/* Author Link Style (for clickable author names throughout the app) */
 .author-link {
   transition: color 0.2s ease;
 }
@@ -623,7 +616,6 @@
   text-decoration: underline;
 }
 
-/* Profile Picture Upload Modal */
 .profile-picture-modal {
   position: fixed;
   top: 0;

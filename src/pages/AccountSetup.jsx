@@ -45,7 +45,6 @@ const AccountSetup = () => {
     }
   }, [user, navigate]);
 
-  
   useEffect(() => {
     if (formData.username.length >= 3) {
       const timeoutId = setTimeout(async () => {

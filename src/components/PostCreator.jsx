@@ -187,7 +187,7 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
               name="featuredImage"
               value={formData.featuredImage}
               onChange={handleInputChange}
-              placeholder="https://example.com/image.jpg"
+              placeholder="https:
             />
           </div>
         </div>

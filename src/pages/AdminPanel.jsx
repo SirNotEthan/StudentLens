@@ -220,7 +220,7 @@ const AdminPanel = () => {
       if (response.data.success) {
         setSettings(response.data.data.settings);
         setSettingsForm(response.data.data.settings);
-        // Refresh the global settings context
+        
         refreshSettings();
         alert('Site settings updated successfully!');
       }
@@ -291,7 +291,7 @@ const AdminPanel = () => {
       </div>
 
       <div className="admin-tabs">
-        {/* User Management - Only visible to Owner and Teacher */}
+        {}
         {(hasRole('Owner') || hasRole('Teacher')) && (
           <button
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
@@ -301,7 +301,7 @@ const AdminPanel = () => {
           </button>
         )}
 
-        {/* Writer Applications - Only visible to Owner and Teacher */}
+        {}
         {(hasRole('Owner') || hasRole('Teacher')) && (
           <button
             className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
@@ -316,7 +316,7 @@ const AdminPanel = () => {
           </button>
         )}
 
-        {/* Writer Submissions - Only visible to Owner and Teacher */}
+        {}
         {(hasRole('Owner') || hasRole('Teacher')) && (
           <button
             className={`tab-button ${activeTab === 'submissions' ? 'active' : ''}`}
@@ -331,7 +331,7 @@ const AdminPanel = () => {
           </button>
         )}
 
-        {/* Content Management - Visible to all admin roles */}
+        {}
         <button
           className={`tab-button ${activeTab === 'posts' ? 'active' : ''}`}
           onClick={() => setActiveTab('posts')}
@@ -339,7 +339,7 @@ const AdminPanel = () => {
           📄 Content Management
         </button>
 
-        {/* Site Settings - Only visible to Owner */}
+        {}
         {hasRole('Owner') && (
           <button
             className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
@@ -351,7 +351,7 @@ const AdminPanel = () => {
       </div>
 
       <div className="admin-content">
-        {/* User Management Tab - Only accessible by Owner and Teacher */}
+        {}
         {activeTab === 'users' && (hasRole('Owner') || hasRole('Teacher')) && (
           <div className="users-management">
             <div className="section-header">
@@ -456,7 +456,7 @@ const AdminPanel = () => {
                           >
                             Edit Role
                           </button>
-                          {/* Only Owner role can activate/deactivate accounts */}
+                          {}
                           {hasRole('Owner') && (
                             <button
                               className={`toggle-status-btn ${user.isActive ? 'deactivate' : 'activate'}`}
@@ -477,7 +477,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* Writer Applications Tab - Only accessible by Owner and Teacher */}
+        {}
         {activeTab === 'applications' && (hasRole('Owner') || hasRole('Teacher')) && (
           <div className="applications-management">
             <div className="section-header">
@@ -611,7 +611,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* Writer Submissions Tab - Only accessible by Owner and Teacher */}
+        {}
         {activeTab === 'submissions' && (hasRole('Owner') || hasRole('Teacher')) && (
           <div className="submissions-management">
             <div className="section-header">
@@ -768,7 +768,7 @@ const AdminPanel = () => {
           </div>
         )}
 
-        {/* Site Settings Tab - Only accessible by Owner */}
+        {}
         {activeTab === 'settings' && hasRole('Owner') && (
           <div className="settings-management">
             <div className="section-header">
@@ -922,7 +922,7 @@ const AdminPanel = () => {
                           ...settingsForm,
                           images: { ...settingsForm.images, featuredNews: e.target.value }
                         })}
-                        placeholder="https://example.com/news-image.jpg"
+                        placeholder="https:
                       />
                       <small className="form-help">Optional: Image displayed in the Latest News section</small>
                       {settingsForm.images?.featuredNews && (
@@ -941,7 +941,7 @@ const AdminPanel = () => {
                           ...settingsForm,
                           images: { ...settingsForm.images, games: e.target.value }
                         })}
-                        placeholder="https://example.com/games-image.jpg"
+                        placeholder="https:
                       />
                       <small className="form-help">Optional: Image displayed below the games section</small>
                       {settingsForm.images?.games && (
@@ -972,7 +972,7 @@ const AdminPanel = () => {
         )}
       </div>
 
-      {/* Role Change Modal */}
+      {}
       {showRoleModal && selectedUser && (
         <div className="modal-overlay">
           <div className="modal">

@@ -5,7 +5,7 @@ const AuthorLink = ({ authorName, authorId, username, className = '' }) => {
   const navigate = useNavigate();
 
   const handleClick = (e) => {
-    e.stopPropagation(); // Prevent triggering parent click events
+    e.stopPropagation(); 
     if (username) {
       navigate(`/user/${username}`);
     }

@@ -117,7 +117,6 @@
   font-size: 1.2rem;
 }
 
-
 .auth-form {
   background-color: #f0f0f0;
   padding: 2rem;
@@ -233,7 +232,6 @@
     grid-template-columns: 1fr;
   }
 }
-
 
 .loading-spinner {
   display: flex;

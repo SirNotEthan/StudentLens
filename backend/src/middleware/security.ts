@@ -70,7 +70,6 @@ export const uploadLimiter = createRateLimit(
 );
 
 export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
-  // In development, allow connections to localhost on various ports
   const connectSrc = process.env.NODE_ENV === 'development'
     ? "'self' http://localhost:3000 http://localhost:5173 ws://localhost:*"
     : "'self'";
@@ -131,13 +130,11 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
 
 const blacklistedIPs = new Set<string>();
 
-// Initialize whitelisted IPs from environment variable or use defaults for development
 const getWhitelistedIPs = (): Set<string> => {
   const defaultIPs = ['127.0.0.1', '::1'];
   const envIPs = process.env.ADMIN_WHITELIST_IPS;
 
   if (envIPs) {
-    // Parse comma-separated IPs from environment variable
     const ips = envIPs.split(',').map(ip => ip.trim()).filter(ip => ip.length > 0);
     return new Set([...defaultIPs, ...ips]);
   }
@@ -262,19 +259,17 @@ export const detectSuspiciousActivity = (req: Request, res: Response, next: Next
 
 setInterval(() => {
   const now = Date.now();
-  const windowMs = 60 * 60 * 1000; // 1 hour
+  const windowMs = 60 * 60 * 1000; 
 
   for (const [ip, activity] of suspiciousActivities.entries()) {
     if (now - activity.lastSeen > windowMs) {
       suspiciousActivities.delete(ip);
     }
   }
-}, 5 * 60 * 1000); // Clean every 5 minutes
+}, 5 * 60 * 1000);
 
 export const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // In production, only allow the production client URL
-    // In development, allow localhost origins
     const allowedOrigins = process.env.NODE_ENV === 'production'
       ? [process.env.CLIENT_URL].filter(Boolean)
       : [
@@ -283,7 +278,6 @@ export const corsOptions = {
           process.env.CLIENT_URL
         ].filter(Boolean);
 
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {

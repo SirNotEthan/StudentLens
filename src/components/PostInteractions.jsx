@@ -37,7 +37,6 @@ const PostInteractions = ({
     }
   }, [post, initialLikes, initialBookmarked, isAuthenticated, currentPostId]);
 
-
   const fetchUserInteractions = async () => {
     try {
       const response = await axios.get(`/posts/${currentPostId}/interactions`);

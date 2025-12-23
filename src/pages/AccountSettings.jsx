@@ -8,12 +8,10 @@ const AccountSettings = () => {
   const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
 
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [error, setError] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-
 
   const [activeSection, setActiveSection] = useState('Security');
   const [profileVisibility, setProfileVisibility] = useState(user?.profileVisibility !== false);
@@ -123,7 +121,7 @@ const AccountSettings = () => {
     } catch (error) {
       console.error('Failed to update information visibility:', error);
       setError(error.response?.data?.message || 'Failed to update settings');
-      // Revert
+      
       if (field === 'showBio') setShowBio(!value);
       else if (field === 'showStats') setShowStats(!value);
       else if (field === 'showPosts') setShowPosts(!value);

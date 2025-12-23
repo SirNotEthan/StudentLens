@@ -1,6 +1,5 @@
 
 
-
 :root {
   --primary-green: #2d5a4d;
   --primary-green-light: #3a6b5c;
@@ -27,14 +26,12 @@
   --spacing-xl: 3rem;
 }
 
-
 .post-detail {
   min-height: 100vh;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   font-family: var(--font-family-sans);
   line-height: 1.6;
 }
-
 
 .post-navigation {
   position: sticky;
@@ -95,7 +92,6 @@
   font-weight: 600;
 }
 
-
 .post-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -106,14 +102,12 @@
   align-items: start;
 }
 
-
 .post-main {
   background: var(--background-primary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   overflow: hidden;
 }
-
 
 .article-header {
   padding: var(--spacing-xl);
@@ -181,7 +175,6 @@
   font-style: italic;
 }
 
-
 .author-section {
   display: flex;
   gap: var(--spacing-md);
@@ -237,7 +230,6 @@
   font-size: 1rem;
 }
 
-
 .featured-image-container {
   margin: 0;
   overflow: hidden;
@@ -254,7 +246,6 @@
 .featured-image:hover {
   transform: scale(1.02);
 }
-
 
 .article-content {
   padding: var(--spacing-xl);
@@ -287,7 +278,6 @@
   color: var(--primary-green);
   font-family: var(--font-family-serif);
 }
-
 
 .tags-section {
   margin-top: var(--spacing-xl);
@@ -326,13 +316,11 @@
   box-shadow: var(--shadow-md);
 }
 
-
 .article-footer {
   padding: var(--spacing-xl);
   background: var(--background-accent);
   border-top: 1px solid var(--border-light);
 }
-
 
 .engagement-prompt {
   background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
@@ -373,7 +361,6 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
 }
-
 
 .author-bio {
   background: var(--background-primary);
@@ -422,7 +409,6 @@
   line-height: 1.6;
 }
 
-
 .post-sidebar {
   display: flex;
   flex-direction: column;
@@ -448,7 +434,6 @@
   border-bottom: 2px solid var(--border-light);
   padding-bottom: var(--spacing-xs);
 }
-
 
 .detail-list {
   display: flex;
@@ -483,7 +468,6 @@
   font-weight: 500;
 }
 
-
 .quick-actions {
   display: flex;
   flex-direction: column;
@@ -515,13 +499,11 @@
   font-size: 1rem;
 }
 
-
 .comments-wrapper {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 var(--spacing-lg) var(--spacing-xl);
 }
-
 
 .post-detail-loading,
 .post-detail-error {
@@ -548,7 +530,6 @@
   margin-bottom: var(--spacing-md);
   font-size: var(--font-size-2xl);
 }
-
 
 @media (max-width: 1200px) {
   .post-container {
@@ -639,7 +620,6 @@
   }
 }
 
-
 @media print {
   .post-navigation,
   .post-sidebar,
@@ -668,7 +648,6 @@
     line-height: 1.6;
   }
 }
-
 
 .content-math-block {
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
@@ -722,7 +701,6 @@
   color: var(--primary-green-dark);
   font-weight: 500;
 }
-
 
 .math-expression-inline {
   display: inline-flex;
@@ -791,20 +769,17 @@
   position: relative;
 }
 
-
 .math-expression .math-symbol {
   color: var(--primary-green);
   font-weight: 600;
   margin: 0 0.25rem;
 }
 
-
 .math-expression .greek-letter {
   font-style: italic;
   color: var(--primary-green-dark);
   font-weight: 500;
 }
-
 
 .math-expression .math-operator {
   color: var(--text-primary);
@@ -813,14 +788,12 @@
   font-size: 1.1em;
 }
 
-
 .math-expression .math-parentheses {
   font-size: 1.2em;
   color: var(--primary-green);
   font-weight: 600;
   margin: 0 0.1rem;
 }
-
 
 @media (max-width: 768px) {
   .math-expression {

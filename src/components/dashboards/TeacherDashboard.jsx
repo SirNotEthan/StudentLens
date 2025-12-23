@@ -27,7 +27,7 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
   const handlePublishArticle = async (articleId) => {
     try {
       await axios.patch(`/posts/${articleId}/publish-article`);
-      await loadPendingArticles(); // Refresh list
+      await loadPendingArticles(); 
     } catch (error) {
       console.error('Failed to publish article:', error);
     }
@@ -36,7 +36,7 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
   const handleRejectArticle = async (articleId, reason) => {
     try {
       await axios.patch(`/posts/${articleId}/reject`, { reason });
-      await loadPendingArticles(); // Refresh list
+      await loadPendingArticles(); 
     } catch (error) {
       console.error('Failed to reject article:', error);
     }

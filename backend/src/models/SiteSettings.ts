@@ -22,9 +22,6 @@ export interface ISiteSettings {
 }
 
 export class SiteSettings {
-  /**
-   * Get site settings (there should only be one document)
-   */
   static async get(): Promise<ISiteSettings> {
     try {
       const response = await databases.listDocuments(
@@ -34,7 +31,6 @@ export class SiteSettings {
       );
 
       if (response.documents.length === 0) {
-        // Create default settings if they don't exist
         return await this.createDefault();
       }
 
@@ -46,9 +42,6 @@ export class SiteSettings {
     }
   }
 
-  /**
-   * Create default settings
-   */
   static async createDefault(): Promise<ISiteSettings> {
     try {
       const doc = await databases.createDocument(
@@ -75,15 +68,10 @@ export class SiteSettings {
     }
   }
 
-  /**
-   * Update site settings
-   */
   static async update(data: Partial<Omit<ISiteSettings, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ISiteSettings> {
     try {
-      // Get existing settings
       const existing = await this.get();
 
-      // Update the document
       const doc = await databases.updateDocument(
         DATABASE_ID,
         SETTINGS_COLLECTION_ID,
@@ -98,9 +86,6 @@ export class SiteSettings {
     }
   }
 
-  /**
-   * Map Appwrite document to ISiteSettings
-   */
   private static mapDocument(doc: any): ISiteSettings {
     return {
       id: doc.$id,

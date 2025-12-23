@@ -1,10 +1,8 @@
-const DICTIONARY_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en";
-const RANDOM_WORD_API_URL = "https://random-word-api.herokuapp.com/word";
+const DICTIONARY_API_URL = "https:
+const RANDOM_WORD_API_URL = "https:
 
-// Wordle epoch start date (January 1, 2025)
 const WORDLE_EPOCH = new Date('2025-01-01T00:00:00Z');
 
-// Fallback word list in case API is unavailable
 const FALLBACK_WORDLE_WORDS = [
   "about", "above", "abuse", "actor", "acute", "admit", "adopt", "adult", "after", "again",
   "agent", "agree", "ahead", "alarm", "album", "alert", "align", "alike", "alive", "allow",
@@ -59,7 +57,6 @@ const FALLBACK_WORDLE_WORDS = [
   "wound", "write", "wrong", "wrote", "young", "youth"
 ];
 
-// Get the current day number since the epoch
 function getDayNumber(): number {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -69,13 +66,11 @@ function getDayNumber(): number {
   return diffDays;
 }
 
-// Get today's date in YYYY-MM-DD format
 export function getTodayDateString(): string {
   const now = new Date();
   return now.toISOString().split('T')[0];
 }
 
-// Generate the daily word (same for everyone on the same day)
 export function getDailyWord(): string {
   const dayNumber = getDayNumber();
   const wordIndex = dayNumber % FALLBACK_WORDLE_WORDS.length;
@@ -134,7 +129,6 @@ export async function isValidEnglishWord(word: string): Promise<boolean> {
   }
 }
 
-// Extended word list for validation (includes common 5-letter words)
 const VALID_GUESSES = [
   ...FALLBACK_WORDLE_WORDS,
   "slate", "crane", "crate", "trace", "slice", "sauce", "adieu", "audio", "stare", "arise",
@@ -151,12 +145,10 @@ export async function validateWordSubmission(word: string): Promise<{
 
   const normalizedWord = word.toLowerCase().trim();
 
-  // First check against our known valid words list for quick validation
   if (VALID_GUESSES.includes(normalizedWord)) {
     return { isValid: true };
   }
 
-  // Then check with the dictionary API for words not in our list
   const isEnglishWord = await isValidEnglishWord(normalizedWord);
   if (!isEnglishWord) {
     return { isValid: false, reason: "Word is not in the dictionary" };

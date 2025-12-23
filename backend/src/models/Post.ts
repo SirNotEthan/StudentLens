@@ -67,7 +67,7 @@ export class Post implements IPost {
     const startTime = Date.now();
 
     try {
-      // Validate required fields
+      
       if (!authorName || authorName.trim() === '') {
         throw AppError.badRequest('Author name is required and cannot be empty');
       }
@@ -89,11 +89,9 @@ export class Post implements IPost {
         featuredImage: postData.featuredImage || '',
         viewCount: 0,
         likes: 0,
-        slug: slug + '-' + Date.now() // Add timestamp to ensure uniqueness
+        slug: slug + '-' + Date.now() 
       };
 
-      // Only set publishedAt if the post is being published
-      // Don't set it to empty string as that can cause issues with datetime fields
       if (postData.status === 'published') {
         documentData.publishedAt = now;
       }
@@ -196,7 +194,6 @@ export class Post implements IPost {
       if (options.authorId) {
         queries.push(Query.equal('authorId', options.authorId));
       }
-
 
       queries.push(Query.orderDesc('$createdAt'));
 
@@ -416,8 +413,6 @@ export class Post implements IPost {
       throw AppError.badRequest('Post must be pending reviewer approval to publish');
     }
 
-    // Only set publishedAt if this is the first time being published
-    // This preserves the original publication date
     const updateData: any = {
       status: 'published'
     };

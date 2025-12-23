@@ -8,7 +8,7 @@ import { catchAsync } from '@/middleware/errorHandler';
 
 const authAttempts = new Map<string, { count: number; lastAttempt: number }>();
 const MAX_AUTH_ATTEMPTS = 5;
-const AUTH_WINDOW = 15 * 60 * 1000; // 15 minutes
+const AUTH_WINDOW = 15 * 60 * 1000;
 
 setInterval(() => {
   const now = Date.now();
@@ -17,7 +17,7 @@ setInterval(() => {
       authAttempts.delete(ip);
     }
   }
-}, 5 * 60 * 1000); // Clean every 5 minutes
+}, 5 * 60 * 1000);
 
 const isRateLimited = (ip: string): boolean => {
   const attempts = authAttempts.get(ip);
@@ -337,7 +337,6 @@ export const checkResourceAccess = (resource: string, action: string) => {
     next();
   });
 };
-
 
 export const requireOwnershipOrAdmin = (resourceIdParam: string = 'id') => {
   return catchAsync(async (

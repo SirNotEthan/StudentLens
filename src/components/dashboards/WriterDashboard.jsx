@@ -45,7 +45,7 @@ const WriterDashboard = ({ activeTab, setActiveTab }) => {
         category: '',
         tags: []
       });
-      await loadMyArticles(); // Refresh list
+      await loadMyArticles(); 
       setActiveTab('drafts');
     } catch (error) {
       console.error('Failed to create article:', error);
@@ -55,7 +55,7 @@ const WriterDashboard = ({ activeTab, setActiveTab }) => {
   const handleSubmitForReview = async (articleId) => {
     try {
       await axios.patch(`/posts/${articleId}/submit`);
-      await loadMyArticles(); // Refresh lists
+      await loadMyArticles(); 
     } catch (error) {
       console.error('Failed to submit article for review:', error);
     }
@@ -65,7 +65,7 @@ const WriterDashboard = ({ activeTab, setActiveTab }) => {
     if (window.confirm('Are you sure you want to delete this article?')) {
       try {
         await axios.delete(`/posts/${articleId}`);
-        await loadMyArticles(); // Refresh lists
+        await loadMyArticles(); 
       } catch (error) {
         console.error('Failed to delete article:', error);
       }

@@ -31,7 +31,7 @@ const ApplyWriter = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      // Combine all fields into the reason field
+      
       const reason = `
 **Areas of Interest:**
 ${formData.interests}

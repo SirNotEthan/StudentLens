@@ -243,7 +243,6 @@
   background-color: #e0a800;
 }
 
-/* Responsive */
 @media (max-width: 576px) {
   .modal-container {
     width: 95%;

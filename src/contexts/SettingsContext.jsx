@@ -28,7 +28,7 @@ export const SettingsProvider = ({ children }) => {
     } catch (err) {
       console.error('Error fetching settings:', err);
       setError('Failed to load site settings');
-      // Set default settings as fallback
+      
       setSettings({
         siteName: 'STUDENT LENS',
         tagline: 'Your Student News Hub',

@@ -4,7 +4,6 @@ import { User } from '@/models/User';
 import { appLogger } from '@/services/logger';
 import { UserRole } from '@/types';
 
-// Only configure Google OAuth if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
   console.log('PASSPORT: Configuring Google OAuth strategy');
   console.log('PASSPORT: Google Client ID:', process.env.GOOGLE_CLIENT_ID);
@@ -101,8 +100,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
       provider: 'google',
       googleId: profile.id,
       isActive: true,
-      needsSetup: true, // Google users need to confirm their profile details
-      password: undefined // No password for OAuth users
+      needsSetup: true, 
+      password: undefined 
     });
 
     appLogger.info('New Google user created - signup', {

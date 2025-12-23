@@ -2,9 +2,6 @@ import { Request, Response } from 'express';
 import SiteSettings from '../models/SiteSettings';
 import { appLogger } from '../services/logger';
 
-/**
- * Get site settings
- */
 export const getSettings = async (_req: Request, res: Response) => {
   try {
     const settings = await SiteSettings.get();
@@ -42,9 +39,6 @@ export const getSettings = async (_req: Request, res: Response) => {
   }
 };
 
-/**
- * Update site settings (Owner only)
- */
 export const updateSettings = async (req: Request, res: Response) => {
   try {
     const {

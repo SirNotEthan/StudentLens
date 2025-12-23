@@ -23,7 +23,6 @@ const PostView = () => {
       setLoading(true);
       setError('');
 
-      
       let response;
       try {
         response = await axios.get(`/posts/${id}`);

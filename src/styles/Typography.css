@@ -1,6 +1,5 @@
 
 
-
 :root {
   
   --font-size-xs: 0.75rem;    
@@ -13,25 +12,19 @@
   --font-size-4xl: 2.25rem;   
   --font-size-5xl: 3rem;      
 
-  
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  
   --line-height-tight: 1.25;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
 
-  
   --font-family-serif: 'Times New Roman', serif;
   --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
 }
-
-
-
 
 .heading-5xl {
   font-size: var(--font-size-5xl);
@@ -75,7 +68,6 @@
   font-family: var(--font-family-serif);
 }
 
-
 .text-lg {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-normal);
@@ -104,7 +96,6 @@
   font-family: var(--font-family-sans);
 }
 
-
 .text-medium {
   font-weight: var(--font-weight-medium);
 }
@@ -116,7 +107,6 @@
 .text-bold {
   font-weight: var(--font-weight-bold);
 }
-
 
 @media (max-width: 768px) {
   .heading-5xl {

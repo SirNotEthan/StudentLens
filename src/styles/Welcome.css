@@ -132,7 +132,6 @@
   animation: progressSlide 2s ease-out infinite;
 }
 
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -183,7 +182,6 @@
     left: 100%;
   }
 }
-
 
 @media (max-width: 480px) {
   .welcome-container {

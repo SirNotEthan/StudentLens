@@ -20,7 +20,6 @@ body {
   background-color: #e8e4df;
 }
 
-/* Header Styles */
 .header {
   background-color: transparent;
   border-bottom: 1px solid #e0e0e0;
@@ -319,7 +318,6 @@ body {
   font-style: normal;
 }
 
-/* Main Content Layout */
 .main-content {
   display: grid;
   grid-template-columns: 160px 1fr 280px;
@@ -332,7 +330,6 @@ body {
   box-shadow: none;
 }
 
-/* Left Sidebar - Games */
 .left-sidebar {
   background-color: transparent;
   padding: 0;
@@ -481,7 +478,6 @@ body {
   display: block;
 }
 
-/* Center Content */
 .center-content {
   background-color: transparent;
   padding: 0;
@@ -585,7 +581,6 @@ body {
   display: flex;
   flex-direction: column;
 }
-
 
 .article-card-image {
   background-color: #d4d4d4;
@@ -695,12 +690,12 @@ body {
   width: fit-content;
 }
 
-.category-tag.ics { background-color: #4a90e2; color: white; } /* Blue */
-.category-tag.world { background-color: #17a2b8; color: white; } /* Teal/Cyan */
-.category-tag.science-tech { background-color: #6f42c1; color: white; } /* Purple */
-.category-tag.sport { background-color: #28a745; color: white; } /* Green */
-.category-tag.culture { background-color: #fd7e14; color: white; } /* Orange */
-.category-tag.art { background-color: #e83e8c; color: white; } /* Pink */
+.category-tag.ics { background-color: #4a90e2; color: white; } 
+.category-tag.world { background-color: #17a2b8; color: white; } 
+.category-tag.science-tech { background-color: #6f42c1; color: white; } 
+.category-tag.sport { background-color: #28a745; color: white; } 
+.category-tag.culture { background-color: #fd7e14; color: white; } 
+.category-tag.art { background-color: #e83e8c; color: white; } 
 .category-tag.gray { background-color: #6c757d; color: white; }
 
 .article-title {
@@ -788,7 +783,6 @@ body {
   background-color: rgba(45, 90, 77, 1);
 }
 
-/* Right Sidebar - Info */
 .right-sidebar {
   background-color: transparent;
   padding: 0;
@@ -1073,7 +1067,6 @@ body {
   color: #ffffff;
 }
 
-/* News Grid Section */
 .news-grid {
   padding: 0;
   background-color: transparent;
@@ -1125,14 +1118,13 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-/* Category-specific colors */
-.tag.tag-all { background-color: #dc3545 !important; color: white !important; } /* ALL - Red */
-.tag.tag-ics { background-color: #4a90e2 !important; color: white !important; } /* ICS - Blue */
-.tag.tag-world { background-color: #17a2b8 !important; color: white !important; } /* WORLD - Teal */
-.tag.tag-science-tech { background-color: #6f42c1 !important; color: white !important; } /* SCIENCE/TECH - Purple */
-.tag.tag-sport { background-color: #28a745 !important; color: white !important; } /* SPORT - Green */
-.tag.tag-culture { background-color: #fd7e14 !important; color: white !important; } /* CULTURE - Orange */
-.tag.tag-art { background-color: #e83e8c !important; color: white !important; } /* ART - Pink */
+.tag.tag-all { background-color: #dc3545 !important; color: white !important; } 
+.tag.tag-ics { background-color: #4a90e2 !important; color: white !important; } 
+.tag.tag-world { background-color: #17a2b8 !important; color: white !important; } 
+.tag.tag-science-tech { background-color: #6f42c1 !important; color: white !important; } 
+.tag.tag-sport { background-color: #28a745 !important; color: white !important; } 
+.tag.tag-culture { background-color: #fd7e14 !important; color: white !important; } 
+.tag.tag-art { background-color: #e83e8c !important; color: white !important; } 
 
 .tag.active {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -1208,12 +1200,12 @@ body {
   font-family: 'Arial', sans-serif;
 }
 
-.news-category-tag.ics { background-color: #4a90e2; color: white; } /* Blue */
-.news-category-tag.world { background-color: #17a2b8; color: white; } /* Teal/Cyan */
-.news-category-tag.science-tech { background-color: #6f42c1; color: white; } /* Purple */
-.news-category-tag.sport { background-color: #28a745; color: white; } /* Green */
-.news-category-tag.culture { background-color: #fd7e14; color: white; } /* Orange */
-.news-category-tag.art { background-color: #e83e8c; color: white; } /* Pink */
+.news-category-tag.ics { background-color: #4a90e2; color: white; } 
+.news-category-tag.world { background-color: #17a2b8; color: white; } 
+.news-category-tag.science-tech { background-color: #6f42c1; color: white; } 
+.news-category-tag.sport { background-color: #28a745; color: white; } 
+.news-category-tag.culture { background-color: #fd7e14; color: white; } 
+.news-category-tag.art { background-color: #e83e8c; color: white; } 
 .news-category-tag.gray { background-color: #6c757d; color: white; }
 
 .news-card-title {
@@ -1245,7 +1237,6 @@ body {
   font-family: 'Arial', sans-serif;
 }
 
-/* Footer */
 .footer {
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffc857 100%);
   color: white;
@@ -1293,7 +1284,6 @@ body {
   transform: translateY(-2px);
 }
 
-/* Search Results */
 .search-results {
   margin-bottom: 2rem;
   background-color: #fff;
@@ -1413,7 +1403,6 @@ body {
   background-color: #d4d4d4;
 }
 
-/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -1439,7 +1428,6 @@ body {
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-/* Error Banner */
 .error-banner {
   background-color: #fee;
   border: 1px solid #fcc;
@@ -1475,7 +1463,6 @@ body {
   background-color: #a22;
 }
 
-/* Responsive Design */
 @media (max-width: 1500px) {
   .main-content,
   .news-grid,
@@ -1515,7 +1502,6 @@ body {
     font-size: 2rem;
   }
 
-  /* Tablet: Keep 2-column layout */
   .articles-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -1613,7 +1599,6 @@ body {
     min-height: 100px;
   }
 
-  /* Mobile: Single column for Latest News */
   .articles-grid {
     grid-template-columns: 1fr;
   }
@@ -1757,7 +1742,6 @@ body {
   }
 }
 
-/* Extra small devices and landscape phones */
 @media (max-width: 375px) {
   .header-top {
     padding: 0.4rem 0.5rem;
@@ -1792,7 +1776,6 @@ body {
   }
 }
 
-/* Landscape mode adjustments */
 @media (max-height: 500px) and (orientation: landscape) {
   .header {
     padding: 0.25rem 0;
@@ -1817,7 +1800,6 @@ body {
   }
 }
 
-/* News Title and Search Bar */
 .news-title-search {
   display: flex;
   align-items: center;

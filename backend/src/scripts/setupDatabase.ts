@@ -1,6 +1,6 @@
 #!/usr/bin/env ts-node
 
-import 'dotenv/config'; // Load environment variables FIRST
+import 'dotenv/config'; 
 import { databases, client } from '../config/appwrite';
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
@@ -69,7 +69,7 @@ async function setupPostsCollection() {
       DATABASE_ID,
       POSTS_COLLECTION_ID,
       'Posts',
-      ['read("any")', 'write("users")'] // Read public, write for logged-in users
+      ['read("any")', 'write("users")'] 
       );
 
       console.log('✅ Posts collection created');
@@ -213,7 +213,7 @@ async function setupCommentsCollection() {
       DATABASE_ID,
       COMMENTS_COLLECTION_ID,
       'Comments',
-      ['read("any")', 'write("users")'] // Read public, write for logged-in users
+      ['read("any")', 'write("users")'] 
     );
 
     console.log('✅ Comments collection created');
@@ -306,7 +306,7 @@ async function setupCommentsCollection() {
           attr.size,
           attr.required,
           undefined,
-          true // array = true
+          true 
         );
         console.log(`  ✅ Created array attribute: ${attr.key}`);
       } catch (error: any) {
@@ -368,7 +368,7 @@ async function setupBookmarksCollection() {
         DATABASE_ID,
         BOOKMARKS_COLLECTION_ID,
         'Bookmarks',
-        ['read("users")', 'write("users")'] // Only logged-in users can read/write their bookmarks
+        ['read("users")', 'write("users")'] 
       );
 
       console.log('✅ Bookmarks collection created');
@@ -445,7 +445,7 @@ async function setupUsersCollection() {
       DATABASE_ID,
       USERS_COLLECTION_ID,
       'Users',
-      ['read("users")', 'write("users")'] // Only logged-in users can read/write
+      ['read("users")', 'write("users")'] 
     );
 
     console.log('✅ Users collection created');

@@ -9,7 +9,7 @@ const WordlePage = () => {
   const navigate = useNavigate();
   const [currentGuess, setCurrentGuess] = useState('');
   const [guesses, setGuesses] = useState([]);
-  const [gameStatus, setGameStatus] = useState('playing'); // 'playing', 'won', 'lost'
+  const [gameStatus, setGameStatus] = useState('playing'); 
   const [targetWord, setTargetWord] = useState('');
   const [currentRow, setCurrentRow] = useState(0);
   const [shake, setShake] = useState(false);
@@ -55,7 +55,6 @@ const WordlePage = () => {
     } catch (error) {
       console.error('Error fetching new word:', error);
 
-      // Handle "already played today" error gracefully
       if (error.response?.status === 400 && error.response?.data?.message?.includes('already played')) {
         setGameStatus('already-played');
         setMessage(error.response.data.message || 'You have already played today. Come back tomorrow!');
@@ -195,7 +194,7 @@ const WordlePage = () => {
       letter = currentGuess[colIndex];
       status = 'tbd';
     } else if (isCurrentRow && gameStatus === 'won' && guesses[rowIndex]) {
-      // Show the winning word in green
+      
       letter = guesses[rowIndex][colIndex];
       status = 'correct';
     }

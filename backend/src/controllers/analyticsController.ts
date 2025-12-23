@@ -5,9 +5,6 @@ import { AnalyticsService } from '@/services/analytics';
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 
-/**
- * Track a custom analytics event
- */
 export const trackEvent = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const eventData: CreateAnalyticsEventRequest = req.body;
@@ -31,9 +28,6 @@ export const trackEvent = async (req: AuthenticatedRequest, res: Response): Prom
   }
 };
 
-/**
- * Get analytics events
- */
 export const getEvents = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const query: AnalyticsQuery = {
@@ -64,9 +58,6 @@ export const getEvents = async (req: AuthenticatedRequest, res: Response): Promi
   }
 };
 
-/**
- * Get analytics statistics
- */
 export const getStats = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const query: AnalyticsQuery = {
@@ -90,9 +81,6 @@ export const getStats = async (req: AuthenticatedRequest, res: Response): Promis
   }
 };
 
-/**
- * Get user behavior data
- */
 export const getUserBehavior = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.params.userId || req.user?.id;
@@ -102,7 +90,6 @@ export const getUserBehavior = async (req: AuthenticatedRequest, res: Response):
       throw AppError.badRequest('User ID is required');
     }
 
-    // Only allow users to view their own data unless they have view_analytics permission
     if (userId !== req.user?.id && !req.user?.hasPermission('view_analytics')) {
       throw AppError.forbidden('You do not have permission to view this user\'s behavior data');
     }
@@ -122,9 +109,6 @@ export const getUserBehavior = async (req: AuthenticatedRequest, res: Response):
   }
 };
 
-/**
- * Get current user's behavior data
- */
 export const getMyBehavior = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;

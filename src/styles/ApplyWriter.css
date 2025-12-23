@@ -224,7 +224,6 @@
   text-decoration: underline;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .apply-writer-page {
     padding: 1rem;

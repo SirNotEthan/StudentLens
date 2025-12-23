@@ -12,13 +12,10 @@ interface ParsedUserAgent {
 }
 
 export class AnalyticsService {
-  /**
-   * Parse user agent string to extract browser, OS, and device information
-   */
+  
   static parseUserAgent(userAgent: string): ParsedUserAgent {
     const ua = userAgent.toLowerCase();
 
-    // Detect Browser
     let browser = 'Unknown';
     let browserVersion = '';
 
@@ -48,7 +45,6 @@ export class AnalyticsService {
       browserVersion = match ? match[1] : '';
     }
 
-    // Detect Operating System
     let operatingSystem = 'Unknown';
     let osVersion = '';
 
@@ -86,7 +82,6 @@ export class AnalyticsService {
       operatingSystem = 'Chrome OS';
     }
 
-    // Detect Device Type
     let deviceType = 'desktop';
 
     if (ua.includes('mobile') || ua.includes('iphone') || ua.includes('ipod') || ua.includes('android')) {
@@ -104,9 +99,6 @@ export class AnalyticsService {
     };
   }
 
-  /**
-   * Extract IP address from request, accounting for proxies
-   */
   static getClientIp(req: Request): string {
     const forwardedFor = req.headers['x-forwarded-for'];
     if (forwardedFor) {
@@ -122,26 +114,19 @@ export class AnalyticsService {
     return req.ip || req.socket.remoteAddress || 'unknown';
   }
 
-  /**
-   * Generate a session ID from request
-   */
   static getSessionId(req: Request): string {
-    // Try to get from session first
+    
     if ((req as any).session?.id) {
       return (req as any).session.id;
     }
 
-    // Fallback to generating from user agent + IP
     const userAgent = req.headers['user-agent'] || '';
     const ip = this.getClientIp(req);
-    const date = new Date().toISOString().split('T')[0]; // Daily session
+    const date = new Date().toISOString().split('T')[0]; 
 
     return `${ip}-${date}-${this.hashString(userAgent)}`;
   }
 
-  /**
-   * Simple hash function for strings
-   */
   private static hashString(str: string): string {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -152,9 +137,6 @@ export class AnalyticsService {
     return Math.abs(hash).toString(36);
   }
 
-  /**
-   * Track an analytics event
-   */
   static async trackEvent(
     req: Request,
     eventData: CreateAnalyticsEventRequest
@@ -185,19 +167,16 @@ export class AnalyticsService {
         sessionId
       });
     } catch (error) {
-      // Log the error but don't throw - analytics failures shouldn't break the application
+      
       appLogger.error('Failed to track analytics event', error, {
         eventType: eventData.eventType
       });
     }
   }
 
-  /**
-   * Middleware to automatically track page views
-   */
   static trackPageView() {
     return async (req: Request, res: any, next: any) => {
-      // Only track GET requests to non-API routes
+      
       if (req.method === 'GET' && !req.path.startsWith('/api/')) {
         await this.trackEvent(req, {
           eventType: 'page_view',

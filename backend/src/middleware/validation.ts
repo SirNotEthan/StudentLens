@@ -7,7 +7,7 @@ import { appLogger } from '@/services/logger';
 
 export const sanitizeString = (value: any): string => {
   if (typeof value !== 'string') return '';
-  return value.trim().replace(/\s+/g, ' '); // Normalize whitespace
+  return value.trim().replace(/\s+/g, ' ');
 };
 
 export const sanitizeHTML = (value: any): string => {
@@ -334,7 +334,7 @@ export const validateBusinessRules = (
   }
 
   if (method === 'PUT' && endpoint.includes('/role')) {
-    // Prevent non-Owners from assigning Owner role to anyone
+    
     if (req.body.role === 'Owner' && user && user.role !== 'Owner') {
       throw AppError.forbidden('Only Owners can assign the Owner role');
     }

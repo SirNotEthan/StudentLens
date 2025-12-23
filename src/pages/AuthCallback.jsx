@@ -25,7 +25,7 @@ const AuthCallback = () => {
           if (result.success) {
             navigate('/main', { replace: true });
           } else {
-            // Pass the error message to login page
+            
             const errorParam = encodeURIComponent(result.error || 'auth_failed');
             navigate(`/login?error=${errorParam}`, { replace: true });
           }

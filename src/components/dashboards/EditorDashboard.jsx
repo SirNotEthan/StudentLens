@@ -38,7 +38,6 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
       
       await axios.put(`/posts/${articleId}`, { content: editedContent });
 
-      
       await axios.patch(`/posts/${articleId}/forward`, {
         reviewerId,
         reviewerName

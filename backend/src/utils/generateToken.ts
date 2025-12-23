@@ -234,7 +234,7 @@ setInterval(() => {
       count: tokensToRemove.length
     });
   }
-}, 60 * 60 * 1000); // Clean every hour
+}, 60 * 60 * 1000); 
 
 export const validateTokenStructure = (token: string): boolean => {
   const parts = token.split('.');

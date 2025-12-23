@@ -73,7 +73,6 @@ const requiredEnvVars: (keyof EnvironmentVariables)[] = [
   'SESSION_SECRET'
 ];
 
-// In production, Redis is required for session persistence
 if (process.env.NODE_ENV === 'production') {
   requiredEnvVars.push('REDIS_URL');
 }
@@ -96,7 +95,6 @@ console.log('INIT: Trust proxy configured');
 
 app.use(securityHeaders);
 
-// Configure helmet based on environment and protocol
 const isProduction = process.env.NODE_ENV === 'production';
 const helmetConfig: any = {
   contentSecurityPolicy: {
@@ -112,23 +110,20 @@ const helmetConfig: any = {
     }
   },
   crossOriginEmbedderPolicy: false,
-  // Disable COOP and COEP for HTTP, as they're only meant for HTTPS
+  
   crossOriginOpenerPolicy: false,
-  // Only enable origin agent cluster for HTTPS
+  
   originAgentCluster: false
 };
 
 app.use(helmet(helmetConfig));
 
-// Serve static files EARLY - before security middleware
-// This prevents security middleware from interfering with asset serving
 console.log('INIT: Setting up static file serving (early)...');
 const publicPath = path.join(__dirname, 'public');
 console.log(`INIT: Public path: ${publicPath}`);
 console.log(`INIT: __dirname: ${__dirname}`);
 console.log(`INIT: process.cwd(): ${process.cwd()}`);
 
-// Check if public directory exists
 const fs = require('fs');
 const publicExists = fs.existsSync(publicPath);
 console.log(`INIT: Public directory exists: ${publicExists}`);
@@ -141,7 +136,6 @@ if (publicExists) {
     const indexExists = fs.existsSync(path.join(publicPath, 'index.html'));
     console.log(`INIT: index.html exists: ${indexExists}`);
 
-    // Check assets directory
     const assetsPath = path.join(publicPath, 'assets');
     const assetsExists = fs.existsSync(assetsPath);
     console.log(`INIT: Assets directory exists: ${assetsExists}`);
@@ -159,12 +153,11 @@ if (publicExists) {
 
 appLogger.info('Static files directory', { publicPath, exists: publicExists });
 
-// Serve static files with aggressive caching
 app.use(express.static(publicPath, {
   maxAge: '1d',
   etag: true,
   lastModified: true,
-  index: false  // Don't serve index.html here - let SPA fallback handle it
+  index: false  
 }));
 console.log('INIT: ✅ Static file middleware added (early in chain)');
 
@@ -193,12 +186,9 @@ app.use(express.urlencoded({
   parameterLimit: 1000
 }));
 
-// Redis setup - client will be created and connected in startServer
 let redisClient: ReturnType<typeof createClient> | null = null;
 let sessionStore: any = null;
 
-// Determine if secure cookies should be used (HTTPS)
-// In production, use HTTPS (secure cookies) unless explicitly disabled
 const useSecureCookies = process.env.SECURE_COOKIES === 'false'
   ? false
   : (process.env.NODE_ENV === 'production' || process.env.SECURE_COOKIES === 'true');
@@ -263,7 +253,6 @@ console.log('INIT: Configuring PORT...');
 const PORT = parseInt(process.env.PORT || '5000', 10);
 console.log(`INIT: PORT = ${PORT}`);
 
-// Log port configuration for debugging
 appLogger.info('Port Configuration', {
   envPort: process.env.PORT,
   parsedPort: PORT,
@@ -291,13 +280,12 @@ const startServer = async (): Promise<void> => {
 
     console.log('STARTUP: Logger initialized');
 
-    // Try to connect to Redis with timeout
     let redisConnected = false;
     console.log('STARTUP: Attempting Redis connection...');
 
     try {
       redisClient = createClient({
-        url: process.env.REDIS_URL || 'redis://localhost:6379',
+        url: process.env.REDIS_URL || 'redis:
         socket: {
           connectTimeout: 5000,
           reconnectStrategy: (retries) => {
@@ -345,13 +333,13 @@ const startServer = async (): Promise<void> => {
       appLogger.info('Connected to Redis successfully - using Redis for sessions');
       console.log('STARTUP: ✅ Redis connection successful');
     } catch (error) {
-      // In production, Redis is required
+      
       if (process.env.NODE_ENV === 'production') {
         appLogger.error('❌ CRITICAL: Redis connection failed in production environment', error);
         console.error('STARTUP: ❌ Redis connection failed in PRODUCTION');
         console.error('STARTUP: Redis is required for production deployments');
         console.error('STARTUP: Please ensure REDIS_URL is correctly configured');
-        throw error; // This will be caught by the outer try-catch and exit
+        throw error; 
       }
 
       appLogger.warn('Failed to connect to Redis, falling back to memory store for sessions', error);
@@ -361,7 +349,6 @@ const startServer = async (): Promise<void> => {
       sessionStore = null;
     }
 
-    // Initialize session middleware with appropriate store
     console.log('STARTUP: Configuring session middleware...');
     const sessionConfig: any = {
       secret: process.env.SESSION_SECRET!,
@@ -380,7 +367,6 @@ const startServer = async (): Promise<void> => {
       }
     };
 
-    // Add Redis store if available
     if (sessionStore) {
       sessionConfig.store = sessionStore;
       appLogger.info('Session middleware configured with Redis store');
@@ -390,11 +376,9 @@ const startServer = async (): Promise<void> => {
       console.log('STARTUP: ⚠️ Session configured with memory store (NOT suitable for production)');
     }
 
-    // Initialize session middleware
     app.use(session(sessionConfig));
     console.log('STARTUP: ✅ Session middleware initialized');
 
-    // Initialize Passport middleware
     console.log('STARTUP: Setting up Passport middleware...');
     app.use(passport.initialize());
     console.log('STARTUP: ✅ Passport initialized');
@@ -404,7 +388,6 @@ const startServer = async (): Promise<void> => {
 
     appLogger.info('Session and Passport middleware initialized successfully');
 
-    // Set up health check route
     console.log('STARTUP: Setting up health check route...');
     app.get('/api/health', async (req, res): Promise<void> => {
       const appwriteConnected = await checkAppwriteConnection();
@@ -421,13 +404,10 @@ const startServer = async (): Promise<void> => {
         }
       };
 
-      // Always return 200 OK if the server is running
-      // Report service status but don't fail the health check
       res.json(healthCheck);
     });
     console.log('STARTUP: ✅ Health check route configured');
 
-    // Set up API routes (must be after session/passport initialization)
     console.log('STARTUP: Setting up API routes...');
     app.use('/api/auth', googleAuthRoutes);
     console.log('STARTUP: - Google auth routes added');
@@ -451,55 +431,48 @@ const startServer = async (): Promise<void> => {
     console.log('STARTUP: - Version routes added');
     console.log('STARTUP: ✅ All API routes configured');
 
-    // Set up SPA fallback route (must be after all API routes)
     console.log('STARTUP: Setting up SPA fallback route...');
-    // Express 5 compatible: use middleware without wildcards
+    
     app.use((req, res, next) => {
-      // Skip if it's an API route
+      
       if (req.path.startsWith('/api')) {
         return next();
       }
 
-      // Skip static files (anything with a file extension in the last path segment)
       const pathParts = req.path.split('/');
       const lastSegment = pathParts[pathParts.length - 1];
       if (lastSegment.includes('.')) {
-        // This looks like a file request (e.g., .js, .css, .png, etc.)
+        
         return next();
       }
 
-      // Only handle GET and HEAD requests for SPA routing
       if (req.method !== 'GET' && req.method !== 'HEAD') {
         return next();
       }
 
-      // Skip if response already sent
       if (res.headersSent) {
         return next();
       }
 
-      // Serve index.html for all other routes (SPA routing)
       const indexPath = path.join(publicPath, 'index.html');
 
       res.sendFile(indexPath, (err) => {
         if (err) {
           appLogger.warn('Failed to serve index.html', { error: err.message, path: indexPath });
           if (!res.headersSent) {
-            next(); // Fall through to 404 handler
+            next(); 
           }
         }
       });
     });
     console.log('STARTUP: ✅ SPA fallback route configured');
 
-    // Set up error handlers (must be LAST, after all routes)
     console.log('STARTUP: Setting up error handlers...');
     app.use(notFoundHandler);
     console.log('STARTUP: - Not found handler added');
     app.use(errorHandler);
     console.log('STARTUP: ✅ Error handlers configured');
 
-    // Check Appwrite connection (non-fatal)
     console.log('STARTUP: Checking Appwrite connection...');
     const appwriteConnected = await checkAppwriteConnection();
     console.log(`STARTUP: Appwrite connection ${appwriteConnected ? 'successful' : 'failed'}`);
@@ -510,7 +483,6 @@ const startServer = async (): Promise<void> => {
       appLogger.info('Connected to Appwrite successfully');
     }
 
-    // Start the server
     console.log('STARTUP: Preparing to start HTTP server...');
     console.log(`STARTUP: Port = ${PORT}`);
 
@@ -534,7 +506,7 @@ const startServer = async (): Promise<void> => {
         nodeEnv: process.env.NODE_ENV,
         appwriteEndpoint: process.env.APPWRITE_ENDPOINT,
         clientUrl: process.env.CLIENT_URL,
-        redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+        redisUrl: process.env.REDIS_URL || 'redis:
         logLevel: process.env.LOG_LEVEL || 'info'
       });
 
@@ -543,7 +515,7 @@ const startServer = async (): Promise<void> => {
       console.log('==========================================');
       console.log(`Port: ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV}`);
-      console.log(`Health Check: http://localhost:${PORT}/api/health`);
+      console.log(`Health Check: http:
       console.log('==========================================\n');
     });
 
@@ -568,7 +540,6 @@ const startServer = async (): Promise<void> => {
         appLogger.info('HTTP server closed');
       });
 
-      // Close Redis connection if it exists
       if (redisClient && redisConnected) {
         try {
           await redisClient.quit();
@@ -604,7 +575,6 @@ const startServer = async (): Promise<void> => {
       errno: error.errno
     });
 
-    // Ensure Redis connection is closed on error
     if (redisClient) {
       try {
         await redisClient.quit();
