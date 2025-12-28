@@ -922,7 +922,7 @@ const AdminPanel = () => {
                           ...settingsForm,
                           images: { ...settingsForm.images, featuredNews: e.target.value }
                         })}
-                        placeholder="https:
+                        placeholder="https://example.com/image.jpg"
                       />
                       <small className="form-help">Optional: Image displayed in the Latest News section</small>
                       {settingsForm.images?.featuredNews && (
