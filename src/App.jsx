@@ -21,6 +21,8 @@ import ContactUs from './pages/ContactUs'
 import TermsPrivacy from './pages/TermsPrivacy'
 import ApplyWriter from './pages/ApplyWriter'
 import WordlePage from './pages/WordlePage'
+import SpellingBeePage from './pages/SpellingBeePage'
+import StrandsPage from './pages/StrandsPage'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -151,6 +153,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <WordlePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/spelling-bee"
+            element={
+              <ProtectedRoute>
+                <SpellingBeePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/strands"
+            element={
+              <ProtectedRoute>
+                <StrandsPage />
               </ProtectedRoute>
             }
           />

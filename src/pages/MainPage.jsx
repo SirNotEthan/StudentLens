@@ -359,11 +359,18 @@ const MainPage = () => {
                 </div>
                 <span className="game-name">Wordle</span>
               </div>
-            </div>
-            <div className="games-coming-soon">
-              <div className="coming-soon-icon">🎮</div>
-              <h4 className="coming-soon-title">MORE COMING SOON</h4>
-              <p className="coming-soon-text">More games coming soon!</p>
+              <div className="game-item spelling-bee" onClick={() => navigate('/spelling-bee')}>
+                <div className="game-icon">
+                  🐝
+                </div>
+                <span className="game-name">Spelling Bee</span>
+              </div>
+              <div className="game-item strands" onClick={() => navigate('/strands')}>
+                <div className="game-icon">
+                  🧩
+                </div>
+                <span className="game-name">Strands</span>
+              </div>
             </div>
           </section>
         </aside>

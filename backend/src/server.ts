@@ -55,6 +55,8 @@ import commentRoutes from '@/routes/comments';
 import analyticsRoutes from '@/routes/analytics';
 import settingsRoutes from '@/routes/settings';
 import wordleRoutes from '@/routes/wordle';
+import spellingBeeRoutes from '@/routes/spellingBee';
+import strandsRoutes from '@/routes/strands';
 import versionRoutes from '@/routes/version';
 console.log('LOADING: all routes loaded');
 
@@ -427,6 +429,10 @@ const startServer = async (): Promise<void> => {
     console.log('STARTUP: - Settings routes added');
     app.use('/api/wordle', wordleRoutes);
     console.log('STARTUP: - Wordle routes added');
+    app.use('/api/spelling-bee', spellingBeeRoutes);
+    console.log('STARTUP: - Spelling Bee routes added');
+    app.use('/api/strands', strandsRoutes);
+    console.log('STARTUP: - Strands routes added');
     app.use('/api/version', versionRoutes);
     console.log('STARTUP: - Version routes added');
     console.log('STARTUP: ✅ All API routes configured');

@@ -33,6 +33,16 @@ export class User implements IUser {
   public wordleBestStreak: number;
   public wordleWins: number;
   public wordleLastPlayedDate?: string;
+  public spellingBeeGamesPlayed: number;
+  public spellingBeeCurrentStreak: number;
+  public spellingBeeBestStreak: number;
+  public spellingBeeWins: number;
+  public spellingBeeLastPlayedDate?: string;
+  public strandsGamesPlayed: number;
+  public strandsCurrentStreak: number;
+  public strandsBestStreak: number;
+  public strandsWins: number;
+  public strandsLastPlayedDate?: string;
   public createdAt: string;
   public updatedAt: string;
   public prefs: Record<string, any>;
@@ -60,6 +70,16 @@ export class User implements IUser {
     this.wordleBestStreak = userData.prefs?.wordleBestStreak || 0;
     this.wordleWins = userData.prefs?.wordleWins || 0;
     this.wordleLastPlayedDate = userData.prefs?.wordleLastPlayedDate;
+    this.spellingBeeGamesPlayed = userData.prefs?.spellingBeeGamesPlayed || 0;
+    this.spellingBeeCurrentStreak = userData.prefs?.spellingBeeCurrentStreak || 0;
+    this.spellingBeeBestStreak = userData.prefs?.spellingBeeBestStreak || 0;
+    this.spellingBeeWins = userData.prefs?.spellingBeeWins || 0;
+    this.spellingBeeLastPlayedDate = userData.prefs?.spellingBeeLastPlayedDate;
+    this.strandsGamesPlayed = userData.prefs?.strandsGamesPlayed || 0;
+    this.strandsCurrentStreak = userData.prefs?.strandsCurrentStreak || 0;
+    this.strandsBestStreak = userData.prefs?.strandsBestStreak || 0;
+    this.strandsWins = userData.prefs?.strandsWins || 0;
+    this.strandsLastPlayedDate = userData.prefs?.strandsLastPlayedDate;
     this.createdAt = userData.$createdAt;
     this.updatedAt = userData.$updatedAt;
     this.prefs = userData.prefs || {};
@@ -97,7 +117,17 @@ export class User implements IUser {
         wordleCurrentStreak: 0,
         wordleBestStreak: 0,
         wordleWins: 0,
-        wordleLastPlayedDate: undefined
+        wordleLastPlayedDate: undefined,
+        spellingBeeGamesPlayed: 0,
+        spellingBeeCurrentStreak: 0,
+        spellingBeeBestStreak: 0,
+        spellingBeeWins: 0,
+        spellingBeeLastPlayedDate: undefined,
+        strandsGamesPlayed: 0,
+        strandsCurrentStreak: 0,
+        strandsBestStreak: 0,
+        strandsWins: 0,
+        strandsLastPlayedDate: undefined
       });
 
       const updatedUser = await users.get(user.$id);
@@ -721,6 +751,16 @@ export class User implements IUser {
       wordleBestStreak: this.wordleBestStreak,
       wordleWins: this.wordleWins,
       wordleLastPlayedDate: this.wordleLastPlayedDate,
+      spellingBeeGamesPlayed: this.spellingBeeGamesPlayed,
+      spellingBeeCurrentStreak: this.spellingBeeCurrentStreak,
+      spellingBeeBestStreak: this.spellingBeeBestStreak,
+      spellingBeeWins: this.spellingBeeWins,
+      spellingBeeLastPlayedDate: this.spellingBeeLastPlayedDate,
+      strandsGamesPlayed: this.strandsGamesPlayed,
+      strandsCurrentStreak: this.strandsCurrentStreak,
+      strandsBestStreak: this.strandsBestStreak,
+      strandsWins: this.strandsWins,
+      strandsLastPlayedDate: this.strandsLastPlayedDate,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

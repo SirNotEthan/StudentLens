@@ -1,0 +1,273 @@
+.spelling-bee-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 1rem;
+}
+
+.spelling-bee-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: white;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.spelling-bee-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
+}
+
+.spelling-bee-stats {
+  display: flex;
+  gap: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4CAF50;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.spelling-bee-main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.spelling-bee-message {
+  text-align: center;
+  padding: 0.75rem;
+  background: #4CAF50;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.score-display {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.score-value {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.score-label {
+  font-size: 1rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.current-word-display {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  min-height: 3rem;
+  padding: 1rem;
+  border: 3px solid #4CAF50;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.current-word-display.shake {
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.action-btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: #e0e0e0;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #d0d0d0;
+  transform: translateY(-2px);
+}
+
+.action-btn.submit-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.action-btn.submit-btn:hover {
+  background: #45a049;
+}
+
+.honeycomb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 2rem 0;
+}
+
+.hex-row-center {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.hex-button {
+  width: 80px;
+  height: 80px;
+  border: 3px solid #ddd;
+  background: #f5f5f5;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 10px;
+}
+
+.hex-button:hover:not(:disabled) {
+  transform: scale(1.1);
+  background: #e0e0e0;
+}
+
+.hex-button.center {
+  background: #FFD700;
+  border-color: #FFA500;
+  color: #333;
+}
+
+.hex-button.center:hover:not(:disabled) {
+  background: #FFC700;
+}
+
+.hex-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.found-words {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e0e0e0;
+}
+
+.found-words h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.words-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.found-word {
+  padding: 0.5rem 1rem;
+  background: #4CAF50;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.end-game-button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: #FF5722;
+  color: white;
+  cursor: pointer;
+  margin-top: 2rem;
+  transition: all 0.2s;
+}
+
+.end-game-button:hover {
+  background: #E64A19;
+  transform: translateY(-2px);
+}
+
+.game-over {
+  text-align: center;
+  padding: 2rem;
+  background: #f5f5f5;
+  border-radius: 10px;
+  margin-top: 2rem;
+}
+
+.game-over h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+  color: #4CAF50;
+}
+
+.game-over p {
+  font-size: 1rem;
+  color: #666;
+  margin: 0.5rem 0;
+}
+
+.stats-preview {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.back-button {
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: 2px solid #4CAF50;
+  border-radius: 8px;
+  background: white;
+  color: #4CAF50;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.back-button:hover {
+  background: #4CAF50;
+  color: white;
+}
