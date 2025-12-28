@@ -23,6 +23,16 @@ export interface IUser {
   wordleBestStreak: number;
   wordleWins: number;
   wordleLastPlayedDate?: string;
+  spellingBeeGamesPlayed: number;
+  spellingBeeCurrentStreak: number;
+  spellingBeeBestStreak: number;
+  spellingBeeWins: number;
+  spellingBeeLastPlayedDate?: string;
+  strandsGamesPlayed: number;
+  strandsCurrentStreak: number;
+  strandsBestStreak: number;
+  strandsWins: number;
+  strandsLastPlayedDate?: string;
   createdAt: string;
   updatedAt: string;
   prefs: Record<string, any>;
@@ -282,6 +292,16 @@ export interface UpdateUserRequest {
   wordleBestStreak?: number;
   wordleWins?: number;
   wordleLastPlayedDate?: string;
+  spellingBeeGamesPlayed?: number;
+  spellingBeeCurrentStreak?: number;
+  spellingBeeBestStreak?: number;
+  spellingBeeWins?: number;
+  spellingBeeLastPlayedDate?: string;
+  strandsGamesPlayed?: number;
+  strandsCurrentStreak?: number;
+  strandsBestStreak?: number;
+  strandsWins?: number;
+  strandsLastPlayedDate?: string;
 }
 
 export interface ChangePasswordRequest {
