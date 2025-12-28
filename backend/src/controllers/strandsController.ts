@@ -2,53 +2,7 @@ import { Response, NextFunction } from 'express';
 import { User } from '@/models/User';
 import { AppError } from '@/utils/AppError';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
-
-// Simple word grid puzzles for Strands
-const STRANDS_PUZZLES = [
-  {
-    theme: 'Animals',
-    grid: [
-      ['C', 'A', 'T', 'S'],
-      ['D', 'O', 'G', 'S'],
-      ['F', 'I', 'S', 'H'],
-      ['B', 'I', 'R', 'D']
-    ],
-    words: ['CAT', 'CATS', 'DOG', 'DOGS', 'FISH', 'BIRD', 'BIRDS']
-  },
-  {
-    theme: 'Colors',
-    grid: [
-      ['R', 'E', 'D', 'S'],
-      ['B', 'L', 'U', 'E'],
-      ['G', 'R', 'E', 'N'],
-      ['P', 'I', 'N', 'K']
-    ],
-    words: ['RED', 'BLUE', 'GREEN', 'PINK', 'REDS']
-  },
-  {
-    theme: 'Food',
-    grid: [
-      ['B', 'R', 'E', 'D'],
-      ['M', 'I', 'L', 'K'],
-      ['E', 'G', 'G', 'S'],
-      ['F', 'I', 'S', 'H']
-    ],
-    words: ['BREAD', 'MILK', 'EGGS', 'FISH', 'BRED']
-  }
-];
-
-const getTodayDateString = (): string => {
-  const date = new Date();
-  return date.toISOString().split('T')[0];
-};
-
-const getDailyPuzzle = () => {
-  const startDate = new Date('2025-01-01');
-  const today = new Date();
-  const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const puzzleIndex = daysDiff % STRANDS_PUZZLES.length;
-  return STRANDS_PUZZLES[puzzleIndex];
-};
+import { getDailyStrandsPuzzle, getTodayDateString } from '@/data/strandsWords';
 
 const getCustomPuzzle = (puzzleData: any) => {
   // Validate and return custom puzzle
@@ -79,7 +33,7 @@ export const getNewPuzzle = async (
 
     const { custom, puzzleData } = req.query;
 
-    let puzzle;
+    let puzzle: { theme: string; grid: string[][]; words: string[] };
     if (custom === 'true' && puzzleData) {
       // Custom puzzle
       puzzle = getCustomPuzzle(JSON.parse(puzzleData as string));
@@ -91,7 +45,7 @@ export const getNewPuzzle = async (
         throw AppError.badRequest('You have already played today. Come back tomorrow for a new puzzle!');
       }
 
-      puzzle = getDailyPuzzle();
+      puzzle = getDailyStrandsPuzzle();
     }
 
     res.json({
@@ -117,7 +71,7 @@ export const validateWord = async (
       throw AppError.unauthorized('User not authenticated');
     }
 
-    const { word, path } = req.body;
+    const { word } = req.body;
 
     if (!word || typeof word !== 'string') {
       throw AppError.badRequest('Word is required');

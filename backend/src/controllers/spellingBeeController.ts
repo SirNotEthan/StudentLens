@@ -2,26 +2,7 @@ import { Response, NextFunction } from 'express';
 import { User } from '@/models/User';
 import { AppError } from '@/utils/AppError';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
-
-// Simple word list for Spelling Bee (7-letter centers with possible words)
-const SPELLING_BEE_PUZZLES = [
-  { center: 'A', outer: ['B', 'C', 'D', 'E', 'F', 'G'], words: ['ABCD', 'FACE', 'AGED', 'BEAD', 'CAFE', 'FADE'] },
-  { center: 'E', outer: ['L', 'N', 'T', 'R', 'S', 'I'], words: ['TREE', 'STEEL', 'ENTER', 'STREET', 'SILENT', 'LISTEN'] },
-  { center: 'O', outer: ['P', 'R', 'T', 'S', 'N', 'I'], words: ['POINT', 'SPORT', 'ROOTS', 'OPTION', 'PORTION', 'POSITION'] },
-];
-
-const getTodayDateString = (): string => {
-  const date = new Date();
-  return date.toISOString().split('T')[0];
-};
-
-const getDailyPuzzle = () => {
-  const startDate = new Date('2025-01-01');
-  const today = new Date();
-  const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-  const puzzleIndex = daysDiff % SPELLING_BEE_PUZZLES.length;
-  return SPELLING_BEE_PUZZLES[puzzleIndex];
-};
+import { getDailySpellingBeePuzzle, getTodayDateString } from '@/data/spellingBeeWords';
 
 const getCustomPuzzle = (puzzleData: any) => {
   // Validate and return custom puzzle
@@ -52,7 +33,7 @@ export const getNewPuzzle = async (
 
     const { custom, puzzleData } = req.query;
 
-    let puzzle;
+    let puzzle: { center: string; outer: string[]; words: string[] };
     if (custom === 'true' && puzzleData) {
       // Custom puzzle
       puzzle = getCustomPuzzle(JSON.parse(puzzleData as string));
@@ -64,7 +45,7 @@ export const getNewPuzzle = async (
         throw AppError.badRequest('You have already played today. Come back tomorrow for a new puzzle!');
       }
 
-      puzzle = getDailyPuzzle();
+      puzzle = getDailySpellingBeePuzzle();
     }
 
     res.json({

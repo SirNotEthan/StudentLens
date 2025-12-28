@@ -80,6 +80,29 @@ const SpellingBeePage = () => {
     setOuterLetters(prev => [...prev].sort(() => Math.random() - 0.5));
   };
 
+  const handleKeyDown = (e) => {
+    if (gameStatus !== 'playing') return;
+
+    const key = e.key.toUpperCase();
+    const allLetters = [centerLetter, ...outerLetters];
+
+    if (key === 'ENTER') {
+      e.preventDefault();
+      handleSubmit();
+    } else if (key === 'BACKSPACE' || key === 'DELETE') {
+      e.preventDefault();
+      handleDelete();
+    } else if (allLetters.includes(key)) {
+      e.preventDefault();
+      handleLetterClick(key);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentWord, gameStatus, centerLetter, outerLetters]);
+
   const handleSubmit = async () => {
     if (currentWord.length < 4) {
       showMessage('Word must be at least 4 letters');
@@ -195,17 +218,19 @@ const SpellingBeePage = () => {
         </div>
 
         <div className="honeycomb">
-          {outerLetters.slice(0, 2).map((letter, i) => (
-            <button
-              key={i}
-              className="hex-button outer"
-              onClick={() => handleLetterClick(letter)}
-              disabled={gameStatus !== 'playing'}
-            >
-              {letter}
-            </button>
-          ))}
-          <div className="hex-row-center">
+          <div className="hex-row">
+            {outerLetters.slice(0, 2).map((letter, i) => (
+              <button
+                key={i}
+                className="hex-button outer"
+                onClick={() => handleLetterClick(letter)}
+                disabled={gameStatus !== 'playing'}
+              >
+                {letter}
+              </button>
+            ))}
+          </div>
+          <div className="hex-row">
             {outerLetters.slice(2, 3).map((letter, i) => (
               <button
                 key={i + 2}
@@ -234,16 +259,18 @@ const SpellingBeePage = () => {
               </button>
             ))}
           </div>
-          {outerLetters.slice(4, 6).map((letter, i) => (
-            <button
-              key={i + 4}
-              className="hex-button outer"
-              onClick={() => handleLetterClick(letter)}
-              disabled={gameStatus !== 'playing'}
-            >
-              {letter}
-            </button>
-          ))}
+          <div className="hex-row">
+            {outerLetters.slice(4, 6).map((letter, i) => (
+              <button
+                key={i + 4}
+                className="hex-button outer"
+                onClick={() => handleLetterClick(letter)}
+                disabled={gameStatus !== 'playing'}
+              >
+                {letter}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="found-words">
