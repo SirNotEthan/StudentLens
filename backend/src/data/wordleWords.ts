@@ -1,5 +1,5 @@
-const DICTIONARY_API_URL = "https:
-const RANDOM_WORD_API_URL = "https:
+const DICTIONARY_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
+const RANDOM_WORD_API_URL = "https://random-word-api.herokuapp.com/word?length=5";
 
 const WORDLE_EPOCH = new Date('2025-01-01T00:00:00Z');
 

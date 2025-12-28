@@ -287,7 +287,7 @@ const startServer = async (): Promise<void> => {
 
     try {
       redisClient = createClient({
-        url: process.env.REDIS_URL || 'redis:
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
         socket: {
           connectTimeout: 5000,
           reconnectStrategy: (retries) => {
@@ -512,7 +512,7 @@ const startServer = async (): Promise<void> => {
         nodeEnv: process.env.NODE_ENV,
         appwriteEndpoint: process.env.APPWRITE_ENDPOINT,
         clientUrl: process.env.CLIENT_URL,
-        redisUrl: process.env.REDIS_URL || 'redis:
+        redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
         logLevel: process.env.LOG_LEVEL || 'info'
       });
 
@@ -521,20 +521,20 @@ const startServer = async (): Promise<void> => {
       console.log('==========================================');
       console.log(`Port: ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV}`);
-      console.log(`Health Check: http:
+      console.log(`Health Check: http://localhost:${PORT}/health`);
       console.log('==========================================\n');
     });
 
     server.on('error', (error: any) => {
       if (error.code === 'EADDRINUSE') {
-        appLogger.error(`❌ Port ${PORT} is already in use!`, error);
-        console.error(`\n❌ ERROR: Port ${PORT} is already in use!`);
+        appLogger.error(`Port ${PORT} is already in use!`, error);
+        console.error(`\nERROR: Port ${PORT} is already in use!`);
         console.error('This should not happen in App Platform.');
         console.error('Check your configuration.\n');
         process.exit(1);
       } else {
-        appLogger.error('❌ Server error:', error);
-        console.error('\n❌ SERVER ERROR:', error);
+        appLogger.error('Server error:', error);
+        console.error('\nSERVER ERROR:', error);
         process.exit(1);
       }
     });
