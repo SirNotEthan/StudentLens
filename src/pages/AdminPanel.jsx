@@ -941,7 +941,7 @@ const AdminPanel = () => {
                           ...settingsForm,
                           images: { ...settingsForm.images, games: e.target.value }
                         })}
-                        placeholder="https:
+                        placeholder="https://example.com/image.jpg"
                       />
                       <small className="form-help">Optional: Image displayed below the games section</small>
                       {settingsForm.images?.games && (
