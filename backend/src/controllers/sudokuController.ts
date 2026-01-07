@@ -119,7 +119,7 @@ class SudokuGenerator {
 }
 
 // Get new Sudoku puzzle
-export const getNewPuzzle = async (req: Request, res: Response) => {
+export const getNewPuzzle = async (req: Request, res: Response): Promise<void> => {
   try {
     const { difficulty = 'medium' } = req.query;
     
@@ -147,7 +147,7 @@ export const getNewPuzzle = async (req: Request, res: Response) => {
 };
 
 // Submit game result
-export const submitResult = async (req: Request, res: Response) => {
+export const submitResult = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user?.id;
     const { won, time, mistakes, hintsUsed, difficulty } = req.body;
@@ -183,7 +183,7 @@ export const submitResult = async (req: Request, res: Response) => {
 };
 
 // Get user stats
-export const getStats = async (req: Request, res: Response) => {
+export const getStats = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = (req as any).user?.id;
     
