@@ -57,6 +57,7 @@ import settingsRoutes from '@/routes/settings';
 import wordleRoutes from '@/routes/wordle';
 import spellingBeeRoutes from '@/routes/spellingBee';
 import strandsRoutes from '@/routes/strands';
+import sudokuRoutes from '@/routes/sudoku';
 import versionRoutes from '@/routes/version';
 console.log('LOADING: all routes loaded');
 
@@ -433,6 +434,8 @@ const startServer = async (): Promise<void> => {
     console.log('STARTUP: - Spelling Bee routes added');
     app.use('/api/strands', strandsRoutes);
     console.log('STARTUP: - Strands routes added');
+    app.use('/api/sudoku', sudokuRoutes);
+    console.log('STARTUP: - Sudoku routes added');
     app.use('/api/version', versionRoutes);
     console.log('STARTUP: - Version routes added');
     console.log('STARTUP: ✅ All API routes configured');

@@ -371,6 +371,12 @@ const MainPage = () => {
                 </div>
                 <span className="game-name">Strands</span>
               </div>
+              <div className="game-item sudoku" onClick={() => navigate('/sudoku')}>
+                <div className="game-icon">
+                  🔢
+                </div>
+                <span className="game-name">Sudoku</span>
+              </div>
             </div>
           </section>
         </aside>

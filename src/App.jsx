@@ -23,6 +23,7 @@ import ApplyWriter from './pages/ApplyWriter'
 import WordlePage from './pages/WordlePage'
 import SpellingBeePage from './pages/SpellingBeePage'
 import StrandsPage from './pages/StrandsPage'
+import SudokuPage from './pages/SudokuPage'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -169,6 +170,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <StrandsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/sudoku"
+            element={
+              <ProtectedRoute>
+                <SudokuPage />
               </ProtectedRoute>
             }
           />

@@ -37,6 +37,18 @@ export const games = [
   },
   {
     id: 4,
+    name: "Sudoku",
+    icon: "🔢",
+    type: "sudoku",
+    description: "Fill the 9x9 grid with numbers 1-9",
+    difficulty: "Medium",
+    category: "Puzzle",
+    playTime: "10-20 minutes",
+    featured: true,
+    link: "/sudoku"
+  },
+  {
+    id: 5,
     name: "Memory Game",
     icon: "🧠",
     type: "memory",
@@ -48,9 +60,9 @@ export const games = [
     link: "/games/memory"
   },
   {
-    id: 5,
+    id: 6,
     name: "Math Quiz",
-    icon: "🔢",
+    icon: "➕",
     type: "math-quiz",
     description: "Quick math problems to sharpen your skills",
     difficulty: "Medium",
@@ -60,7 +72,7 @@ export const games = [
     link: "/games/math-quiz"
   },
   {
-    id: 6,
+    id: 7,
     name: "Geography Challenge",
     icon: "🌍",
     type: "geography",
@@ -91,6 +103,7 @@ export const getGamesByDifficulty = (difficulty) => {
 export const gameCategories = [
   "Language",
   "Word",
+  "Puzzle",
   "Memory",
   "Math",
   "Geography"
