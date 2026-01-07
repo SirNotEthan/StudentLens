@@ -431,7 +431,13 @@ const MainPage = () => {
                   {featuredPosts.length > 0 || recentPosts.length > 0 ? (
                     <div className="articles-layout">
                       {(() => {
-                        const posts = featuredPosts.length > 0 ? featuredPosts.slice(0, 3) : recentPosts.slice(0, 3);
+                        // Combine featured and recent posts to ensure we always have 3 articles
+                        let allPosts = [...featuredPosts];
+                        if (allPosts.length < 3) {
+                          const additionalPosts = recentPosts.filter(rp => !allPosts.some(fp => fp.id === rp.id));
+                          allPosts = [...allPosts, ...additionalPosts].slice(0, 3);
+                        }
+                        const posts = allPosts.slice(0, 3);
                         const mainPost = posts[0];
                         const sidePosts = posts.slice(1, 3);
 
@@ -506,6 +512,12 @@ const MainPage = () => {
               )}
             </div>
           </section>
+
+          {settings?.newsImage && (
+            <section className="news-image-section">
+              <img src={settings.newsImage} alt="News section" className="news-main-image" />
+            </section>
+          )}
 
           {settings?.gamesImage && (
             <section className="games-image-section">

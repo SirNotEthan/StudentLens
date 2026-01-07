@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
@@ -18,6 +18,9 @@ const StrandsPage = () => {
   const [stats, setStats] = useState({ gamesPlayed: 0, currentStreak: 0 });
   const [gameStatus, setGameStatus] = useState('playing');
   const [shake, setShake] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const isCustom = searchParams.get('custom') === 'true';
 
   useEffect(() => {
@@ -42,6 +45,7 @@ const StrandsPage = () => {
 
   const startNewGame = async () => {
     try {
+      setIsLoading(true);
       const puzzleData = searchParams.get('data');
       const url = isCustom && puzzleData
         ? `/strands/new-puzzle?custom=true&puzzleData=${encodeURIComponent(puzzleData)}`
@@ -57,6 +61,7 @@ const StrandsPage = () => {
         setSelectedPath([]);
         setGameStatus('playing');
         setMessage('');
+        setHintsUsed(0);
       }
     } catch (error) {
       console.error('Error fetching new puzzle:', error);
@@ -66,6 +71,8 @@ const StrandsPage = () => {
       } else {
         setMessage('Error loading game. Please try again.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -104,6 +111,14 @@ const StrandsPage = () => {
     setCurrentWord('');
   };
 
+  const handleUndo = () => {
+    if (selectedPath.length > 0) {
+      const newPath = selectedPath.slice(0, -1);
+      setSelectedPath(newPath);
+      setCurrentWord(newPath.map(c => c.letter).join(''));
+    }
+  };
+
   const handleSubmit = async () => {
     if (currentWord.length < 3) {
       showMessage('Word must be at least 3 letters');
@@ -131,6 +146,8 @@ const StrandsPage = () => {
       }
 
       setFoundWords([...foundWords, upperWord]);
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 1000);
       showMessage('Word found!');
       handleClear();
 
@@ -167,8 +184,34 @@ const StrandsPage = () => {
     setTimeout(() => setShake(false), 500);
   };
 
+  const useHint = async () => {
+    if (hintsUsed >= 3 || gameStatus !== 'playing') return;
+    
+    try {
+      const response = await axios.post('/strands/get-hint', {
+        grid: grid,
+        foundWords: foundWords
+      });
+      
+      if (response.data.hint) {
+        const hintWord = response.data.hint;
+        showMessage(`Hint: Look for a ${hintWord.length}-letter word starting with "${hintWord[0]}"`);
+        setHintsUsed(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error('Error getting hint:', error);
+      showMessage(`Hint: Look for words related to "${theme}"`);
+      setHintsUsed(prev => prev + 1);
+    }
+  };
+
   const isCellSelected = (row, col) => {
     return selectedPath.some(cell => cell.key === `${row}-${col}`);
+  };
+
+  const getCellOrder = (row, col) => {
+    const index = selectedPath.findIndex(cell => cell.key === `${row}-${col}`);
+    return index >= 0 ? index + 1 : null;
   };
 
   return (
@@ -194,6 +237,15 @@ const StrandsPage = () => {
 
       <main className="strands-main">
         {message && <div className="strands-message">{message}</div>}
+        {showCelebration && <div className="celebration-overlay">✨</div>}
+
+        {isLoading ? (
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Loading puzzle...</p>
+          </div>
+        ) : (
+          <>
 
         <div className="theme-display">
           <div className="theme-label">Theme:</div>
@@ -217,11 +269,17 @@ const StrandsPage = () => {
         </div>
 
         <div className="action-buttons">
-          <button onClick={handleClear} className="action-btn">
+          <button onClick={handleUndo} className="action-btn" disabled={gameStatus !== 'playing' || selectedPath.length === 0}>
+            Undo
+          </button>
+          <button onClick={handleClear} className="action-btn" disabled={gameStatus !== 'playing'}>
             Clear
           </button>
-          <button onClick={handleSubmit} className="action-btn submit-btn">
+          <button onClick={handleSubmit} className="action-btn submit-btn" disabled={gameStatus !== 'playing'}>
             Submit
+          </button>
+          <button onClick={useHint} className="action-btn hint-btn" disabled={gameStatus !== 'playing' || hintsUsed >= 3}>
+            💡 Hint ({3 - hintsUsed})
           </button>
         </div>
 
@@ -234,6 +292,7 @@ const StrandsPage = () => {
                   className={`grid-cell ${isCellSelected(rowIndex, colIndex) ? 'selected' : ''}`}
                   onClick={() => handleCellClick(rowIndex, colIndex)}
                   disabled={gameStatus !== 'playing'}
+                  data-order={getCellOrder(rowIndex, colIndex)}
                 >
                   {letter}
                 </button>
@@ -267,6 +326,8 @@ const StrandsPage = () => {
               Your streak: <strong>{stats.currentStreak}</strong> | Games played: <strong>{stats.gamesPlayed}</strong>
             </p>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>

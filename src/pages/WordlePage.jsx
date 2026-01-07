@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -14,8 +14,12 @@ const WordlePage = () => {
   const [currentRow, setCurrentRow] = useState(0);
   const [shake, setShake] = useState(false);
   const [message, setMessage] = useState('');
-  const [stats, setStats] = useState({ gamesPlayed: 0, currentStreak: 0 });
+  const [stats, setStats] = useState({ gamesPlayed: 0, currentStreak: 0, wins: 0, winRate: 0 });
   const [usedLetters, setUsedLetters] = useState({});
+  const [hardMode, setHardMode] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [hintsRemaining, setHintsRemaining] = useState(3);
+  const [isLoading, setIsLoading] = useState(true);
 
   const MAX_GUESSES = 6;
   const WORD_LENGTH = 5;
@@ -42,6 +46,7 @@ const WordlePage = () => {
 
   const startNewGame = async () => {
     try {
+      setIsLoading(true);
       const response = await axios.get('/wordle/new-word');
       if (response.data.success) {
         setTargetWord(response.data.word.toUpperCase());
@@ -51,6 +56,7 @@ const WordlePage = () => {
         setGameStatus('playing');
         setMessage('');
         setUsedLetters({});
+        setHintsRemaining(3);
       }
     } catch (error) {
       console.error('Error fetching new word:', error);
@@ -61,6 +67,8 @@ const WordlePage = () => {
       } else {
         setMessage('Error loading game. Please try again.');
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -167,6 +175,28 @@ const WordlePage = () => {
     setTimeout(() => setShake(false), 500);
   };
 
+  const useHint = () => {
+    if (hintsRemaining <= 0 || gameStatus !== 'playing') return;
+    
+    // Find first letter not yet guessed correctly
+    const guessedCorrect = new Set();
+    guesses.forEach(guess => {
+      guess.split('').forEach((letter, idx) => {
+        if (letter === targetWord[idx]) {
+          guessedCorrect.add(idx);
+        }
+      });
+    });
+    
+    for (let i = 0; i < targetWord.length; i++) {
+      if (!guessedCorrect.has(i)) {
+        showMessage(`Hint: Letter ${i + 1} is '${targetWord[i]}'`);
+        setHintsRemaining(prev => prev - 1);
+        break;
+      }
+    }
+  };
+
   const handleKeyDown = (e) => {
     const key = e.key.toUpperCase();
     if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
@@ -240,6 +270,14 @@ const WordlePage = () => {
       <main className="wordle-main">
         {message && <div className="wordle-message">{message}</div>}
 
+        {isLoading ? (
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Loading puzzle...</p>
+          </div>
+        ) : (
+          <>
+
         <div className="wordle-board">
           {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => (
             <div
@@ -288,6 +326,20 @@ const WordlePage = () => {
               Your streak: <strong>{stats.currentStreak}</strong> | Games played: <strong>{stats.gamesPlayed}</strong>
             </p>
           </div>
+        )}
+
+        {gameStatus === 'playing' && (
+          <div className="game-controls">
+            <button 
+              className="hint-button" 
+              onClick={useHint}
+              disabled={hintsRemaining <= 0}
+            >
+              💡 Hint ({hintsRemaining})
+            </button>
+          </div>
+        )}
+          </>
         )}
       </main>
     </div>

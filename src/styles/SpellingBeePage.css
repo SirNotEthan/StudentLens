@@ -137,6 +137,28 @@
   margin-top: 0.5rem;
 }
 
+.score-rank {
+  font-size: 1rem;
+  color: #1a1a1a;
+  font-weight: 700;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pangram-badge {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
 .current-word-display {
   text-align: center;
   font-size: 2.5rem;
@@ -204,12 +226,68 @@
   color: #1a1a1a;
 }
 
+.hint-btn {
+  background-color: #f59e0b;
+  color: #fff;
+  border-color: #f59e0b;
+}
+
+.hint-btn:hover:not(:disabled) {
+  background-color: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+
+.hint-btn:disabled {
+  background-color: #d1d5db;
+  border-color: #d1d5db;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e8e4df;
+  border-top-color: #1a1a1a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  color: #666;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .honeycomb {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   margin: 3rem 0;
+  transition: transform 0.15s ease;
+}
+
+.honeycomb.shuffling {
+  animation: shuffleRotate 0.3s ease;
+}
+
+@keyframes shuffleRotate {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(5deg); }
 }
 
 .hex-row {
@@ -261,6 +339,20 @@
 .hex-button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+.hex-button:focus-visible {
+  outline: 3px solid #1a1a1a;
+  outline-offset: 3px;
+}
+
+.submit-btn {
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #333;
 }
 
 .found-words {
@@ -354,4 +446,59 @@
 .stats-preview strong {
   color: #1a1a1a;
   font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .spelling-bee-header {
+    padding: 1rem;
+  }
+
+  .spelling-bee-title {
+    font-size: 1.4rem;
+  }
+
+  .current-word-display {
+    min-width: 300px;
+    font-size: 2rem;
+    padding: 1rem;
+  }
+
+  .hex-button {
+    width: 70px;
+    height: 70px;
+    font-size: 1.6rem;
+  }
+
+  .action-buttons {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .action-btn {
+    padding: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .spelling-bee-title {
+    font-size: 1.2rem;
+    letter-spacing: 0.05em;
+  }
+
+  .current-word-display {
+    min-width: 250px;
+    font-size: 1.6rem;
+    letter-spacing: 0.2em;
+  }
+
+  .hex-button {
+    width: 60px;
+    height: 60px;
+    font-size: 1.4rem;
+  }
+
+  .score-value {
+    font-size: 2.5rem;
+  }
 }
