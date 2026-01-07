@@ -519,11 +519,13 @@ const MainPage = () => {
             </div>
           </section>
 
-          {settings?.newsImage && (
-            <section className="news-image-section">
+          <section className="news-image-section">
+            {settings?.newsImage ? (
               <img src={settings.newsImage} alt="News section" className="news-main-image" />
-            </section>
-          )}
+            ) : (
+              <div className="news-placeholder-image"></div>
+            )}
+          </section>
 
           {settings?.gamesImage && (
             <section className="games-image-section">
