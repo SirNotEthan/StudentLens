@@ -153,10 +153,11 @@ export const submitResult = async (req: Request, res: Response): Promise<void> =
     const { won, time, mistakes, hintsUsed, difficulty } = req.body;
     
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'User not authenticated'
       });
+      return;
     }
     
     // Here you would save the game result to the database
@@ -188,10 +189,11 @@ export const getStats = async (req: Request, res: Response): Promise<void> => {
     const userId = (req as any).user?.id;
     
     if (!userId) {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'User not authenticated'
       });
+      return;
     }
     
     // Here you would fetch stats from the database
