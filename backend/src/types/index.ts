@@ -277,6 +277,7 @@ export interface UpdateUserRequest {
   bio?: string;
   profileImage?: string;
   role?: UserRole;
+  permissions?: Permission[];
   isActive?: boolean;
   lastLogin?: string;
   needsSetup?: boolean;
