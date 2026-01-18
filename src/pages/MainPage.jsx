@@ -520,11 +520,11 @@ const MainPage = () => {
           </section>
 
           <section className="news-image-section">
-            {settings?.newsImage ? (
-              <img src={settings.newsImage} alt="News section" className="news-main-image" />
-            ) : (
-              <div className="news-placeholder-image"></div>
-            )}
+            <img
+              src={settings?.newsImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"}
+              alt="News section"
+              className="news-main-image"
+            />
           </section>
 
           {settings?.gamesImage && (
@@ -746,8 +746,6 @@ const MainPage = () => {
           </div>
         </div>
       )}
-
-      <Footer />
     </div>
   );
 };

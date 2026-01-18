@@ -28,13 +28,106 @@ const SudokuPage = () => {
 
   const MAX_MISTAKES = 3;
   const MAX_HINTS = 3;
+  const STORAGE_KEY = 'sudoku_game_state';
+
+  // Calculate how many of each number are placed
+  const getNumberCounts = () => {
+    const counts = {};
+    for (let num = 1; num <= 9; num++) {
+      counts[num] = 0;
+    }
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        const num = grid[row][col];
+        if (num !== 0) {
+          counts[num]++;
+        }
+      }
+    }
+    return counts;
+  };
+
+  const numberCounts = getNumberCounts();
+
+  // Save game state to localStorage
+  const saveGameState = (gameData) => {
+    if (!user) return;
+    try {
+      const stateToSave = {
+        grid: gameData.grid,
+        initialGrid: gameData.initialGrid,
+        solution: gameData.solution,
+        notes: gameData.notes,
+        mistakes: gameData.mistakes,
+        hintsUsed: gameData.hintsUsed,
+        timer: gameData.timer,
+        difficulty: gameData.difficulty,
+        gameStatus: gameData.gameStatus,
+        history: gameData.history,
+        historyIndex: gameData.historyIndex,
+        savedAt: new Date().toISOString(),
+        puzzleDate: new Date().toISOString().split('T')[0]
+      };
+      localStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(stateToSave));
+    } catch (error) {
+      console.error('Error saving game state:', error);
+    }
+  };
+
+  // Load game state from localStorage
+  const loadGameState = () => {
+    if (!user) return null;
+    try {
+      const saved = localStorage.getItem(`${STORAGE_KEY}_${user.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Only load if it's from today and game is still in progress
+        const today = new Date().toISOString().split('T')[0];
+        if (parsed.puzzleDate === today && parsed.gameStatus === 'playing') {
+          return parsed;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading game state:', error);
+    }
+    return null;
+  };
+
+  // Clear saved game state
+  const clearGameState = () => {
+    if (!user) return;
+    try {
+      localStorage.removeItem(`${STORAGE_KEY}_${user.id}`);
+    } catch (error) {
+      console.error('Error clearing game state:', error);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-    startNewGame();
+
+    // Try to load saved game first
+    const savedState = loadGameState();
+    if (savedState) {
+      setGrid(savedState.grid);
+      setInitialGrid(savedState.initialGrid);
+      setSolution(savedState.solution);
+      setNotes(savedState.notes || {});
+      setMistakes(savedState.mistakes || 0);
+      setHintsUsed(savedState.hintsUsed || 0);
+      setTimer(savedState.timer || 0);
+      setDifficulty(savedState.difficulty || 'medium');
+      setGameStatus(savedState.gameStatus);
+      setHistory(savedState.history || []);
+      setHistoryIndex(savedState.historyIndex ?? -1);
+      setIsRunning(true);
+      setIsLoading(false);
+    } else {
+      startNewGame();
+    }
     fetchStats();
   }, [user, navigate]);
 
@@ -47,6 +140,25 @@ const SudokuPage = () => {
     }
     return () => clearInterval(interval);
   }, [isRunning, gameStatus]);
+
+  // Auto-save game state when it changes
+  useEffect(() => {
+    if (gameStatus === 'playing' && !isLoading && grid.some(row => row.some(cell => cell !== 0))) {
+      saveGameState({
+        grid,
+        initialGrid,
+        solution,
+        notes,
+        mistakes,
+        hintsUsed,
+        timer,
+        difficulty,
+        gameStatus,
+        history,
+        historyIndex
+      });
+    }
+  }, [grid, notes, mistakes, hintsUsed, timer, gameStatus]);
 
   const fetchStats = async () => {
     try {
@@ -62,6 +174,7 @@ const SudokuPage = () => {
   const startNewGame = async (newDifficulty = difficulty) => {
     try {
       setIsLoading(true);
+      clearGameState(); // Clear any saved state when starting new game
       const response = await axios.get(`/sudoku/new-puzzle?difficulty=${newDifficulty}`);
       if (response.data.success) {
         const puzzle = response.data.puzzle;
@@ -249,7 +362,8 @@ const SudokuPage = () => {
   const handleGameOver = async (won) => {
     setIsRunning(false);
     setGameStatus(won ? 'won' : 'lost');
-    
+    clearGameState(); // Clear saved state when game ends
+
     if (won) {
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 2000);
@@ -259,8 +373,8 @@ const SudokuPage = () => {
     }
 
     try {
-      await axios.post('/sudoku/submit-result', { 
-        won, 
+      await axios.post('/sudoku/submit-result', {
+        won,
         time: timer,
         mistakes,
         hintsUsed,
@@ -435,16 +549,19 @@ const SudokuPage = () => {
 
             <div className="controls">
               <div className="number-pad">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                  <button
-                    key={num}
-                    className="number-button"
-                    onClick={() => handleNumberInput(num)}
-                    disabled={gameStatus !== 'playing'}
-                  >
-                    {num}
-                  </button>
-                ))}
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => {
+                  const isComplete = numberCounts[num] >= 9;
+                  return (
+                    <button
+                      key={num}
+                      className={`number-button ${isComplete ? 'completed' : ''}`}
+                      onClick={() => handleNumberInput(num)}
+                      disabled={gameStatus !== 'playing' || isComplete}
+                    >
+                      {num}
+                    </button>
+                  );
+                })}
               </div>
 
               <div className="action-buttons">

@@ -371,6 +371,13 @@
   cursor: not-allowed;
 }
 
+.number-button.completed {
+  background: #e0e0e0;
+  color: #999;
+  border-color: #ccc;
+  opacity: 0.5;
+}
+
 .number-button:focus-visible {
   outline: 3px solid #2563eb;
   outline-offset: 2px;

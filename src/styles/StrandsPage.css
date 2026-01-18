@@ -543,3 +543,57 @@
     font-size: 1.4rem;
   }
 }
+
+/* Coming Soon Styles */
+.coming-soon-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: #fff;
+  border: 2px solid #d0d0d0;
+  border-radius: 12px;
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.coming-soon-icon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+}
+
+.coming-soon-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  font-family: 'Playfair Display', serif;
+  margin-bottom: 1rem;
+}
+
+.coming-soon-text {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  max-width: 400px;
+}
+
+.back-to-games-button {
+  margin-top: 1.5rem;
+  padding: 1rem 2rem;
+  background-color: #1a1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-to-games-button:hover {
+  background-color: #333;
+  transform: translateY(-2px);
+}

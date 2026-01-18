@@ -28,11 +28,12 @@ export const games = [
     name: "Strands",
     icon: "🎯",
     type: "strands",
-    description: "Connect letters to form words",
+    description: "Coming Soon - Connect letters to form words",
     difficulty: "Hard",
     category: "Word",
     playTime: "10-15 minutes",
-    featured: true,
+    featured: false,
+    disabled: true,
     link: "/games/strands"
   },
   {

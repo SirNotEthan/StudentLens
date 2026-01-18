@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { User } from '@/models/User';
 import { AppError } from '@/utils/AppError';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
-import { getDailySpellingBeePuzzle, getTodayDateString } from '@/data/spellingBeeWords';
+import { getDailySpellingBeePuzzle, getTodayDateString, isValidSpellingBeeWord } from '@/data/spellingBeeWords';
 
 const getCustomPuzzle = (puzzleData: any) => {
   // Validate and return custom puzzle
@@ -101,11 +101,18 @@ export const validateWord = async (
       return;
     }
 
-    // Basic validation - in a real app, you'd check against a dictionary
+    // Validate against dictionary
+    const isValid = await isValidSpellingBeeWord(word);
+    if (!isValid) {
+      res.json({ success: true, isValid: false, reason: 'Not in word list' });
+      return;
+    }
+
     res.json({
       success: true,
       isValid: true,
-      points: calculatePoints(upperWord, outer)
+      points: calculatePoints(upperWord, outer),
+      isPangram: outer.every((letter: string) => upperWord.includes(letter.toUpperCase()))
     });
   } catch (error) {
     next(error);

@@ -121,19 +121,47 @@ export function validateSubmission(word: string): boolean {
 
 export async function isValidEnglishWord(word: string): Promise<boolean> {
   try {
-    const response = await fetch(`${DICTIONARY_API_URL}/${word.toLowerCase()}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(`${DICTIONARY_API_URL}${word.toLowerCase()}`, {
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
     return response.status === 200;
   } catch (error) {
     console.error("Error checking word validity:", error);
-    return false;
+    // On API failure, accept words from our extended list to avoid blocking gameplay
+    return EXTENDED_VALID_WORDS.includes(word.toLowerCase());
   }
 }
 
-const VALID_GUESSES = [
+// Extended list of common 5-letter words for fallback validation
+const EXTENDED_VALID_WORDS = [
   ...FALLBACK_WORDLE_WORDS,
   "slate", "crane", "crate", "trace", "slice", "sauce", "adieu", "audio", "stare", "arise",
-  "irate", "snare", "raise", "roast", "arose", "saner", "store", "stale", "spare", "stair"
+  "irate", "snare", "raise", "roast", "arose", "saner", "store", "stale", "spare", "stair",
+  "tears", "rates", "tales", "steal", "least", "beats", "teams", "steam", "dream", "cream",
+  "speak", "break", "steak", "sneak", "freak", "bleak", "cloak", "croak", "float", "bloat",
+  "gloat", "stoat", "toast", "coast", "roast", "beast", "feast", "least", "yeast", "haste",
+  "paste", "taste", "waste", "caste", "baste", "haute", "sauté", "dwarf", "wharf", "scarf",
+  "brave", "crave", "grave", "shave", "slave", "stave", "weave", "heave", "leave", "mauve",
+  "naive", "olive", "solve", "valve", "calve", "delve", "halve", "salve", "carve", "curve",
+  "nerve", "serve", "verve", "swerve", "abuse", "amuse", "blush", "brush", "crush", "flush",
+  "plush", "slush", "hunch", "lunch", "bunch", "munch", "punch", "ranch", "bench", "clench",
+  "drench", "french", "stench", "trench", "wrench", "beach", "teach", "reach", "peach", "leach",
+  "coach", "poach", "roach", "botch", "notch", "watch", "catch", "match", "patch", "latch",
+  "batch", "hatch", "ditch", "pitch", "witch", "bitch", "hitch", "switch", "twitch", "glitch",
+  "snitch", "stitch", "which", "thick", "trick", "brick", "click", "flick", "quick", "slick",
+  "stick", "chick", "prick", "crick", "knack", "black", "clack", "crack", "quack", "shack",
+  "slack", "smack", "snack", "stack", "track", "whack", "wrack", "flack", "plaque", "brake",
+  "drake", "flake", "quake", "shake", "snake", "stake", "awake", "brace", "grace", "place",
+  "space", "trace", "blaze", "craze", "glaze", "graze", "phase", "chase", "erase", "these",
+  "those", "chose", "close", "whose", "prose", "froze", "bronze", "prize", "seize", "siege"
 ];
+
+const VALID_GUESSES = [...EXTENDED_VALID_WORDS];
 
 export async function validateWordSubmission(word: string): Promise<{
   isValid: boolean;

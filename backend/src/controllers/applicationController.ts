@@ -162,10 +162,16 @@ export const reviewApplication = catchAsync(async (
     if (status === 'approved') {
       const user = await User.findById(application.userId);
       if (user) {
-        await user.updatePrefs({ role: 'Writer' });
-        appLogger.info('User role updated to Writer', {
+        // Update both role and permissions when approving writer application
+        const writerPermissions = User.getPermissionsByRole('Writer');
+        await user.updatePrefs({
+          role: 'Writer',
+          permissions: writerPermissions
+        });
+        appLogger.info('User role updated to Writer with permissions', {
           userId: user.id,
-          applicationId: application.id
+          applicationId: application.id,
+          permissions: writerPermissions
         });
       }
     }
