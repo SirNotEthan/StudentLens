@@ -60,6 +60,8 @@ This repository demonstrates experience with:
 **Backend**
 - Node.js
 - Typescript
+- Appwrite
+- Google Cloud API for Login Functions
 
 **DevOps / Tooling**
 - Docker
