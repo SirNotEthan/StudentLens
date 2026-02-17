@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
 const PostCreator = ({ onPostCreated, onCancel }) => {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -92,7 +92,7 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
     }
   };
 
-  if (!user || !user.hasPermission('write_articles')) {
+  if (!user || !hasPermission('write_articles')) {
     return (
       <div className="post-creator-error">
         <p>You don't have permission to create posts.</p>
@@ -230,10 +230,10 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
                 name="featured"
                 checked={formData.featured}
                 onChange={handleInputChange}
-                disabled={!user.hasPermission('edit_articles')}
+                disabled={!hasPermission('edit_articles')}
               />
               Featured Article
-              {!user.hasPermission('edit_articles') && (
+              {!hasPermission('edit_articles') && (
                 <span className="permission-note">(Editor permission required)</span>
               )}
             </label>
@@ -248,11 +248,11 @@ const PostCreator = ({ onPostCreated, onCancel }) => {
               onChange={handleInputChange}
             >
               <option value="draft">Draft</option>
-              {user.hasPermission('publish_articles') && (
+              {hasPermission('publish_articles') && (
                 <option value="published">Published</option>
               )}
             </select>
-            {!user.hasPermission('publish_articles') && (
+            {!hasPermission('publish_articles') && (
               <span className="permission-note">
                 Your article will be saved as draft. Contact an editor to publish.
               </span>

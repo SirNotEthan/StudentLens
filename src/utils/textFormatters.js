@@ -74,6 +74,15 @@ const extractMatches = (text, pattern) => {
   return matches;
 };
 
+const isSafeUrl = (url) => {
+  if (!url) return false;
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:')) {
+    return false;
+  }
+  return /^(https?:\/\/|mailto:|tel:|\/|#)/.test(trimmed) || !trimmed.includes(':');
+};
+
 const createElementProps = (pattern, match, keyCounter) => {
   const props = {
     key: `${pattern.component}-${keyCounter}`,
@@ -81,9 +90,14 @@ const createElementProps = (pattern, match, keyCounter) => {
   };
 
   if (pattern.href && match.url) {
-    props.href = match.url;
-    props.target = '_blank';
-    props.rel = 'noopener noreferrer';
+    if (isSafeUrl(match.url)) {
+      props.href = match.url;
+      props.target = '_blank';
+      props.rel = 'noopener noreferrer';
+    } else {
+      props.href = '#';
+      props.title = 'Link removed for security';
+    }
   }
 
   return props;

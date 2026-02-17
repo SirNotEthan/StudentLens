@@ -104,7 +104,7 @@ body {
 .date-text {
   font-size: 0.9rem;
   font-weight: 400;
-  color: #666;
+  color: #1a1a1a;
   font-family: 'Arial', sans-serif;
   line-height: 1.5;
   padding: 0.25rem 0;
@@ -334,7 +334,7 @@ body {
   background-color: transparent;
   padding: 0;
   border: none;
-  border-right: 2px solid #c0c0c0;
+  border-right: 1px solid #c0c0c0;
   padding-right: 2rem;
   align-self: start;
 }
@@ -729,12 +729,16 @@ body {
   width: fit-content;
 }
 
-.category-tag.ics { background-color: #4a90e2; color: white; } 
-.category-tag.world { background-color: #17a2b8; color: white; } 
-.category-tag.science-tech { background-color: #6f42c1; color: white; } 
-.category-tag.sport { background-color: #28a745; color: white; } 
-.category-tag.culture { background-color: #fd7e14; color: white; } 
-.category-tag.art { background-color: #e83e8c; color: white; } 
+.category-tag.academic { background-color: #4a90e2; color: white; }
+.category-tag.sports { background-color: #28a745; color: white; }
+.category-tag.events { background-color: #fd7e14; color: white; }
+.category-tag.clubs { background-color: #6f42c1; color: white; }
+.category-tag.announcements { background-color: #dc3545; color: white; }
+.category-tag.news { background-color: #6c757d; color: white; }
+.category-tag.student-life { background-color: #e83e8c; color: white; }
+.category-tag.technology { background-color: #17a2b8; color: white; }
+.category-tag.arts { background-color: #563d7c; color: white; }
+.category-tag.science { background-color: #20c997; color: white; }
 .category-tag.gray { background-color: #6c757d; color: white; }
 
 .article-title {
@@ -826,7 +830,7 @@ body {
   background-color: transparent;
   padding: 0;
   border: none;
-  border-left: 2px solid #c0c0c0;
+  border-left: 1px solid #c0c0c0;
   padding-left: 2rem;
 }
 
@@ -1066,7 +1070,7 @@ body {
 .info-text {
   font-size: 0.65rem;
   line-height: 1.5;
-  color: #555;
+  color: #1a1a1a;
   font-family: 'Times New Roman', Times, serif;
   margin-top: 0.75rem;
   text-align: left;
@@ -1157,13 +1161,6 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
-.tag.tag-all { background-color: #dc3545 !important; color: white !important; } 
-.tag.tag-ics { background-color: #4a90e2 !important; color: white !important; } 
-.tag.tag-world { background-color: #17a2b8 !important; color: white !important; } 
-.tag.tag-science-tech { background-color: #6f42c1 !important; color: white !important; } 
-.tag.tag-sport { background-color: #28a745 !important; color: white !important; } 
-.tag.tag-culture { background-color: #fd7e14 !important; color: white !important; } 
-.tag.tag-art { background-color: #e83e8c !important; color: white !important; } 
 
 .tag.active {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -1239,12 +1236,16 @@ body {
   font-family: 'Arial', sans-serif;
 }
 
-.news-category-tag.ics { background-color: #4a90e2; color: white; } 
-.news-category-tag.world { background-color: #17a2b8; color: white; } 
-.news-category-tag.science-tech { background-color: #6f42c1; color: white; } 
-.news-category-tag.sport { background-color: #28a745; color: white; } 
-.news-category-tag.culture { background-color: #fd7e14; color: white; } 
-.news-category-tag.art { background-color: #e83e8c; color: white; } 
+.news-category-tag.academic { background-color: #4a90e2; color: white; }
+.news-category-tag.sports { background-color: #28a745; color: white; }
+.news-category-tag.events { background-color: #fd7e14; color: white; }
+.news-category-tag.clubs { background-color: #6f42c1; color: white; }
+.news-category-tag.announcements { background-color: #dc3545; color: white; }
+.news-category-tag.news { background-color: #6c757d; color: white; }
+.news-category-tag.student-life { background-color: #e83e8c; color: white; }
+.news-category-tag.technology { background-color: #17a2b8; color: white; }
+.news-category-tag.arts { background-color: #563d7c; color: white; }
+.news-category-tag.science { background-color: #20c997; color: white; }
 .news-category-tag.gray { background-color: #6c757d; color: white; }
 
 .news-card-title {

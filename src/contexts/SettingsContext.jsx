@@ -46,6 +46,11 @@ export const SettingsProvider = ({ children }) => {
           mission: 'Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.',
           whatWeDo: 'We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.',
           values: 'Authenticity, Community, Growth, Inclusivity',
+          legacy: '',
+        },
+        legal: {
+          termsOfService: '',
+          privacyPolicy: '',
         },
       });
     } finally {

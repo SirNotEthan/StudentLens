@@ -25,6 +25,13 @@ const Login = () => {
       } else if (message === 'no_token') {
         setErrorTitle('Authentication Error');
         setErrorMessage('No authentication token received. Please try again.');
+      } else if (message === 'email_exists' || urlError === 'email_exists') {
+        setErrorTitle('Email Already Registered');
+        const customMsg = searchParams.get('message');
+        setErrorMessage(customMsg || 'An account with this email already exists. Please log in with your password first, then link your Google account from settings.');
+      } else if (message === 'oauth_failed') {
+        setErrorTitle('Google Sign-In Failed');
+        setErrorMessage('Google authentication failed. Please try again.');
       } else {
         setErrorTitle('Error');
         setErrorMessage(message);

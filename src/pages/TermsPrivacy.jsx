@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../contexts/SettingsContext';
 import '../styles/InfoPage.css';
 
 const TermsPrivacy = () => {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [activeTab, setActiveTab] = useState('terms');
 
   return (
@@ -32,6 +34,11 @@ const TermsPrivacy = () => {
 
       <div className="info-content legal-content">
         {activeTab === 'terms' ? (
+          settings?.legal?.termsOfService ? (
+            <section className="info-section">
+              <div style={{ whiteSpace: 'pre-wrap' }}>{settings.legal.termsOfService}</div>
+            </section>
+          ) : (
           <>
             <section className="info-section">
               <p className="last-updated">Last Updated: {new Date().toLocaleDateString()}</p>
@@ -123,7 +130,13 @@ const TermsPrivacy = () => {
               </p>
             </section>
           </>
+          )
         ) : (
+          settings?.legal?.privacyPolicy ? (
+            <section className="info-section">
+              <div style={{ whiteSpace: 'pre-wrap' }}>{settings.legal.privacyPolicy}</div>
+            </section>
+          ) : (
           <>
             <section className="info-section">
               <p className="last-updated">Last Updated: {new Date().toLocaleDateString()}</p>
@@ -235,6 +248,7 @@ const TermsPrivacy = () => {
               </p>
             </section>
           </>
+          )
         )}
       </div>
     </div>

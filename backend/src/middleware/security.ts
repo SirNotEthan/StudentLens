@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
 import { appLogger } from '@/services/logger';
 import { AppError } from '@/utils/AppError';
+import { getRedisClient, isRedisConnected } from '@/config/redis';
 
 export const createRateLimit = (windowMs: number, max: number, message?: string) => {
   return rateLimit({
@@ -183,17 +184,72 @@ export const removeFromBlacklist = (ip: string): void => {
   appLogger.logSecurityEvent('ip_removed_from_blacklist', { ip });
 };
 
-const suspiciousActivities = new Map<string, {
+// In-memory fallback for suspicious activity tracking when Redis is unavailable
+const suspiciousActivitiesFallback = new Map<string, {
   count: number;
   firstSeen: number;
   lastSeen: number;
   activities: string[];
 }>();
 
-export const detectSuspiciousActivity = (req: Request, res: Response, next: NextFunction): void => {
+interface SuspiciousActivity {
+  count: number;
+  firstSeen: number;
+  lastSeen: number;
+  activities: string[];
+}
+
+const SUSPICIOUS_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const SUSPICIOUS_REDIS_KEY_PREFIX = 'suspicious:';
+
+const getSuspiciousActivity = async (ip: string): Promise<SuspiciousActivity | null> => {
+  const redis = isRedisConnected() ? getRedisClient() : null;
+  if (redis) {
+    try {
+      const data = await redis.get(`${SUSPICIOUS_REDIS_KEY_PREFIX}${ip}`);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      return suspiciousActivitiesFallback.get(ip) || null;
+    }
+  }
+  return suspiciousActivitiesFallback.get(ip) || null;
+};
+
+const setSuspiciousActivity = async (ip: string, activity: SuspiciousActivity): Promise<void> => {
+  const redis = isRedisConnected() ? getRedisClient() : null;
+  if (redis) {
+    try {
+      // Store with 1-hour TTL so Redis auto-cleans
+      await redis.set(
+        `${SUSPICIOUS_REDIS_KEY_PREFIX}${ip}`,
+        JSON.stringify(activity),
+        { EX: Math.ceil(SUSPICIOUS_WINDOW_MS / 1000) }
+      );
+      return;
+    } catch {
+      // Fall through to in-memory
+    }
+  }
+  suspiciousActivitiesFallback.set(ip, activity);
+};
+
+const sensitiveFields = ['password', 'token', 'secret', 'authorization', 'cookie', 'currentPassword', 'newPassword'];
+const filterSensitive = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj;
+  const filtered: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (sensitiveFields.includes(key.toLowerCase())) {
+      filtered[key] = '[REDACTED]';
+    } else {
+      filtered[key] = value;
+    }
+  }
+  return filtered;
+};
+
+export const detectSuspiciousActivity = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
   const now = Date.now();
-  const windowMs = 60 * 60 * 1000; // 1 hour window
 
   const suspiciousPatterns = [
     /\.\./g, // Directory traversal
@@ -207,21 +263,23 @@ export const detectSuspiciousActivity = (req: Request, res: Response, next: Next
   const requestData = JSON.stringify({
     url: req.originalUrl,
     query: req.query,
-    body: req.body,
-    headers: req.headers
+    body: filterSensitive(req.body),
+    headers: filterSensitive(req.headers)
   });
 
   const hasSuspiciousPattern = suspiciousPatterns.some(pattern => pattern.test(requestData));
 
   if (hasSuspiciousPattern) {
-    const activity = suspiciousActivities.get(clientIp) || {
+    const existing = await getSuspiciousActivity(clientIp);
+    const activity: SuspiciousActivity = existing || {
       count: 0,
       firstSeen: now,
       lastSeen: now,
       activities: []
     };
 
-    if (now - activity.firstSeen > windowMs) {
+    // Reset if window has passed
+    if (now - activity.firstSeen > SUSPICIOUS_WINDOW_MS) {
       activity.count = 0;
       activity.firstSeen = now;
       activity.activities = [];
@@ -231,7 +289,7 @@ export const detectSuspiciousActivity = (req: Request, res: Response, next: Next
     activity.lastSeen = now;
     activity.activities.push(req.originalUrl);
 
-    suspiciousActivities.set(clientIp, activity);
+    await setSuspiciousActivity(clientIp, activity);
 
     appLogger.logSecurityEvent('suspicious_activity_detected', {
       ip: clientIp,
@@ -257,13 +315,13 @@ export const detectSuspiciousActivity = (req: Request, res: Response, next: Next
   next();
 };
 
+// Clean up in-memory fallback only (Redis handles its own TTL)
 setInterval(() => {
   const now = Date.now();
-  const windowMs = 60 * 60 * 1000; 
 
-  for (const [ip, activity] of suspiciousActivities.entries()) {
-    if (now - activity.lastSeen > windowMs) {
-      suspiciousActivities.delete(ip);
+  for (const [ip, activity] of suspiciousActivitiesFallback.entries()) {
+    if (now - activity.lastSeen > SUSPICIOUS_WINDOW_MS) {
+      suspiciousActivitiesFallback.delete(ip);
     }
   }
 }, 5 * 60 * 1000);

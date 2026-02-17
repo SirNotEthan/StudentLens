@@ -17,6 +17,9 @@ export interface ISiteSettings {
   aboutMission?: string;
   aboutWhatWeDo?: string;
   aboutValues?: string;
+  aboutLegacy?: string;
+  termsOfService?: string;
+  privacyPolicy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,6 +103,9 @@ export class SiteSettings {
       aboutMission: doc.aboutMission || 'Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.',
       aboutWhatWeDo: doc.aboutWhatWeDo || 'We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.',
       aboutValues: doc.aboutValues || 'Authenticity, Community, Growth, Inclusivity',
+      aboutLegacy: doc.aboutLegacy || '',
+      termsOfService: doc.termsOfService || '',
+      privacyPolicy: doc.privacyPolicy || '',
       createdAt: doc.$createdAt,
       updatedAt: doc.$updatedAt,
     };

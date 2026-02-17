@@ -5,6 +5,7 @@ import { AuthenticatedRequest, JWTPayload, Permission, UserRole } from '@/types'
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 import { catchAsync } from '@/middleware/errorHandler';
+import { isTokenRevoked } from '@/utils/generateToken';
 
 const authAttempts = new Map<string, { count: number; lastAttempt: number }>();
 const MAX_AUTH_ATTEMPTS = 5;
@@ -96,6 +97,13 @@ export const authenticate = catchAsync(async (
       recordFailedAttempt(clientIp);
       appLogger.logSecurityEvent('invalid_token_structure', { ip: clientIp }, req);
       throw AppError.unauthorized('Invalid token format.');
+    }
+
+    // Check if token has been revoked (e.g., after logout)
+    if (await isTokenRevoked(token)) {
+      recordFailedAttempt(clientIp);
+      appLogger.logSecurityEvent('revoked_token_used', { ip: clientIp }, req);
+      throw AppError.unauthorized('Token has been revoked.');
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;

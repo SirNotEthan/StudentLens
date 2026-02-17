@@ -91,44 +91,60 @@ export class User implements IUser {
     try {
       appLogger.debug('Creating new user', { email: userData.email, username: userData.username });
 
+      // Enforce password for email-based registration (OAuth users handled separately)
+      if (userData.provider !== 'google' && !userData.password) {
+        throw AppError.badRequest('Password is required for email registration');
+      }
+
       const user = await users.create(
         ID.unique(),
         userData.email,
-        undefined, 
-        userData.password || ID.unique(), 
-        userData.username || userData.email.split('@')[0] 
+        undefined,
+        userData.password || ID.unique(), // ID.unique() only for OAuth users
+        userData.username || userData.email.split('@')[0]
       );
 
-      await users.updatePrefs(user.$id, {
-        username: userData.username,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        role: userData.role || 'Student',
-        permissions: User.getPermissionsByRole(userData.role || 'Student'),
-        isActive: userData.isActive !== undefined ? userData.isActive : true,
-        streak: 0,
-        profileImage: userData.profileImage || '',
-        bio: userData.bio || '',
-        needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : true,
-        provider: userData.provider || 'email',
-        googleId: userData.googleId || undefined,
-        profileVisibility: true, 
-        wordleGamesPlayed: 0,
-        wordleCurrentStreak: 0,
-        wordleBestStreak: 0,
-        wordleWins: 0,
-        wordleLastPlayedDate: undefined,
-        spellingBeeGamesPlayed: 0,
-        spellingBeeCurrentStreak: 0,
-        spellingBeeBestStreak: 0,
-        spellingBeeWins: 0,
-        spellingBeeLastPlayedDate: undefined,
-        strandsGamesPlayed: 0,
-        strandsCurrentStreak: 0,
-        strandsBestStreak: 0,
-        strandsWins: 0,
-        strandsLastPlayedDate: undefined
-      });
+      try {
+        await users.updatePrefs(user.$id, {
+          username: userData.username,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role || 'Student',
+          permissions: User.getPermissionsByRole(userData.role || 'Student'),
+          isActive: userData.isActive !== undefined ? userData.isActive : true,
+          streak: 0,
+          profileImage: userData.profileImage || '',
+          bio: userData.bio || '',
+          needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : true,
+          provider: userData.provider || 'email',
+          googleId: userData.googleId || undefined,
+          profileVisibility: true,
+          wordleGamesPlayed: 0,
+          wordleCurrentStreak: 0,
+          wordleBestStreak: 0,
+          wordleWins: 0,
+          wordleLastPlayedDate: undefined,
+          spellingBeeGamesPlayed: 0,
+          spellingBeeCurrentStreak: 0,
+          spellingBeeBestStreak: 0,
+          spellingBeeWins: 0,
+          spellingBeeLastPlayedDate: undefined,
+          strandsGamesPlayed: 0,
+          strandsCurrentStreak: 0,
+          strandsBestStreak: 0,
+          strandsWins: 0,
+          strandsLastPlayedDate: undefined
+        });
+      } catch (prefsError: any) {
+        // Rollback: delete the auth user if prefs update fails
+        appLogger.error('Failed to set user prefs, rolling back auth user creation', prefsError, { userId: user.$id });
+        try {
+          await users.delete(user.$id);
+        } catch (rollbackError: any) {
+          appLogger.error('Rollback failed: could not delete orphaned auth user', rollbackError, { userId: user.$id });
+        }
+        throw AppError.internal('Failed to create user profile');
+      }
 
       const updatedUser = await users.get(user.$id);
       const newUser = new User(updatedUser);
@@ -159,7 +175,8 @@ export class User implements IUser {
           );
           appLogger.info('User document created in database', { userId: newUser.id });
         } catch (dbError: any) {
-          appLogger.warn('Failed to create user document in database', {
+          // Non-fatal: auth user exists and has prefs, just log the db sync failure
+          appLogger.warn('Failed to create user document in database (non-fatal)', {
             error: dbError.message,
             userId: newUser.id
           });
@@ -216,11 +233,13 @@ export class User implements IUser {
     try {
       appLogger.debug('Finding user by email', { email });
 
-      const usersList = await users.list();
+      // Use Appwrite query to filter server-side instead of loading all users
+      const usersList = await users.list(
+        [Query.equal('email', email)]
+      );
       const user = usersList.users.find(u =>
-        u.email === email &&
         !u.prefs?.isDeleted &&
-        !u.email.startsWith('DELETED_') 
+        !u.email.startsWith('DELETED_')
       );
 
       const duration = Date.now() - startTime;
@@ -246,8 +265,25 @@ export class User implements IUser {
     try {
       appLogger.debug('Finding user by username', { username });
 
-      const usersList = await users.list();
-      const user = usersList.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
+      // Try server-side name search first to narrow results
+      const searchList = await users.list(
+        [Query.search('name', username), Query.limit(100)]
+      );
+      let user = searchList.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
+
+      // Fallback: paginate through all users if name search didn't match
+      if (!user) {
+        const batchSize = 100;
+        let offset = 0;
+        let hasMore = true;
+
+        while (hasMore && !user) {
+          const batch = await users.list([Query.limit(batchSize), Query.offset(offset)]);
+          user = batch.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
+          offset += batchSize;
+          hasMore = batch.users.length === batchSize;
+        }
+      }
 
       const duration = Date.now() - startTime;
       appLogger.logPerformance('User.findByUsername', duration, { username, found: !!user });
@@ -272,22 +308,30 @@ export class User implements IUser {
     try {
       appLogger.debug('Finding user by Google ID', { googleId });
 
-      const usersList = await users.list();
+      // Paginate through users since googleId is stored in prefs
+      const batchSize = 100;
+      let offset = 0;
+      let hasMore = true;
+      let matchingUser: any = null;
+
+      while (hasMore && !matchingUser) {
+        const batch = await users.list([Query.limit(batchSize), Query.offset(offset)]);
+        matchingUser = batch.users.find((user: any) =>
+          user.prefs?.googleId === googleId &&
+          user.prefs?.googleId != null &&
+          !user.prefs?.isDeleted
+        );
+        offset += batchSize;
+        hasMore = batch.users.length === batchSize;
+      }
 
       const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.findByGoogleId', duration, { googleId });
-
-      const matchingUser = usersList.users.find((user: any) =>
-        user.prefs?.googleId === googleId &&
-        user.prefs?.googleId != null &&
-        !user.prefs?.isDeleted
-      );
+      appLogger.logPerformance('User.findByGoogleId', duration, { googleId, found: !!matchingUser });
 
       if (!matchingUser) {
         return null;
       }
 
-      appLogger.logDatabase('findByGoogleId', 'users', { googleId }, null);
       return new User(matchingUser);
     } catch (error: any) {
       const duration = Date.now() - startTime;
@@ -310,14 +354,62 @@ export class User implements IUser {
     }
   }
 
+  /**
+   * Fetches all users from Appwrite in paginated batches to avoid loading
+   * everything in a single API call. Applies client-side filtering for
+   * prefs-based fields that can't be queried server-side.
+   */
   static async find(query: any = {}): Promise<User[]> {
     const startTime = Date.now();
 
     try {
       appLogger.debug('Finding users with query', { query });
 
-      const usersList = await users.list();
-      let filteredUsers = usersList.users;
+      // Paginate through users in batches of 100
+      const allUsers: any[] = [];
+      const batchSize = 100;
+      let offset = 0;
+      let hasMore = true;
+
+      // If there's a search term, try server-side search first to narrow results
+      const searchTerm = query.$or?.[0]?.username?.$regex ||
+                        query.$or?.[0]?.email?.$regex ||
+                        query.$or?.[0]?.firstName?.$regex ||
+                        query.$or?.[0]?.lastName?.$regex;
+
+      const queries = [Query.limit(batchSize)];
+      if (searchTerm) {
+        // Appwrite can search on the 'name' and 'email' fields
+        queries.push(Query.search('name', searchTerm));
+      }
+
+      while (hasMore) {
+        const batch = await users.list([...queries, Query.offset(offset)]);
+        allUsers.push(...batch.users);
+        offset += batchSize;
+        hasMore = batch.users.length === batchSize;
+      }
+
+      // If we did a server-side name search, also search by email to be thorough
+      if (searchTerm) {
+        try {
+          const emailBatch = await users.list([
+            Query.limit(batchSize),
+            Query.search('email', searchTerm)
+          ]);
+          // Merge without duplicates
+          const existingIds = new Set(allUsers.map(u => u.$id));
+          for (const u of emailBatch.users) {
+            if (!existingIds.has(u.$id)) {
+              allUsers.push(u);
+            }
+          }
+        } catch {
+          // email search may not be supported, continue with what we have
+        }
+      }
+
+      let filteredUsers = allUsers;
 
       if (query.isActive !== undefined) {
         filteredUsers = filteredUsers.filter(u => u.prefs?.isActive === query.isActive);
@@ -327,21 +419,16 @@ export class User implements IUser {
         filteredUsers = filteredUsers.filter(u => u.prefs?.role === query.role);
       }
 
-      if (query.$or && Array.isArray(query.$or)) {
-        const searchTerm = query.$or[0]?.username?.$regex ||
-                          query.$or[0]?.email?.$regex ||
-                          query.$or[0]?.firstName?.$regex ||
-                          query.$or[0]?.lastName?.$regex;
-
-        if (searchTerm) {
-          const regex = new RegExp(searchTerm, 'i');
-          filteredUsers = filteredUsers.filter(u =>
-            regex.test(u.prefs?.username || '') ||
-            regex.test(u.email || '') ||
-            regex.test(u.prefs?.firstName || '') ||
-            regex.test(u.prefs?.lastName || '')
-          );
-        }
+      // Client-side search for prefs-based fields not covered by server search
+      if (searchTerm) {
+        const regex = new RegExp(searchTerm, 'i');
+        filteredUsers = filteredUsers.filter(u =>
+          regex.test(u.prefs?.username || '') ||
+          regex.test(u.email || '') ||
+          regex.test(u.prefs?.firstName || '') ||
+          regex.test(u.prefs?.lastName || '') ||
+          regex.test(u.name || '')
+        );
       }
 
       const result = filteredUsers.map(user => new User(user));
@@ -350,7 +437,7 @@ export class User implements IUser {
       appLogger.logPerformance('User.find', duration, {
         query,
         totalFound: result.length,
-        totalScanned: usersList.users.length
+        totalScanned: allUsers.length
       });
 
       return result;
@@ -363,7 +450,17 @@ export class User implements IUser {
   }
 
   static async countDocuments(query: any = {}): Promise<number> {
+    const startTime = Date.now();
     try {
+      // For simple counts without filters, use pagination to count without creating User objects
+      if (Object.keys(query).length === 0) {
+        const batch = await users.list([Query.limit(1)]);
+        const duration = Date.now() - startTime;
+        appLogger.logPerformance('User.countDocuments', duration, { total: batch.total });
+        return batch.total;
+      }
+
+      // For filtered counts, we still need to fetch and filter
       const allUsers = await this.find(query);
       return allUsers.length;
     } catch (error: any) {
@@ -627,13 +724,24 @@ export class User implements IUser {
         });
       }
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      try {
-        await users.delete(this.id);
-        appLogger.warn('User successfully deleted from Appwrite Auth', { userId: this.id });
-      } catch (deleteError: any) {
-        appLogger.error('Failed to delete user from Appwrite Auth', deleteError, { userId: this.id });
+      // Delete the auth user with retry logic instead of a fragile timeout
+      const maxRetries = 3;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          await users.delete(this.id);
+          appLogger.warn('User successfully deleted from Appwrite Auth', { userId: this.id });
+          break;
+        } catch (deleteError: any) {
+          if (attempt === maxRetries) {
+            appLogger.error('Failed to delete user from Appwrite Auth after retries', deleteError, {
+              userId: this.id,
+              attempts: maxRetries
+            });
+          } else {
+            appLogger.warn(`Retrying user deletion (attempt ${attempt}/${maxRetries})`, { userId: this.id });
+            await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+          }
+        }
       }
 
       const duration = Date.now() - startTime;

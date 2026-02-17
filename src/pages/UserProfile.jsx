@@ -17,17 +17,20 @@ const UserProfile = () => {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetchUserProfile();
+    const abortController = new AbortController();
+    fetchUserProfile(abortController.signal);
+    return () => abortController.abort();
   }, [username]);
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (signal) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(`/users/profile/${username}`);
-      
+      const response = await axios.get(`/users/profile/${username}`, { signal });
+
       setProfileData(response.data.data || response.data);
     } catch (err) {
+      if (axios.isCancel(err) || err.name === 'AbortError') return;
       console.error('Error fetching user profile:', err);
       setError(err.response?.data?.message || 'Failed to load user profile');
     } finally {
@@ -56,8 +59,13 @@ const UserProfile = () => {
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { 
+      if (file.size > 5 * 1024 * 1024) {
         alert('Image size must be less than 5MB');
+        return;
+      }
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Only JPEG, PNG, GIF, and WebP images are allowed');
         return;
       }
       setSelectedImage(file);

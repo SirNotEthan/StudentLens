@@ -26,6 +26,11 @@ export const getSettings = async (_req: Request, res: Response) => {
             mission: settings.aboutMission,
             whatWeDo: settings.aboutWhatWeDo,
             values: settings.aboutValues,
+            legacy: settings.aboutLegacy,
+          },
+          legal: {
+            termsOfService: settings.termsOfService,
+            privacyPolicy: settings.privacyPolicy,
           },
         },
       },
@@ -53,6 +58,9 @@ export const updateSettings = async (req: Request, res: Response) => {
       aboutMission,
       aboutWhatWeDo,
       aboutValues,
+      aboutLegacy,
+      termsOfService,
+      privacyPolicy,
     } = req.body;
 
     const settings = await SiteSettings.update({
@@ -67,6 +75,9 @@ export const updateSettings = async (req: Request, res: Response) => {
       ...(aboutMission !== undefined && { aboutMission }),
       ...(aboutWhatWeDo !== undefined && { aboutWhatWeDo }),
       ...(aboutValues !== undefined && { aboutValues }),
+      ...(aboutLegacy !== undefined && { aboutLegacy }),
+      ...(termsOfService !== undefined && { termsOfService }),
+      ...(privacyPolicy !== undefined && { privacyPolicy }),
     });
 
     appLogger.info(`Site settings updated by user ${(req as any).user?.id || 'unknown'}`);
@@ -92,6 +103,11 @@ export const updateSettings = async (req: Request, res: Response) => {
             mission: settings.aboutMission,
             whatWeDo: settings.aboutWhatWeDo,
             values: settings.aboutValues,
+            legacy: settings.aboutLegacy,
+          },
+          legal: {
+            termsOfService: settings.termsOfService,
+            privacyPolicy: settings.privacyPolicy,
           },
         },
       },

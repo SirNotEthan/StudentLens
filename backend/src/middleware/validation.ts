@@ -13,10 +13,23 @@ export const sanitizeString = (value: any): string => {
 export const sanitizeHTML = (value: any): string => {
   if (typeof value !== 'string') return '';
   return value
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '');
+    // Remove dangerous tags (including multiline content)
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+    .replace(/<object[\s\S]*?<\/object>/gi, '')
+    .replace(/<embed[\s\S]*?<\/embed>/gi, '')
+    .replace(/<form[\s\S]*?<\/form>/gi, '')
+    // Remove dangerous standalone tags
+    .replace(/<(script|iframe|object|embed|form|base|meta|link)[^>]*\/?>/gi, '')
+    // Remove dangerous protocols (javascript:, data:, vbscript:)
+    .replace(/javascript\s*:/gi, '')
+    .replace(/data\s*:\s*text\/html/gi, '')
+    .replace(/vbscript\s*:/gi, '')
+    // Remove event handlers (onclick, onerror, onload, etc.)
+    .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
+    // Remove style expressions (IE-specific CSS attacks)
+    .replace(/expression\s*\(/gi, '')
+    .replace(/url\s*\(\s*['"]?\s*javascript/gi, '');
 };
 
 export const handleValidationErrors = (

@@ -80,27 +80,32 @@ const AboutUs = () => {
 
         <section className="info-section legacy-section">
           <h2>Our Legacy</h2>
-          <p>
-            Student Lens has been created with the intention of amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.
-            Each year, the team of student leaders takes on the responsibility of managing and growing the platform.
-          </p>
-          <div className="legacy-timeline">
-            <div className="legacy-year">
-              <h3>2024-2025</h3>
-              <div className="legacy-leaders">
-                <div className="leader-card">
-                  <div className="leader-placeholder">
-                    <span>📸</span>
+          {settings?.about?.legacy ? (
+            <div className="legacy-content" style={{ whiteSpace: 'pre-wrap' }}>
+              {settings.about.legacy}
+            </div>
+          ) : (
+            <>
+              <p>
+                Student Lens has been created with the intention of amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.
+                Each year, the team of student leaders takes on the responsibility of managing and growing the platform.
+              </p>
+              <div className="legacy-timeline">
+                <div className="legacy-year">
+                  <h3>2024-2025</h3>
+                  <div className="legacy-leaders">
+                    <div className="leader-card">
+                      <div className="leader-placeholder">
+                        <span>📸</span>
+                      </div>
+                      <h4>Current Leadership</h4>
+                      <p>Managing Student Lens and continuing the tradition</p>
+                    </div>
                   </div>
-                  <h4>Current Leadership</h4>
-                  <p>Managing Student Lens and continuing the tradition</p>
                 </div>
               </div>
-              <p className="legacy-note">
-                <em>To add leader photos and details, contact the site administrator</em>
-              </p>
-            </div>
-          </div>
+            </>
+          )}
         </section>
 
         <section className="info-section">

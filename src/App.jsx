@@ -24,6 +24,8 @@ import WordlePage from './pages/WordlePage'
 import SpellingBeePage from './pages/SpellingBeePage'
 import StrandsPage from './pages/StrandsPage'
 import SudokuPage from './pages/SudokuPage'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -36,6 +38,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/setup" element={<AccountSetup />} />
           <Route
             path="/main"

@@ -1,5 +1,6 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 const validationResult = require('express-validator').validationResult;
+import crypto from 'crypto';
 import { account, users } from '@/config/appwrite';
 import { User } from '@/models/User';
 import {
@@ -18,6 +19,8 @@ import {
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 import { catchAsync } from '@/middleware/errorHandler';
+import { getRedisClient, isRedisConnected } from '@/config/redis';
+import { sendPasswordResetEmail } from '@/services/email';
 
 export const register = catchAsync(async (
   req: AuthenticatedRequest,
@@ -265,7 +268,7 @@ export const logout = catchAsync(async (
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       if (token) {
-        revokeToken(token);
+        await revokeToken(token);
       }
     }
 
@@ -532,3 +535,136 @@ export const deleteAccount = catchAsync(async (
     throw error;
   }
 });
+
+// In-memory fallback for password reset tokens when Redis is unavailable
+const resetTokensFallback = new Map<string, { userId: string; email: string; expires: number }>();
+
+const RESET_TOKEN_TTL = 60 * 60; // 1 hour in seconds
+const RESET_REDIS_PREFIX = 'password_reset:';
+
+export const requestPasswordReset = catchAsync(async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { email } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    throw AppError.badRequest('Email is required');
+  }
+
+  appLogger.info('Password reset requested', { email });
+
+  // Always return success to prevent email enumeration
+  const successResponse: ApiResponse = {
+    success: true,
+    message: 'If an account with that email exists, a password reset link has been sent.'
+  };
+
+  const user = await User.findByEmail(email);
+  if (!user) {
+    // Don't reveal that the email doesn't exist
+    res.json(successResponse);
+    return;
+  }
+
+  if (user.provider === 'google') {
+    // Google users don't have passwords to reset
+    res.json(successResponse);
+    return;
+  }
+
+  // Generate a secure random token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+  // Store the token hash (not the raw token) with user info
+  const redis = isRedisConnected() ? getRedisClient() : null;
+  if (redis) {
+    await redis.set(
+      `${RESET_REDIS_PREFIX}${tokenHash}`,
+      JSON.stringify({ userId: user.id, email: user.email }),
+      { EX: RESET_TOKEN_TTL }
+    );
+  } else {
+    resetTokensFallback.set(tokenHash, {
+      userId: user.id,
+      email: user.email,
+      expires: Date.now() + RESET_TOKEN_TTL * 1000
+    });
+  }
+
+  // Send the email with the raw token (user sends it back, we hash and compare)
+  await sendPasswordResetEmail(email, resetToken);
+
+  appLogger.info('Password reset token generated', { userId: user.id, email });
+
+  res.json(successResponse);
+});
+
+export const resetPassword = catchAsync(async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { token, newPassword } = req.body;
+
+  if (!token || typeof token !== 'string') {
+    throw AppError.badRequest('Reset token is required');
+  }
+
+  if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 8) {
+    throw AppError.badRequest('New password must be at least 8 characters');
+  }
+
+  // Hash the provided token and look it up
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  let tokenData: { userId: string; email: string } | null = null;
+
+  const redis = isRedisConnected() ? getRedisClient() : null;
+  if (redis) {
+    const stored = await redis.get(`${RESET_REDIS_PREFIX}${tokenHash}`);
+    if (stored) {
+      tokenData = JSON.parse(stored);
+      // Delete the token so it can't be reused
+      await redis.del(`${RESET_REDIS_PREFIX}${tokenHash}`);
+    }
+  } else {
+    const stored = resetTokensFallback.get(tokenHash);
+    if (stored && stored.expires > Date.now()) {
+      tokenData = { userId: stored.userId, email: stored.email };
+      resetTokensFallback.delete(tokenHash);
+    } else {
+      resetTokensFallback.delete(tokenHash); // Clean up expired
+    }
+  }
+
+  if (!tokenData) {
+    throw AppError.badRequest('Invalid or expired reset token');
+  }
+
+  // Update the password in Appwrite
+  try {
+    await users.updatePassword(tokenData.userId, newPassword);
+    appLogger.info('Password reset successful', { userId: tokenData.userId });
+  } catch (error: any) {
+    appLogger.error('Failed to update password during reset', error, { userId: tokenData.userId });
+    throw AppError.internal('Failed to reset password');
+  }
+
+  const response: ApiResponse = {
+    success: true,
+    message: 'Password has been reset successfully. You can now log in with your new password.'
+  };
+
+  res.json(response);
+});
+
+// Clean up expired in-memory reset tokens
+setInterval(() => {
+  const now = Date.now();
+  for (const [hash, data] of resetTokensFallback.entries()) {
+    if (data.expires < now) {
+      resetTokensFallback.delete(hash);
+    }
+  }
+}, 10 * 60 * 1000);

@@ -90,10 +90,10 @@ const AdminPanel = () => {
       if (response.data.success && response.data.data?.user) {
         const updatedUser = response.data.data.user;
         setUsers(users.map(u => u.id === userId ? updatedUser : u));
-        alert(`Successfully updated role to ${newRole}`);
+        showAlert('Success', `Successfully updated role to ${newRole}`, 'success');
       } else {
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole, permissions: [] } : u));
-        alert(`Role updated to ${newRole}`);
+        showAlert('Success', `Role updated to ${newRole}`, 'success');
       }
 
       setShowRoleModal(false);
@@ -101,18 +101,13 @@ const AdminPanel = () => {
     } catch (error) {
       console.error('Error updating user role:', error);
       const errorMessage = error.response?.data?.message || error.message || 'Failed to update user role';
-      alert(`Error: ${errorMessage}`);
-
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-      }
+      showAlert('Error', errorMessage, 'error');
     }
   };
 
-  const handleUserToggle = async (userId, isActive, userName) => {
+  const handleUserToggle = (userId, isActive, userName) => {
     if (_user.id === userId && isActive) {
-      alert('You cannot deactivate your own account.');
+      showAlert('Error', 'You cannot deactivate your own account.', 'error');
       return;
     }
 
@@ -121,81 +116,88 @@ const AdminPanel = () => {
       ? `Are you sure you want to deactivate ${userName}? They will not be able to log in until their account is reactivated.`
       : `Are you sure you want to activate ${userName}? They will be able to log in again.`;
 
-    if (!confirm(confirmMessage)) {
-      return;
-    }
-
-    try {
-      const response = await axios.put(`/users/${userId}`, { isActive: !isActive });
-      if (response.data.success && response.data.data?.user) {
-        setUsers(users.map(u => u.id === userId ? response.data.data.user : u));
-      } else {
-        setUsers(users.map(u => u.id === userId ? { ...u, isActive: !isActive } : u));
+    showConfirm(`${action.charAt(0).toUpperCase() + action.slice(1)} User`, confirmMessage, async () => {
+      try {
+        const response = await axios.put(`/users/${userId}`, { isActive: !isActive });
+        if (response.data.success && response.data.data?.user) {
+          setUsers(users.map(u => u.id === userId ? response.data.data.user : u));
+        } else {
+          setUsers(users.map(u => u.id === userId ? { ...u, isActive: !isActive } : u));
+        }
+        closeConfirm();
+      } catch (error) {
+        console.error('Error updating user status:', error);
+        const errorMessage = error.response?.data?.message || 'Failed to update user status';
+        showAlert('Error', errorMessage, 'error');
       }
-    } catch (error) {
-      console.error('Error updating user status:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to update user status';
-      alert(errorMessage);
-    }
+    });
   };
 
-  const handleDeletePost = async (postId) => {
-    if (!confirm('Are you sure you want to delete this post?')) return;
-
-    try {
-      await axios.delete(`/posts/${postId}`);
-      setPosts(posts.filter(p => p.id !== postId));
-    } catch (error) {
-      console.error('Error deleting post:', error);
-      alert('Failed to delete post');
-    }
+  const handleDeletePost = (postId) => {
+    showConfirm('Delete Post', 'Are you sure you want to delete this post?', async () => {
+      try {
+        await axios.delete(`/posts/${postId}`);
+        setPosts(posts.filter(p => p.id !== postId));
+        closeConfirm();
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        showAlert('Error', 'Failed to delete post', 'error');
+      }
+    }, 'danger');
   };
 
-  const handleReviewApplication = async (applicationId, status) => {
+  const handleReviewApplication = (applicationId, status) => {
     const action = status === 'approved' ? 'approve' : 'reject';
-    if (!confirm(`Are you sure you want to ${action} this application?`)) return;
-
-    try {
-      const response = await axios.put(`/applications/${applicationId}/review`, { status });
-      if (response.data.success) {
-        const applicationsRes = await axios.get('/applications');
-        setApplications(applicationsRes.data.data?.applications || []);
-        alert(`Application ${status} successfully!`);
+    showConfirm(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} Application`,
+      `Are you sure you want to ${action} this application?`,
+      async () => {
+        try {
+          const response = await axios.put(`/applications/${applicationId}/review`, { status });
+          if (response.data.success) {
+            const applicationsRes = await axios.get('/applications');
+            setApplications(applicationsRes.data.data?.applications || []);
+            closeConfirm();
+            showAlert('Success', `Application ${status} successfully!`, 'success');
+          }
+        } catch (error) {
+          console.error('Error reviewing application:', error);
+          showAlert('Error', error.response?.data?.message || 'Failed to review application', 'error');
+        }
       }
-    } catch (error) {
-      console.error('Error reviewing application:', error);
-      alert(error.response?.data?.message || 'Failed to review application');
-    }
+    );
   };
 
-  const handleApproveSubmission = async (postId) => {
-    if (!confirm('Approve this submission and publish it?')) return;
-
-    try {
-      const response = await axios.put(`/posts/${postId}`, { status: 'published' });
-      if (response.data.success) {
-        setPosts(posts.map(p => p.id === postId ? { ...p, status: 'published', publishedAt: new Date().toISOString() } : p));
-        alert('Submission approved and published successfully!');
+  const handleApproveSubmission = (postId) => {
+    showConfirm('Approve Submission', 'Approve this submission and publish it?', async () => {
+      try {
+        const response = await axios.put(`/posts/${postId}`, { status: 'published' });
+        if (response.data.success) {
+          setPosts(posts.map(p => p.id === postId ? { ...p, status: 'published', publishedAt: new Date().toISOString() } : p));
+          closeConfirm();
+          showAlert('Success', 'Submission approved and published successfully!', 'success');
+        }
+      } catch (error) {
+        console.error('Error approving submission:', error);
+        showAlert('Error', error.response?.data?.message || 'Failed to approve submission', 'error');
       }
-    } catch (error) {
-      console.error('Error approving submission:', error);
-      alert(error.response?.data?.message || 'Failed to approve submission');
-    }
+    });
   };
 
-  const handleRejectSubmission = async (postId) => {
-    if (!confirm('Reject this submission? It will be sent back to draft status.')) return;
-
-    try {
-      const response = await axios.put(`/posts/${postId}`, { status: 'draft' });
-      if (response.data.success) {
-        setPosts(posts.map(p => p.id === postId ? { ...p, status: 'draft' } : p));
-        alert('Submission rejected and returned to draft.');
+  const handleRejectSubmission = (postId) => {
+    showConfirm('Reject Submission', 'Reject this submission? It will be sent back to draft status.', async () => {
+      try {
+        const response = await axios.put(`/posts/${postId}`, { status: 'draft' });
+        if (response.data.success) {
+          setPosts(posts.map(p => p.id === postId ? { ...p, status: 'draft' } : p));
+          closeConfirm();
+          showAlert('Success', 'Submission rejected and returned to draft.', 'success');
+        }
+      } catch (error) {
+        console.error('Error rejecting submission:', error);
+        showAlert('Error', error.response?.data?.message || 'Failed to reject submission', 'error');
       }
-    } catch (error) {
-      console.error('Error rejecting submission:', error);
-      alert(error.response?.data?.message || 'Failed to reject submission');
-    }
+    }, 'danger');
   };
 
   const handleSettingsUpdate = async (e) => {
@@ -215,6 +217,9 @@ const AdminPanel = () => {
         aboutMission: settingsForm.about?.mission,
         aboutWhatWeDo: settingsForm.about?.whatWeDo,
         aboutValues: settingsForm.about?.values,
+        aboutLegacy: settingsForm.about?.legacy,
+        termsOfService: settingsForm.legal?.termsOfService,
+        privacyPolicy: settingsForm.legal?.privacyPolicy,
       });
 
       if (response.data.success) {
@@ -222,11 +227,11 @@ const AdminPanel = () => {
         setSettingsForm(response.data.data.settings);
         
         refreshSettings();
-        alert('Site settings updated successfully!');
+        showAlert('Success', 'Site settings updated successfully!', 'success');
       }
     } catch (error) {
       console.error('Error updating settings:', error);
-      alert(error.response?.data?.message || 'Failed to update settings');
+      showAlert('Error', error.response?.data?.message || 'Failed to update settings', 'error');
     } finally {
       setSettingsSaving(false);
     }
@@ -730,7 +735,7 @@ const AdminPanel = () => {
                     <div className="post-actions">
                       <button
                         className="edit-post-btn"
-                        onClick={() => navigate(`/post/${post.id}/edit`)}
+                        onClick={() => navigate(`/write/${post.id}`)}
                       >
                         ✏️
                       </button>
@@ -906,6 +911,54 @@ const AdminPanel = () => {
                       />
                       <small className="form-help">Enter values separated by commas (e.g., Authenticity, Community, Growth, Inclusivity)</small>
                     </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="aboutLegacy">Our Legacy</label>
+                      <textarea
+                        id="aboutLegacy"
+                        value={settingsForm.about?.legacy || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          about: { ...settingsForm.about, legacy: e.target.value }
+                        })}
+                        placeholder="Describe the legacy and history of Student Lens, leadership teams, etc."
+                        rows="6"
+                      />
+                      <small className="form-help">This content appears in the "Our Legacy" section of the About Us page. You can use plain text to describe the history and leadership of Student Lens.</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-section">
+                  <h3 className="settings-section-title">Legal Content</h3>
+                  <div className="form-grid">
+                    <div className="form-group full-width">
+                      <label htmlFor="termsOfService">Terms of Service</label>
+                      <textarea
+                        id="termsOfService"
+                        value={settingsForm.legal?.termsOfService || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          legal: { ...settingsForm.legal, termsOfService: e.target.value }
+                        })}
+                        placeholder="Enter your Terms of Service content here..."
+                        rows="10"
+                      />
+                      <small className="form-help">Leave empty to use default terms. Content will be displayed on the Terms & Privacy page.</small>
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="privacyPolicy">Privacy Policy</label>
+                      <textarea
+                        id="privacyPolicy"
+                        value={settingsForm.legal?.privacyPolicy || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          legal: { ...settingsForm.legal, privacyPolicy: e.target.value }
+                        })}
+                        placeholder="Enter your Privacy Policy content here..."
+                        rows="10"
+                      />
+                      <small className="form-help">Leave empty to use default privacy policy. Content will be displayed on the Terms & Privacy page.</small>
+                    </div>
                   </div>
                 </div>
 
@@ -1025,6 +1078,22 @@ const AdminPanel = () => {
           </div>
         </div>
       )}
+
+      <AlertModal
+        isOpen={alertModal.isOpen}
+        title={alertModal.title}
+        message={alertModal.message}
+        type={alertModal.type}
+        onClose={closeAlert}
+      />
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        type={confirmModal.type}
+        onConfirm={confirmModal.onConfirm}
+        onClose={closeConfirm}
+      />
     </div>
   );
 };

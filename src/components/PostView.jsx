@@ -6,7 +6,7 @@ import axios from 'axios';
 const PostView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -135,8 +135,8 @@ const PostView = () => {
     );
   }
 
-  const canEdit = user && (post.authorId === user.id || user.hasPermission('edit_articles'));
-  const canDelete = user && (post.authorId === user.id || user.hasPermission('delete_articles'));
+  const canEdit = user && (post.authorId === user.id || hasPermission('edit_articles'));
+  const canDelete = user && (post.authorId === user.id || hasPermission('delete_articles'));
 
   return (
     <article className="post-view">
@@ -171,7 +171,7 @@ const PostView = () => {
               ⭐ Featured
             </span>
           )}
-          {user && user.hasPermission('edit_articles') && post.status !== 'published' && (
+          {user && hasPermission('edit_articles') && post.status !== 'published' && (
             <span className={`status-badge status-${post.status}`}>
               {post.status.toUpperCase()}
             </span>

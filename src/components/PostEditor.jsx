@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
 const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -141,7 +141,7 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
   };
 
   const handlePublishToggle = async () => {
-    if (!user.hasPermission('publish_articles')) {
+    if (!hasPermission('publish_articles')) {
       setError('You do not have permission to publish articles');
       return;
     }
@@ -189,9 +189,9 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
   }
 
   const isAuthor = originalPost.authorId === user.id;
-  const canEditAny = user.hasPermission('edit_articles');
+  const canEditAny = hasPermission('edit_articles');
   const canEdit = isAuthor || canEditAny;
-  const canDelete = isAuthor || user.hasPermission('delete_articles');
+  const canDelete = isAuthor || hasPermission('delete_articles');
 
   if (!canEdit) {
     return (
@@ -211,7 +211,7 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
       <div className="post-editor-header">
         <h2>Edit Article</h2>
         <div className="header-actions">
-          {user.hasPermission('publish_articles') && (
+          {hasPermission('publish_articles') && (
             <button
               type="button"
               onClick={handlePublishToggle}
@@ -362,10 +362,10 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
                 name="featured"
                 checked={formData.featured}
                 onChange={handleInputChange}
-                disabled={!user.hasPermission('edit_articles')}
+                disabled={!hasPermission('edit_articles')}
               />
               Featured Article
-              {!user.hasPermission('edit_articles') && (
+              {!hasPermission('edit_articles') && (
                 <span className="permission-note">(Editor permission required)</span>
               )}
             </label>
@@ -380,10 +380,10 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
               onChange={handleInputChange}
             >
               <option value="draft">Draft</option>
-              {user.hasPermission('publish_articles') && (
+              {hasPermission('publish_articles') && (
                 <option value="published">Published</option>
               )}
-              {user.hasPermission('edit_articles') && (
+              {hasPermission('edit_articles') && (
                 <option value="archived">Archived</option>
               )}
             </select>

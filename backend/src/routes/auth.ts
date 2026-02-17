@@ -8,7 +8,9 @@ import {
   completeSetup,
   checkUsername,
   refreshToken,
-  deleteAccount
+  deleteAccount,
+  requestPasswordReset,
+  resetPassword
 } from '@/controllers/authController';
 import { authenticate, optionalAuth } from '@/middleware/auth';
 import {
@@ -19,6 +21,7 @@ import {
 } from '@/middleware/validation';
 import {
   authLimiter,
+  passwordResetLimiter,
   registrationLimiter
 } from '@/middleware/security';
 
@@ -37,7 +40,19 @@ router.post('/login',
 );
 
 router.get('/check-username/:username',
+  authLimiter,
   checkUsername
+);
+
+// Password reset routes (public, rate-limited)
+router.post('/forgot-password',
+  passwordResetLimiter,
+  requestPasswordReset
+);
+
+router.post('/reset-password',
+  passwordResetLimiter,
+  resetPassword
 );
 
 router.use((req, res, next) => {

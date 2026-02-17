@@ -1,83 +1,15 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import passport from '@/config/passport';
 import jwt from 'jsonwebtoken';
 import { appLogger } from '@/services/logger';
-import { AppError } from '@/utils/AppError';
 import { catchAsync } from '@/middleware/errorHandler';
 import { ApiResponse, JWTPayload } from '@/types';
 
 const router = Router();
 
-// Debug endpoint to check OAuth configuration
-router.get('/google/debug', (req: Request, res: Response): void => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
-  const clientUrl = process.env.CLIENT_URL;
-
-  // Manually construct OAuth URL to test
-  const scopes = [
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/userinfo.email',
-    'openid'
-  ];
-
-  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${encodeURIComponent(clientId || '')}` +
-    `&redirect_uri=${encodeURIComponent(callbackUrl || '')}` +
-    `&response_type=code` +
-    `&scope=${encodeURIComponent(scopes.join(' '))}` +
-    `&access_type=offline` +
-    `&prompt=select_account`;
-
-  res.json({
-    configured: !!(clientId && callbackUrl),
-    clientId: clientId ? `${clientId.substring(0, 20)}...` : 'NOT SET',
-    callbackUrl: callbackUrl || 'NOT SET',
-    clientUrl: clientUrl || 'NOT SET',
-    scopes: scopes,
-    manualOAuthUrl: oauthUrl,
-    message: 'Try the manualOAuthUrl in your browser to test OAuth directly'
-  });
-});
-
-// Manual OAuth test (bypasses Passport entirely)
-router.get('/google/test-manual', (req: Request, res: Response): void => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
-
-  if (!clientId || !callbackUrl) {
-    res.status(500).json({ error: 'OAuth not configured' });
-    return;
-  }
-
-  const scopes = [
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/userinfo.email',
-    'openid'
-  ].join(' ');
-
-  const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-    `client_id=${encodeURIComponent(clientId)}` +
-    `&redirect_uri=${encodeURIComponent(callbackUrl)}` +
-    `&response_type=code` +
-    `&scope=${encodeURIComponent(scopes)}` +
-    `&access_type=offline`;
-
-  console.log('MANUAL OAUTH: Redirecting to:', oauthUrl);
-  res.redirect(oauthUrl);
-});
-
 router.get('/google/signup',
-  (req: Request, res: Response, next: any) => {
-    appLogger.info('Google OAuth signup initiated', {
-      ip: req.ip,
-      callbackUrl: process.env.GOOGLE_CALLBACK_URL,
-      clientUrl: process.env.CLIENT_URL
-    });
-
-    console.log('GOOGLE_AUTH: Signup route hit');
-    console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
-
+  (req: Request, _res: Response, next: NextFunction) => {
+    appLogger.info('Google OAuth signup initiated', { ip: req.ip });
     (req.session as any).oauthIntent = 'signup';
     next();
   },
@@ -89,16 +21,8 @@ router.get('/google/signup',
 );
 
 router.get('/google/signin',
-  (req: Request, res: Response, next: any) => {
-    appLogger.info('Google OAuth signin initiated', {
-      ip: req.ip,
-      callbackUrl: process.env.GOOGLE_CALLBACK_URL,
-      clientUrl: process.env.CLIENT_URL
-    });
-
-    console.log('GOOGLE_AUTH: Signin route hit');
-    console.log('GOOGLE_AUTH: GOOGLE_CALLBACK_URL =', process.env.GOOGLE_CALLBACK_URL);
-
+  (req: Request, _res: Response, next: NextFunction) => {
+    appLogger.info('Google OAuth signin initiated', { ip: req.ip });
     (req.session as any).oauthIntent = 'signin';
     next();
   },
@@ -109,25 +33,34 @@ router.get('/google/signin',
 );
 
 router.get('/google/callback',
-  (req: Request, res: Response, next: any) => {
-    console.log('GOOGLE_AUTH: Callback route hit');
-    console.log('GOOGLE_AUTH: Query params:', req.query);
-    console.log('GOOGLE_AUTH: Full callback URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+  (req: Request, res: Response, next: NextFunction) => {
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
-    appLogger.info('Google OAuth callback received', {
-      query: req.query,
-      fullUrl: req.protocol + '://' + req.get('host') + req.originalUrl
-    });
+    appLogger.info('Google OAuth callback received');
 
-    next();
+    // Use custom callback to handle the email-conflict case (done(null, false, info))
+    passport.authenticate('google', { session: false }, (err: any, user: any, info: any) => {
+      if (err) {
+        appLogger.error('Google OAuth authentication error', err);
+        return res.redirect(`${clientUrl}/login?error=oauth_failed`);
+      }
+
+      if (!user) {
+        // Passport returned false — likely an email conflict
+        const message = info?.message || 'Authentication failed';
+        appLogger.warn('Google OAuth authentication rejected', { message });
+        return res.redirect(`${clientUrl}/login?error=email_exists&message=${encodeURIComponent(message)}`);
+      }
+
+      // Attach user to request and continue
+      req.user = user;
+      next();
+    })(req, res, next);
   },
-  passport.authenticate('google', { session: false }),
   catchAsync(async (req: Request, res: Response): Promise<void> => {
     const user = req.user as any;
     const requestedIntent = (req.session as any)?.oauthIntent || 'signin';
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-
-    console.log('GOOGLE_AUTH: Authentication complete, user:', user ? user.id : 'none');
 
     if (!user) {
       appLogger.error('Google OAuth callback: No user returned');
@@ -169,10 +102,8 @@ router.get('/google/callback',
 
       appLogger.info('Google OAuth successful', {
         userId: user.id,
-        requestedIntent,
         actualIntent,
-        isNewUser,
-        redirectUrl: redirectUrl.split('?')[0] // Log URL without token
+        isNewUser
       });
 
       res.redirect(redirectUrl);
@@ -183,9 +114,7 @@ router.get('/google/callback',
   })
 );
 
-router.get('/google/profile', catchAsync(async (req: Request, res: Response): Promise<void> => {
-  appLogger.info('Google profile route accessed', { ip: req.ip });
-
+router.get('/google/profile', catchAsync(async (_req: Request, res: Response): Promise<void> => {
   const response: ApiResponse = {
     success: true,
     message: 'Google OAuth is now implemented',

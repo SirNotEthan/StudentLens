@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import '../styles/PostCard.css';
 
 const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant = 'default' }) => {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -38,8 +38,8 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
     return classes[status] || 'status-draft';
   };
 
-  const canEdit = user && (post.authorId === user.id || user.hasPermission('edit_articles'));
-  const canDelete = user && (post.authorId === user.id || user.hasPermission('delete_articles'));
+  const canEdit = user && (post.authorId === user.id || hasPermission('edit_articles'));
+  const canDelete = user && (post.authorId === user.id || hasPermission('delete_articles'));
 
   const handleCardClick = (e) => {
     if (e.target.closest('.post-actions')) {
@@ -55,7 +55,7 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
 
   const handleDelete = (e) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this article?')) {
+    if (window.confirm('Are you sure you want to delete this article?')) {
       onDelete && onDelete(post);
     }
   };
@@ -81,7 +81,7 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
             <span className={`category-tag ${getCategoryColor(post.category)}`}>
               {post.category.replace(/_/g, ' ')}
             </span>
-            {user && user.hasPermission('edit_articles') && (
+            {user && hasPermission('edit_articles') && (
               <span className={`status-badge ${getStatusBadgeClass(post.status)}`}>
                 {post.status}
               </span>

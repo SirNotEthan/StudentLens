@@ -14,7 +14,7 @@ const PostList = ({
   showCreateButton = true,
   variant = 'default'
 }) => {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -136,7 +136,7 @@ const PostList = ({
     fetchPosts();
   };
 
-  const canCreatePosts = user && user.hasPermission('write_articles');
+  const canCreatePosts = user && hasPermission('write_articles');
 
   if (editingPost) {
     return (

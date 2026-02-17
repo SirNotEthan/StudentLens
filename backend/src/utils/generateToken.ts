@@ -195,46 +195,75 @@ export const refreshAccessToken = (refreshToken: string): string => {
   }
 };
 
-const revokedTokens = new Set<string>();
+// In-memory fallback for when Redis is unavailable
+const revokedTokensFallback = new Set<string>();
 
-export const revokeToken = (token: string): void => {
+const getRedis = () => {
+  try {
+    const { getRedisClient, isRedisConnected } = require('@/config/redis');
+    if (isRedisConnected()) return getRedisClient();
+  } catch {}
+  return null;
+};
+
+export const revokeToken = async (token: string): Promise<void> => {
   try {
     const decoded = decodeToken(token);
-    if (decoded) {
-      revokedTokens.add(token);
-      appLogger.info('Token revoked', {
-        userId: decoded.id,
-        email: decoded.email
-      });
+    if (!decoded) return;
+
+    const redis = getRedis();
+    if (redis) {
+      // Store in Redis with TTL matching token expiration
+      const ttl = decoded.exp ? decoded.exp - Math.floor(Date.now() / 1000) : 86400;
+      if (ttl > 0) {
+        await redis.set(`revoked:${token}`, '1', { EX: ttl });
+      }
+    } else {
+      revokedTokensFallback.add(token);
     }
+
+    appLogger.info('Token revoked', {
+      userId: decoded.id,
+      email: decoded.email
+    });
   } catch (error: any) {
     appLogger.warn('Failed to revoke token', { error: error.message });
   }
 };
 
-export const isTokenRevoked = (token: string): boolean => {
-  return revokedTokens.has(token);
+export const isTokenRevoked = async (token: string): Promise<boolean> => {
+  const redis = getRedis();
+  if (redis) {
+    try {
+      const result = await redis.get(`revoked:${token}`);
+      return result === '1';
+    } catch {
+      return revokedTokensFallback.has(token);
+    }
+  }
+  return revokedTokensFallback.has(token);
 };
 
+// Clean up expired tokens from in-memory fallback only
 setInterval(() => {
   const now = Math.floor(Date.now() / 1000);
   const tokensToRemove: string[] = [];
 
-  for (const token of revokedTokens) {
+  for (const token of revokedTokensFallback) {
     const decoded = decodeToken(token);
     if (decoded && decoded.exp && decoded.exp < now) {
       tokensToRemove.push(token);
     }
   }
 
-  tokensToRemove.forEach(token => revokedTokens.delete(token));
+  tokensToRemove.forEach(token => revokedTokensFallback.delete(token));
 
   if (tokensToRemove.length > 0) {
-    appLogger.debug('Cleaned up expired revoked tokens', {
+    appLogger.debug('Cleaned up expired revoked tokens from fallback', {
       count: tokensToRemove.length
     });
   }
-}, 60 * 60 * 1000); 
+}, 60 * 60 * 1000);
 
 export const validateTokenStructure = (token: string): boolean => {
   const parts = token.split('.');

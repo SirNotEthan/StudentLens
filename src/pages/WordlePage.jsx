@@ -158,7 +158,28 @@ const WordlePage = () => {
       return 'correct';
     }
 
-    if (targetWord.includes(letter)) {
+    // Count how many times this letter appears in the target word
+    let targetCount = 0;
+    for (let i = 0; i < targetWord.length; i++) {
+      if (targetWord[i] === letter) targetCount++;
+    }
+
+    if (targetCount === 0) return 'absent';
+
+    // Count how many times this letter is already matched as correct (green)
+    let correctCount = 0;
+    for (let i = 0; i < guess.length; i++) {
+      if (guess[i] === letter && guess[i] === targetWord[i]) correctCount++;
+    }
+
+    // Count how many times this letter appears as present (yellow) before this index
+    let presentBefore = 0;
+    for (let i = 0; i < index; i++) {
+      if (guess[i] === letter && guess[i] !== targetWord[i]) presentBefore++;
+    }
+
+    // Only mark as present if there are remaining unmatched occurrences
+    if (correctCount + presentBefore < targetCount) {
       return 'present';
     }
 
@@ -211,25 +232,21 @@ const WordlePage = () => {
   }, [currentGuess, gameStatus, targetWord]);
 
   const renderTile = (rowIndex, colIndex) => {
-    const isCurrentRow = rowIndex === currentRow;
-    const isPastRow = rowIndex < currentRow;
-
     let letter = '';
     let status = '';
 
-    if (isPastRow && guesses[rowIndex]) {
+    // If this row has a submitted guess, show it with its status
+    if (guesses[rowIndex]) {
       letter = guesses[rowIndex][colIndex];
       status = getLetterStatus(guesses[rowIndex], colIndex);
-    } else if (isCurrentRow && gameStatus === 'playing' && currentGuess[colIndex]) {
+    } else if (rowIndex === guesses.length && gameStatus === 'playing' && currentGuess[colIndex]) {
+      // Current row being typed (only while playing)
       letter = currentGuess[colIndex];
       status = 'tbd';
-    } else if (isCurrentRow && gameStatus === 'won' && guesses[rowIndex]) {
-      
-      letter = guesses[rowIndex][colIndex];
-      status = 'correct';
     }
 
-    const animationDelay = isPastRow && guesses[rowIndex] ? `${colIndex * 0.1}s` : '0s';
+    const hasGuess = !!guesses[rowIndex];
+    const animationDelay = hasGuess ? `${colIndex * 0.1}s` : '0s';
 
     return (
       <div
@@ -282,7 +299,7 @@ const WordlePage = () => {
           {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => (
             <div
               key={rowIndex}
-              className={`wordle-row ${shake && rowIndex === currentRow ? 'shake' : ''}`}
+              className={`wordle-row ${shake && rowIndex === guesses.length ? 'shake' : ''}`}
             >
               {Array.from({ length: WORD_LENGTH }).map((_, colIndex) =>
                 renderTile(rowIndex, colIndex)

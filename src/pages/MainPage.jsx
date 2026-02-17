@@ -24,6 +24,7 @@ const MainPage = () => {
   const [error, setError] = useState(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
   const [pendingCount, setPendingCount] = useState(0);
   const [loadingStats, setLoadingStats] = useState(false);
 
@@ -39,6 +40,10 @@ const MainPage = () => {
       fetchPendingStats();
     }
   }, [user?.role]);
+
+  useEffect(() => {
+    return () => clearTimeout(searchTimeoutRef.current);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -172,12 +177,16 @@ const MainPage = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      ICS: 'ics',
-      WORLD: 'world',
-      SCIENCE_TECH: 'science-tech',
-      SPORT: 'sport',
-      CULTURE: 'culture',
-      ART: 'art'
+      ACADEMIC: 'academic',
+      SPORTS: 'sports',
+      EVENTS: 'events',
+      CLUBS: 'clubs',
+      ANNOUNCEMENTS: 'announcements',
+      NEWS: 'news',
+      STUDENT_LIFE: 'student-life',
+      TECHNOLOGY: 'technology',
+      ARTS: 'arts',
+      SCIENCE: 'science'
     };
     return colors[category] || 'gray';
   };
@@ -185,12 +194,16 @@ const MainPage = () => {
   const getCategoryButtonStyle = (category) => {
     const styles = {
       ALL: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
-      ICS: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
-      WORLD: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
-      SCIENCE_TECH: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
-      SPORT: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
-      CULTURE: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
-      ART: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' }
+      ACADEMIC: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
+      SPORTS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
+      EVENTS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
+      CLUBS: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
+      ANNOUNCEMENTS: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
+      NEWS: { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' },
+      STUDENT_LIFE: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' },
+      TECHNOLOGY: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
+      ARTS: { backgroundColor: '#563d7c', color: 'white', backgroundImage: 'none' },
+      SCIENCE: { backgroundColor: '#20c997', color: 'white', backgroundImage: 'none' }
     };
     return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };
   };
@@ -239,8 +252,8 @@ const MainPage = () => {
     const query = e.target.value;
     setSearchQuery(query);
 
-    clearTimeout(window.searchTimeout);
-    window.searchTimeout = setTimeout(() => {
+    clearTimeout(searchTimeoutRef.current);
+    searchTimeoutRef.current = setTimeout(() => {
       handleSearch(query);
     }, 300);
   };
@@ -382,7 +395,7 @@ const MainPage = () => {
         </aside>
 
         <main className="center-content">
-          {showSearchResults && (
+          {showSearchResults ? (
             <section className="search-results">
               <div className="search-results-header">
                 <h2 className="section-title">SEARCH RESULTS</h2>
@@ -417,8 +430,7 @@ const MainPage = () => {
                 </div>
               )}
             </section>
-          )}
-
+          ) : (
           <section className="latest-news">
             <h2 className="section-title">LATEST NEWS</h2>
             {error && (
@@ -518,18 +530,19 @@ const MainPage = () => {
               )}
             </div>
           </section>
+          )}
 
           <section className="news-image-section">
             <img
-              src={settings?.newsImage || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"}
+              src={settings?.images?.featuredNews || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"}
               alt="News section"
               className="news-main-image"
             />
           </section>
 
-          {settings?.gamesImage && (
+          {settings?.images?.games && (
             <section className="games-image-section">
-              <img src={settings.gamesImage} alt="Games section" className="games-main-image" />
+              <img src={settings.images.games} alt="Games section" className="games-main-image" />
             </section>
           )}
         </main>
@@ -640,55 +653,16 @@ const MainPage = () => {
             </div>
           </div>
           <div className="category-tags">
-            <span
-              className={`tag tag-all ${selectedCategory === 'ALL' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('ALL')}
-              onClick={() => setSelectedCategory('ALL')}
-            >
-              ALL
-            </span>
-            <span
-              className={`tag tag-ics ${selectedCategory === 'ICS' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('ICS')}
-              onClick={() => setSelectedCategory('ICS')}
-            >
-              ICS
-            </span>
-            <span
-              className={`tag tag-world ${selectedCategory === 'WORLD' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('WORLD')}
-              onClick={() => setSelectedCategory('WORLD')}
-            >
-              WORLD
-            </span>
-            <span
-              className={`tag tag-science-tech ${selectedCategory === 'SCIENCE_TECH' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('SCIENCE_TECH')}
-              onClick={() => setSelectedCategory('SCIENCE_TECH')}
-            >
-              SCIENCE / TECH
-            </span>
-            <span
-              className={`tag tag-sport ${selectedCategory === 'SPORT' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('SPORT')}
-              onClick={() => setSelectedCategory('SPORT')}
-            >
-              SPORT
-            </span>
-            <span
-              className={`tag tag-culture ${selectedCategory === 'CULTURE' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('CULTURE')}
-              onClick={() => setSelectedCategory('CULTURE')}
-            >
-              CULTURE
-            </span>
-            <span
-              className={`tag tag-art ${selectedCategory === 'ART' ? 'active' : ''}`}
-              style={getCategoryButtonStyle('ART')}
-              onClick={() => setSelectedCategory('ART')}
-            >
-              ART
-            </span>
+            {['ALL', 'ACADEMIC', 'SPORTS', 'EVENTS', 'CLUBS', 'ANNOUNCEMENTS', 'NEWS', 'STUDENT_LIFE', 'TECHNOLOGY', 'ARTS', 'SCIENCE'].map(cat => (
+              <span
+                key={cat}
+                className={`tag ${selectedCategory === cat ? 'active' : ''}`}
+                style={getCategoryButtonStyle(cat)}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat.replace(/_/g, ' ')}
+              </span>
+            ))}
           </div>
         </div>
         <div className="news-grid-container">

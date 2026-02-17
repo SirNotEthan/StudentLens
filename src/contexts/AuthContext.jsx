@@ -59,22 +59,24 @@ export const AuthProvider = ({ children }) => {
       needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : false,
       provider: userData.provider || 'email',
       createdAt: userData.createdAt,
-      updatedAt: userData.updatedAt
+      updatedAt: userData.updatedAt,
+      wordleGamesPlayed: userData.wordleGamesPlayed || 0,
+      wordleWins: userData.wordleWins || 0,
+      wordleCurrentStreak: userData.wordleCurrentStreak || 0,
+      wordleBestStreak: userData.wordleBestStreak || 0
     };
   };
 
   const fetchProfile = useCallback(async () => {
     try {
-      console.log('🔄 Fetching user profile...');
       const response = await axios.get('/auth/profile');
       const userData = response.data.data.user;
       const completeUser = normalizeUserData(userData);
 
-      console.log('✅ Profile loaded successfully:', completeUser);
       setUser(completeUser);
       setError(null);
     } catch (error) {
-      console.error('❌ Failed to fetch profile:', error);
+      console.error('Failed to fetch profile:', error.message);
       const errorMessage = error.response?.data?.message || 'Failed to load profile';
       setError(errorMessage);
       localStorage.removeItem('token');
@@ -100,7 +102,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      console.log('🔄 Attempting login...');
       const response = await axios.post('/auth/login', credentials);
       const { accessToken: token, user: userData } = response.data.data;
       const completeUser = normalizeUserData(userData);
@@ -109,7 +110,6 @@ export const AuthProvider = ({ children }) => {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(completeUser);
 
-      console.log('✅ Login successful:', completeUser);
       return { success: true, user: completeUser };
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Login failed';
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }) => {
       await fetchProfile();
       return { success: true };
     } catch (error) {
-      console.error('Token callback error:', error);
+      console.error('Token callback error:', error.message);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
       const errorMessage = error.response?.data?.message || 'Authentication failed';
@@ -173,19 +173,15 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     setError(null);
     try {
-      console.log('🔄 AuthContext: Sending profile update request with:', profileData);
       const response = await axios.put('/auth/profile', profileData);
-      console.log('📡 AuthContext: Backend response:', response.data);
 
       const updatedUser = response.data.data.user;
       const completeUser = normalizeUserData(updatedUser);
 
-      console.log('✅ AuthContext: Normalized updated user:', completeUser);
       setUser(completeUser);
       return { success: true, user: completeUser };
     } catch (error) {
-      console.error('❌ AuthContext: Profile update error:', error);
-      console.error('❌ AuthContext: Error response:', error.response?.data);
+      console.error('Profile update error:', error.message);
 
       const errorMessage = error.response?.data?.message || 'Profile update failed';
       setError(errorMessage);
@@ -243,15 +239,11 @@ export const AuthProvider = ({ children }) => {
 
   const googleSignup = () => {
     const baseUrl = getOAuthRedirectBase();
-    console.log('🔵 OAuth Signup - Base URL:', baseUrl);
-    console.log('🔵 OAuth Signup - Full URL:', `${baseUrl}/api/auth/google/signup`);
     window.location.href = `${baseUrl}/api/auth/google/signup`;
   };
 
   const googleLogin = () => {
     const baseUrl = getOAuthRedirectBase();
-    console.log('🔵 OAuth Login - Base URL:', baseUrl);
-    console.log('🔵 OAuth Login - Full URL:', `${baseUrl}/api/auth/google/signin`);
     window.location.href = `${baseUrl}/api/auth/google/signin`;
   };
 

@@ -73,16 +73,12 @@ const Profile = () => {
     }
 
     try {
-      console.log('🔄 Updating profile with data:', editData);
       const result = await updateProfile(editData);
-      console.log('📊 Profile update result:', result);
 
       if (result.success) {
-        console.log('✅ Profile updated successfully');
         setIsEditing(false);
-
       } else {
-        console.error('❌ Profile update failed:', result.error);
+        console.error('Profile update failed:', result.error);
         setEditError(result.error || 'Failed to update profile');
       }
     } catch (err) {
