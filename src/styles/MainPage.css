@@ -1110,6 +1110,40 @@ body {
   color: #ffffff;
 }
 
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.load-more-btn {
+  background-color: transparent;
+  color: #1a1a1a;
+  border: 2px solid #1a1a1a;
+  padding: 0.85rem 2.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-family: 'Arial', sans-serif;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.load-more-btn:hover {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .news-grid {
   padding: 0;
   background-color: transparent;

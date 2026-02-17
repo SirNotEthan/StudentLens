@@ -22,6 +22,9 @@ const MainPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const searchTimeoutRef = useRef(null);
@@ -74,19 +77,33 @@ const MainPage = () => {
     }
   };
 
-  const fetchRecentPosts = async () => {
+  const fetchRecentPosts = async (page = 1, append = false) => {
     try {
       setError(null);
-      const response = await axios.get('/posts/public?limit=20');
+      if (page > 1) setLoadingMore(true);
+      const response = await axios.get(`/posts/public?limit=20&page=${page}`);
       if (response.data.success) {
-        setRecentPosts(response.data.data?.posts || response.data.posts || []);
+        const posts = response.data.data?.posts || response.data.posts || [];
+        const pagination = response.data.pagination;
+        if (append) {
+          setRecentPosts(prev => [...prev, ...posts]);
+        } else {
+          setRecentPosts(posts);
+        }
+        setCurrentPage(page);
+        setHasMorePosts(pagination ? pagination.hasNext : posts.length === 20);
       }
     } catch (error) {
       console.error('Error fetching recent posts:', error);
       setError('Failed to load articles');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const loadMorePosts = () => {
+    fetchRecentPosts(currentPage + 1, true);
   };
 
   const fetchPendingStats = async () => {
@@ -668,7 +685,6 @@ const MainPage = () => {
         <div className="news-grid-container">
           {recentPosts
             .filter(post => selectedCategory === 'ALL' || post.category === selectedCategory)
-            .slice(0, 16)
             .map(post => (
               <article
                 key={post.id}
@@ -699,6 +715,17 @@ const MainPage = () => {
               </article>
             ))}
         </div>
+        {hasMorePosts && (
+          <div className="load-more-container">
+            <button
+              className="load-more-btn"
+              onClick={loadMorePosts}
+              disabled={loadingMore}
+            >
+              {loadingMore ? 'Loading...' : 'Load More Articles'}
+            </button>
+          </div>
+        )}
       </section>
 
       <footer className="footer">
