@@ -554,19 +554,6 @@ const MainPage = () => {
           </section>
           )}
 
-          <section className="news-image-section">
-            <img
-              src={settings?.images?.featuredNews || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"}
-              alt="News section"
-              className="news-main-image"
-            />
-          </section>
-
-          {settings?.images?.games && (
-            <section className="games-image-section">
-              <img src={settings.images.games} alt="Games section" className="games-main-image" />
-            </section>
-          )}
         </main>
 
         <aside className="right-sidebar">
@@ -654,6 +641,14 @@ const MainPage = () => {
             )}
           </section>
         </aside>
+
+        <section className="news-image-section">
+          <img
+            src={settings?.images?.featuredNews || "https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1200&q=80"}
+            alt="News section"
+            className="news-main-image"
+          />
+        </section>
       </div>
 
       <section className="news-grid">
