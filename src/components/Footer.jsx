@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useSettings } from '../contexts/SettingsContext';
 import axios from 'axios';
 import '../styles/Footer.css';
 
 const Footer = () => {
+  const { settings } = useSettings();
   const [versionInfo, setVersionInfo] = useState({
     frontend: '2.0.0',
     backend: null,
@@ -37,7 +39,7 @@ const Footer = () => {
       <div className="footer-content">
         <div className="footer-section">
           <p className="footer-copyright">
-            &copy; {new Date().getFullYear()} Student Lens. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings?.siteName || 'Student Lens'}. All rights reserved.
           </p>
         </div>
 

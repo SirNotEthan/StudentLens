@@ -4,7 +4,8 @@ import {
   getNewPuzzle,
   validateWord,
   submitGameResult,
-  getSpellingBeeStats
+  getSpellingBeeStats,
+  getHint
 } from '@/controllers/spellingBeeController';
 
 const router = Router();
@@ -14,6 +15,8 @@ router.use(authenticate);
 router.get('/new-puzzle', getNewPuzzle);
 
 router.post('/validate-word', validateWord);
+
+router.post('/get-hint', getHint);
 
 router.post('/submit-result', submitGameResult);
 

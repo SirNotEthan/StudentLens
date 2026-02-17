@@ -75,14 +75,41 @@ export class SiteSettings {
     try {
       const existing = await this.get();
 
-      const doc = await databases.updateDocument(
-        DATABASE_ID,
-        SETTINGS_COLLECTION_ID,
-        existing.id,
-        data
-      );
+      // Try the full update first
+      try {
+        const doc = await databases.updateDocument(
+          DATABASE_ID,
+          SETTINGS_COLLECTION_ID,
+          existing.id,
+          data
+        );
+        return this.mapDocument(doc);
+      } catch (innerError: any) {
+        // If the update fails (e.g. new attributes not in DB schema), retry without them
+        const safeData = { ...data };
+        const newFields = ['aboutLegacy', 'termsOfService', 'privacyPolicy'] as const;
+        let hadNewFields = false;
+        for (const field of newFields) {
+          if (field in safeData) {
+            delete (safeData as any)[field];
+            hadNewFields = true;
+          }
+        }
 
-      return this.mapDocument(doc);
+        if (hadNewFields && Object.keys(safeData).length > 0) {
+          appLogger.warn('Retrying settings update without new fields (attributes may not exist in DB yet)');
+          const doc = await databases.updateDocument(
+            DATABASE_ID,
+            SETTINGS_COLLECTION_ID,
+            existing.id,
+            safeData
+          );
+          return this.mapDocument(doc);
+        }
+
+        // If no new fields were the issue, or no other fields to update, rethrow
+        throw innerError;
+      }
     } catch (error: any) {
       appLogger.error('Error updating site settings:', error);
       throw new AppError('Failed to update site settings', 500);

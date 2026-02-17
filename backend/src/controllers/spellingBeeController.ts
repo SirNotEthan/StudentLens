@@ -222,3 +222,45 @@ export const getSpellingBeeStats = async (
     next(error);
   }
 };
+
+export const getHint = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
+    }
+
+    const { center, outer, foundWords } = req.body;
+
+    if (!center || !Array.isArray(outer) || !Array.isArray(foundWords)) {
+      throw AppError.badRequest('Missing required fields');
+    }
+
+    // Get today's puzzle to find valid words
+    const puzzle = getDailySpellingBeePuzzle();
+    const upperFoundWords = foundWords.map((w: string) => w.toUpperCase());
+
+    // Find a word from the puzzle's word list that hasn't been found yet
+    const hintWord = puzzle.words.find(
+      (word: string) => !upperFoundWords.includes(word.toUpperCase())
+    );
+
+    if (hintWord) {
+      res.json({
+        success: true,
+        hint: hintWord.toUpperCase()
+      });
+    } else {
+      res.json({
+        success: true,
+        hint: null,
+        message: 'No more hints available'
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};

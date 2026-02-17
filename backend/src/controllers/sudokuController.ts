@@ -1,4 +1,11 @@
-import { Request, Response } from 'express';
+import { Response, NextFunction } from 'express';
+import { User } from '@/models/User';
+import { AppError } from '@/utils/AppError';
+import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
+import crypto from 'crypto';
+
+// Use env secret or generate one (stable per process lifetime)
+const PUZZLE_SECRET = process.env.PUZZLE_SECRET || crypto.randomBytes(32).toString('hex');
 
 interface SudokuPuzzle {
   grid: number[][];
@@ -6,23 +13,36 @@ interface SudokuPuzzle {
   difficulty: string;
 }
 
-// Simple Sudoku generator - in production, you'd want a more sophisticated algorithm
+// ---- Encryption for solution tokens ----
+function encryptSolution(solution: number[][]): string {
+  const key = Buffer.from(PUZZLE_SECRET.slice(0, 64).padEnd(64, '0'), 'hex');
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  let encrypted = cipher.update(JSON.stringify(solution), 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+}
+
+function decryptSolution(token: string): number[][] {
+  const key = Buffer.from(PUZZLE_SECRET.slice(0, 64).padEnd(64, '0'), 'hex');
+  const parts = token.split(':');
+  if (parts.length !== 2) throw new Error('Invalid token');
+  const iv = Buffer.from(parts[0], 'hex');
+  const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+  let decrypted = decipher.update(parts[1], 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return JSON.parse(decrypted);
+}
+
+// ---- Sudoku Generator ----
 class SudokuGenerator {
-  private solution: number[][] = [];
-  
-  // Check if number is valid in given position
   private isValid(board: number[][], row: number, col: number, num: number): boolean {
-    // Check row
     for (let x = 0; x < 9; x++) {
       if (board[row][x] === num) return false;
     }
-    
-    // Check column
     for (let x = 0; x < 9; x++) {
       if (board[x][col] === num) return false;
     }
-    
-    // Check 3x3 box
     const startRow = row - (row % 3);
     const startCol = col - (col % 3);
     for (let i = 0; i < 3; i++) {
@@ -30,192 +50,303 @@ class SudokuGenerator {
         if (board[i + startRow][j + startCol] === num) return false;
       }
     }
-    
     return true;
   }
-  
-  // Fill the board to create a valid solution
+
   private fillBoard(board: number[][]): boolean {
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
         if (board[row][col] === 0) {
-          // Shuffle numbers for randomization
           const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
-          
           for (const num of numbers) {
             if (this.isValid(board, row, col, num)) {
               board[row][col] = num;
-              
-              if (this.fillBoard(board)) {
-                return true;
-              }
-              
+              if (this.fillBoard(board)) return true;
               board[row][col] = 0;
             }
           }
-          
           return false;
         }
       }
     }
     return true;
   }
-  
-  // Remove numbers based on difficulty
+
   private removeNumbers(board: number[][], difficulty: string): number[][] {
     const puzzle = board.map(row => [...row]);
     let cellsToRemove: number;
-    
+
     switch (difficulty) {
-      case 'easy':
-        cellsToRemove = 35; // Remove 35 numbers
-        break;
-      case 'medium':
-        cellsToRemove = 45; // Remove 45 numbers
-        break;
-      case 'hard':
-        cellsToRemove = 55; // Remove 55 numbers
-        break;
-      default:
-        cellsToRemove = 45;
+      case 'easy': cellsToRemove = 35; break;
+      case 'medium': cellsToRemove = 45; break;
+      case 'hard': cellsToRemove = 55; break;
+      default: cellsToRemove = 45;
     }
-    
-    const positions = [];
+
+    const positions: [number, number][] = [];
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
         positions.push([i, j]);
       }
     }
-    
-    // Shuffle positions
     positions.sort(() => Math.random() - 0.5);
-    
-    // Remove numbers
+
     for (let i = 0; i < cellsToRemove && i < positions.length; i++) {
       const [row, col] = positions[i];
       puzzle[row][col] = 0;
     }
-    
+
     return puzzle;
   }
-  
+
   public generate(difficulty: string = 'medium'): SudokuPuzzle {
-    // Create empty board
     const solution: number[][] = Array(9).fill(0).map(() => Array(9).fill(0));
-    
-    // Fill the board
     this.fillBoard(solution);
-    this.solution = solution.map(row => [...row]);
-    
-    // Create puzzle by removing numbers
-    const grid = this.removeNumbers(solution, difficulty);
-    
-    return {
-      grid,
-      solution: this.solution,
-      difficulty
-    };
+    const grid = this.removeNumbers(solution.map(row => [...row]), difficulty);
+    return { grid, solution: solution.map(row => [...row]), difficulty };
   }
 }
 
-// Get new Sudoku puzzle
-export const getNewPuzzle = async (req: Request, res: Response): Promise<void> => {
+// ---- Controller endpoints ----
+
+export const getNewPuzzle = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
+    }
+
     const { difficulty = 'medium' } = req.query;
-    
-    // Check if user already played today (optional feature)
-    // For now, we'll allow unlimited plays
-    
     const generator = new SudokuGenerator();
     const puzzle = generator.generate(difficulty as string);
-    
+
+    // Encrypt solution into a token - client cannot read it
+    const solutionToken = encryptSolution(puzzle.solution);
+
     res.json({
       success: true,
       puzzle: {
         grid: puzzle.grid,
-        solution: puzzle.solution,
+        solutionToken,
         difficulty: puzzle.difficulty
       }
     });
   } catch (error) {
-    console.error('Error generating Sudoku puzzle:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error generating puzzle'
-    });
+    next(error);
   }
 };
 
-// Submit game result
-export const submitResult = async (req: Request, res: Response): Promise<void> => {
+export const checkCell = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const userId = (req as any).user?.id;
-    const { won, time, mistakes, hintsUsed, difficulty } = req.body;
-    
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        message: 'User not authenticated'
-      });
-      return;
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
     }
-    
-    // Here you would save the game result to the database
-    // For now, we'll just return success
-    
+
+    const { solutionToken, row, col, value } = req.body;
+
+    if (!solutionToken || typeof row !== 'number' || typeof col !== 'number' || typeof value !== 'number') {
+      throw AppError.badRequest('Missing required fields');
+    }
+
+    if (row < 0 || row > 8 || col < 0 || col > 8 || value < 1 || value > 9) {
+      throw AppError.badRequest('Invalid cell coordinates or value');
+    }
+
+    let solution: number[][];
+    try {
+      solution = decryptSolution(solutionToken);
+    } catch {
+      throw AppError.badRequest('Invalid solution token');
+    }
+
     res.json({
       success: true,
-      message: 'Game result saved',
+      correct: solution[row][col] === value
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getHintCell = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
+    }
+
+    const { solutionToken, row, col } = req.body;
+
+    if (!solutionToken || typeof row !== 'number' || typeof col !== 'number') {
+      throw AppError.badRequest('Missing required fields');
+    }
+
+    if (row < 0 || row > 8 || col < 0 || col > 8) {
+      throw AppError.badRequest('Invalid cell coordinates');
+    }
+
+    let solution: number[][];
+    try {
+      solution = decryptSolution(solutionToken);
+    } catch {
+      throw AppError.badRequest('Invalid solution token');
+    }
+
+    res.json({
+      success: true,
+      value: solution[row][col]
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const checkComplete = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
+    }
+
+    const { solutionToken, grid } = req.body;
+
+    if (!solutionToken || !Array.isArray(grid)) {
+      throw AppError.badRequest('Missing required fields');
+    }
+
+    let solution: number[][];
+    try {
+      solution = decryptSolution(solutionToken);
+    } catch {
+      throw AppError.badRequest('Invalid solution token');
+    }
+
+    let complete = true;
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (grid[r]?.[c] !== solution[r][c]) {
+          complete = false;
+          break;
+        }
+      }
+      if (!complete) break;
+    }
+
+    res.json({
+      success: true,
+      complete
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Stats persistence using User model
+const updateSudokuStats = async (user: User, won: boolean) => {
+  const newGamesPlayed = (user.prefs?.sudokuGamesPlayed || 0) + 1;
+  const newWins = won ? (user.prefs?.sudokuWins || 0) + 1 : (user.prefs?.sudokuWins || 0);
+
+  let newCurrentStreak: number;
+  let newBestStreak: number;
+
+  if (won) {
+    newCurrentStreak = (user.prefs?.sudokuCurrentStreak || 0) + 1;
+    newBestStreak = Math.max(newCurrentStreak, user.prefs?.sudokuBestStreak || 0);
+  } else {
+    newCurrentStreak = 0;
+    newBestStreak = user.prefs?.sudokuBestStreak || 0;
+  }
+
+  await user.updatePrefs({
+    sudokuGamesPlayed: newGamesPlayed,
+    sudokuCurrentStreak: newCurrentStreak,
+    sudokuBestStreak: newBestStreak,
+    sudokuWins: newWins,
+  } as Partial<UpdateUserRequest>);
+
+  return { newGamesPlayed, newWins, newCurrentStreak, newBestStreak };
+};
+
+export const submitResult = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
+    }
+
+    const { won } = req.body;
+
+    if (typeof won !== 'boolean') {
+      throw AppError.badRequest('Won parameter must be a boolean');
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      throw AppError.notFound('User not found');
+    }
+
+    const { newGamesPlayed, newWins, newCurrentStreak, newBestStreak } = await updateSudokuStats(user, won);
+
+    res.json({
+      success: true,
       data: {
-        won,
-        time,
-        mistakes,
-        hintsUsed,
-        difficulty
+        gamesPlayed: newGamesPlayed,
+        currentStreak: newCurrentStreak,
+        bestStreak: newBestStreak,
+        wins: newWins,
+        winRate: newGamesPlayed > 0 ? Math.round((newWins / newGamesPlayed) * 100) : 0
       }
     });
   } catch (error) {
-    console.error('Error submitting Sudoku result:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error submitting result'
-    });
+    next(error);
   }
 };
 
-// Get user stats
-export const getStats = async (req: Request, res: Response): Promise<void> => {
+export const getStats = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const userId = (req as any).user?.id;
-    
-    if (!userId) {
-      res.status(401).json({
-        success: false,
-        message: 'User not authenticated'
-      });
-      return;
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
     }
-    
-    // Here you would fetch stats from the database
-    // For now, we'll return mock data
-    
-    const stats = {
-      gamesPlayed: 0,
-      currentStreak: 0,
-      bestTime: null,
-      averageTime: null,
-      winRate: 0
-    };
-    
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      throw AppError.notFound('User not found');
+    }
+
+    const gamesPlayed = user.prefs?.sudokuGamesPlayed || 0;
+    const wins = user.prefs?.sudokuWins || 0;
+
     res.json({
       success: true,
-      data: stats
+      data: {
+        gamesPlayed,
+        currentStreak: user.prefs?.sudokuCurrentStreak || 0,
+        bestStreak: user.prefs?.sudokuBestStreak || 0,
+        wins,
+        winRate: gamesPlayed > 0 ? Math.round((wins / gamesPlayed) * 100) : 0
+      }
     });
   } catch (error) {
-    console.error('Error fetching Sudoku stats:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error fetching stats'
-    });
+    next(error);
   }
 };

@@ -291,7 +291,12 @@ const MainPage = () => {
             </div>
           </div>
 
-          <h1 className="main-title">{settings?.siteName || 'STUDENT LENS'}</h1>
+          <div className="main-title-group">
+            <h1 className="main-title">{settings?.siteName || 'STUDENT LENS'}</h1>
+            {settings?.tagline && (
+              <p className="main-tagline">{settings.tagline}</p>
+            )}
+          </div>
 
           <div className="header-right">
             <div

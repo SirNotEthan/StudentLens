@@ -4,16 +4,18 @@ import { authenticate } from '../middleware/auth';
 
 const router = express.Router();
 
-// All routes require authentication
 router.use(authenticate);
 
-// Get new puzzle
 router.get('/new-puzzle', sudokuController.getNewPuzzle);
 
-// Submit result
+router.post('/check-cell', sudokuController.checkCell);
+
+router.post('/hint', sudokuController.getHintCell);
+
+router.post('/check-complete', sudokuController.checkComplete);
+
 router.post('/submit-result', sudokuController.submitResult);
 
-// Get stats
 router.get('/stats', sudokuController.getStats);
 
 export default router;

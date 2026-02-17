@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -9,17 +9,15 @@ const WordlePage = () => {
   const navigate = useNavigate();
   const [currentGuess, setCurrentGuess] = useState('');
   const [guesses, setGuesses] = useState([]);
-  const [gameStatus, setGameStatus] = useState('playing'); 
-  const [targetWord, setTargetWord] = useState('');
-  const [currentRow, setCurrentRow] = useState(0);
+  const [guessStatuses, setGuessStatuses] = useState([]);
+  const [gameStatus, setGameStatus] = useState('playing');
   const [shake, setShake] = useState(false);
   const [message, setMessage] = useState('');
   const [stats, setStats] = useState({ gamesPlayed: 0, currentStreak: 0, wins: 0, winRate: 0 });
   const [usedLetters, setUsedLetters] = useState({});
-  const [hardMode, setHardMode] = useState(false);
-  const [showStats, setShowStats] = useState(false);
   const [hintsRemaining, setHintsRemaining] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
+  const [answer, setAnswer] = useState('');
 
   const MAX_GUESSES = 6;
   const WORD_LENGTH = 5;
@@ -47,20 +45,19 @@ const WordlePage = () => {
   const startNewGame = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('/wordle/new-word');
+      const response = await axios.get('/wordle/start');
       if (response.data.success) {
-        setTargetWord(response.data.word.toUpperCase());
         setGuesses([]);
+        setGuessStatuses([]);
         setCurrentGuess('');
-        setCurrentRow(0);
         setGameStatus('playing');
         setMessage('');
         setUsedLetters({});
         setHintsRemaining(3);
+        setAnswer('');
       }
     } catch (error) {
-      console.error('Error fetching new word:', error);
-
+      console.error('Error starting game:', error);
       if (error.response?.status === 400 && error.response?.data?.message?.includes('already played')) {
         setGameStatus('already-played');
         setMessage(error.response.data.message || 'You have already played today. Come back tomorrow!');
@@ -72,19 +69,7 @@ const WordlePage = () => {
     }
   };
 
-  const handleKeyPress = (key) => {
-    if (gameStatus !== 'playing') return;
-
-    if (key === 'ENTER') {
-      handleSubmitGuess();
-    } else if (key === 'BACKSPACE') {
-      setCurrentGuess(prev => prev.slice(0, -1));
-    } else if (currentGuess.length < WORD_LENGTH && /^[A-Z]$/.test(key)) {
-      setCurrentGuess(prev => prev + key);
-    }
-  };
-
-  const handleSubmitGuess = async () => {
+  const handleSubmitGuess = useCallback(async () => {
     if (currentGuess.length !== WORD_LENGTH) {
       showMessage('Not enough letters');
       triggerShake();
@@ -92,98 +77,59 @@ const WordlePage = () => {
     }
 
     try {
-      const response = await axios.post('/wordle/validate-word', {
-        word: currentGuess.toLowerCase()
+      const response = await axios.post('/wordle/guess', {
+        word: currentGuess,
+        guessNumber: guesses.length
       });
 
-      if (!response.data.isValid) {
-        showMessage('Not in word list');
+      if (!response.data.valid) {
+        showMessage(response.data.reason || 'Not in word list');
         triggerShake();
         return;
       }
 
+      const statuses = response.data.statuses;
       const newGuesses = [...guesses, currentGuess];
+      const newStatuses = [...guessStatuses, statuses];
+
       setGuesses(newGuesses);
-      updateUsedLetters(currentGuess);
-
-      if (currentGuess === targetWord) {
-        setGameStatus('won');
-        showMessage('Awesome! You won!');
-        await submitGameResult(true);
-      } else if (newGuesses.length >= MAX_GUESSES) {
-        setGameStatus('lost');
-        showMessage(`The word was ${targetWord}`);
-        await submitGameResult(false);
-      } else {
-        setCurrentRow(prev => prev + 1);
-      }
-
+      setGuessStatuses(newStatuses);
+      updateUsedLetters(currentGuess, statuses);
       setCurrentGuess('');
+
+      if (response.data.gameOver) {
+        if (response.data.won) {
+          setGameStatus('won');
+          showMessage('Awesome! You won!');
+        } else {
+          setGameStatus('lost');
+          setAnswer(response.data.answer || '');
+          showMessage(`The word was ${response.data.answer}`);
+        }
+        if (response.data.stats) {
+          setStats(response.data.stats);
+        }
+      }
     } catch (error) {
-      console.error('Error validating word:', error);
-      showMessage('Error validating word');
+      console.error('Error submitting guess:', error);
+      showMessage('Error submitting guess');
       triggerShake();
     }
-  };
+  }, [currentGuess, guesses, guessStatuses, usedLetters]);
 
-  const updateUsedLetters = (guess) => {
-    const newUsedLetters = { ...usedLetters };
-
-    for (let i = 0; i < guess.length; i++) {
-      const letter = guess[i];
-      const status = getLetterStatus(guess, i);
-
-      if (!newUsedLetters[letter] || status === 'correct' ||
-          (status === 'present' && newUsedLetters[letter] !== 'correct')) {
-        newUsedLetters[letter] = status;
+  const updateUsedLetters = (guess, statuses) => {
+    setUsedLetters(prev => {
+      const newUsedLetters = { ...prev };
+      for (let i = 0; i < guess.length; i++) {
+        const letter = guess[i];
+        const status = statuses[i];
+        if (!newUsedLetters[letter] || status === 'correct' ||
+            (status === 'present' && newUsedLetters[letter] !== 'correct')) {
+          newUsedLetters[letter] = status;
+        }
       }
-    }
-
-    setUsedLetters(newUsedLetters);
-  };
-
-  const submitGameResult = async (won) => {
-    try {
-      await axios.post('/wordle/submit-result', { won });
-      await fetchStats();
-    } catch (error) {
-      console.error('Error submitting game result:', error);
-    }
-  };
-
-  const getLetterStatus = (guess, index) => {
-    const letter = guess[index];
-
-    if (letter === targetWord[index]) {
-      return 'correct';
-    }
-
-    // Count how many times this letter appears in the target word
-    let targetCount = 0;
-    for (let i = 0; i < targetWord.length; i++) {
-      if (targetWord[i] === letter) targetCount++;
-    }
-
-    if (targetCount === 0) return 'absent';
-
-    // Count how many times this letter is already matched as correct (green)
-    let correctCount = 0;
-    for (let i = 0; i < guess.length; i++) {
-      if (guess[i] === letter && guess[i] === targetWord[i]) correctCount++;
-    }
-
-    // Count how many times this letter appears as present (yellow) before this index
-    let presentBefore = 0;
-    for (let i = 0; i < index; i++) {
-      if (guess[i] === letter && guess[i] !== targetWord[i]) presentBefore++;
-    }
-
-    // Only mark as present if there are remaining unmatched occurrences
-    if (correctCount + presentBefore < targetCount) {
-      return 'present';
-    }
-
-    return 'absent';
+      return newUsedLetters;
+    });
   };
 
   const showMessage = (msg) => {
@@ -196,51 +142,62 @@ const WordlePage = () => {
     setTimeout(() => setShake(false), 500);
   };
 
-  const useHint = () => {
+  const useHint = async () => {
     if (hintsRemaining <= 0 || gameStatus !== 'playing') return;
-    
-    // Find first letter not yet guessed correctly
-    const guessedCorrect = new Set();
-    guesses.forEach(guess => {
-      guess.split('').forEach((letter, idx) => {
-        if (letter === targetWord[idx]) {
-          guessedCorrect.add(idx);
+
+    const knownPositions = Array(WORD_LENGTH).fill(null);
+    guesses.forEach((guess, gIdx) => {
+      for (let i = 0; i < WORD_LENGTH; i++) {
+        if (guessStatuses[gIdx]?.[i] === 'correct') {
+          knownPositions[i] = guess[i];
         }
-      });
-    });
-    
-    for (let i = 0; i < targetWord.length; i++) {
-      if (!guessedCorrect.has(i)) {
-        showMessage(`Hint: Letter ${i + 1} is '${targetWord[i]}'`);
-        setHintsRemaining(prev => prev - 1);
-        break;
       }
+    });
+
+    try {
+      const response = await axios.post('/wordle/hint', { knownPositions });
+      if (response.data.success && response.data.position >= 0) {
+        showMessage(`Hint: Letter ${response.data.position + 1} is '${response.data.letter}'`);
+        setHintsRemaining(prev => prev - 1);
+      }
+    } catch (error) {
+      console.error('Error getting hint:', error);
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyPress = useCallback((key) => {
+    if (gameStatus !== 'playing') return;
+
+    if (key === 'ENTER') {
+      handleSubmitGuess();
+    } else if (key === 'BACKSPACE') {
+      setCurrentGuess(prev => prev.slice(0, -1));
+    } else if (/^[A-Z]$/.test(key)) {
+      setCurrentGuess(prev => prev.length < WORD_LENGTH ? prev + key : prev);
+    }
+  }, [gameStatus, handleSubmitGuess]);
+
+  const handleKeyDown = useCallback((e) => {
     const key = e.key.toUpperCase();
     if (key === 'ENTER' || key === 'BACKSPACE' || /^[A-Z]$/.test(key)) {
       e.preventDefault();
       handleKeyPress(key);
     }
-  };
+  }, [handleKeyPress]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentGuess, gameStatus, targetWord]);
+  }, [handleKeyDown]);
 
   const renderTile = (rowIndex, colIndex) => {
     let letter = '';
     let status = '';
 
-    // If this row has a submitted guess, show it with its status
     if (guesses[rowIndex]) {
       letter = guesses[rowIndex][colIndex];
-      status = getLetterStatus(guesses[rowIndex], colIndex);
+      status = guessStatuses[rowIndex]?.[colIndex] || '';
     } else if (rowIndex === guesses.length && gameStatus === 'playing' && currentGuess[colIndex]) {
-      // Current row being typed (only while playing)
       letter = currentGuess[colIndex];
       status = 'tbd';
     }
@@ -294,68 +251,67 @@ const WordlePage = () => {
           </div>
         ) : (
           <>
-
-        <div className="wordle-board">
-          {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => (
-            <div
-              key={rowIndex}
-              className={`wordle-row ${shake && rowIndex === guesses.length ? 'shake' : ''}`}
-            >
-              {Array.from({ length: WORD_LENGTH }).map((_, colIndex) =>
-                renderTile(rowIndex, colIndex)
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="wordle-keyboard">
-          {KEYBOARD_ROWS.map((row, rowIndex) => (
-            <div key={rowIndex} className="keyboard-row">
-              {row.map((key) => (
-                <button
-                  key={key}
-                  className={`key ${key.length > 1 ? 'key-large' : ''} ${usedLetters[key] || ''}`}
-                  onClick={() => handleKeyPress(key)}
-                  disabled={gameStatus !== 'playing'}
+            <div className="wordle-board">
+              {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => (
+                <div
+                  key={rowIndex}
+                  className={`wordle-row ${shake && rowIndex === guesses.length ? 'shake' : ''}`}
                 >
-                  {key === 'BACKSPACE' ? '⌫' : key}
-                </button>
+                  {Array.from({ length: WORD_LENGTH }).map((_, colIndex) =>
+                    renderTile(rowIndex, colIndex)
+                  )}
+                </div>
               ))}
             </div>
-          ))}
-        </div>
 
-        {gameStatus !== 'playing' && gameStatus !== 'already-played' && (
-          <div className="game-over">
-            <h2>{gameStatus === 'won' ? '🎉 You Won!' : '😔 Better Luck Next Time'}</h2>
-            {gameStatus === 'lost' && <p>The word was: <strong>{targetWord}</strong></p>}
-            <button className="play-again-button" onClick={startNewGame}>
-              Play Again
-            </button>
-          </div>
-        )}
+            <div className="wordle-keyboard">
+              {KEYBOARD_ROWS.map((row, rowIndex) => (
+                <div key={rowIndex} className="keyboard-row">
+                  {row.map((key) => (
+                    <button
+                      key={key}
+                      className={`key ${key.length > 1 ? 'key-large' : ''} ${usedLetters[key] || ''}`}
+                      onClick={() => handleKeyPress(key)}
+                      disabled={gameStatus !== 'playing'}
+                    >
+                      {key === 'BACKSPACE' ? '⌫' : key}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
 
-        {gameStatus === 'already-played' && (
-          <div className="game-over">
-            <h2>✅ Already Played Today</h2>
-            <p>You've already completed today's puzzle. Come back tomorrow for a new word!</p>
-            <p className="stats-preview">
-              Your streak: <strong>{stats.currentStreak}</strong> | Games played: <strong>{stats.gamesPlayed}</strong>
-            </p>
-          </div>
-        )}
+            {gameStatus !== 'playing' && gameStatus !== 'already-played' && (
+              <div className="game-over">
+                <h2>{gameStatus === 'won' ? '🎉 You Won!' : '😔 Better Luck Next Time'}</h2>
+                {gameStatus === 'lost' && answer && <p>The word was: <strong>{answer}</strong></p>}
+                <button className="play-again-button" onClick={startNewGame}>
+                  Play Again
+                </button>
+              </div>
+            )}
 
-        {gameStatus === 'playing' && (
-          <div className="game-controls">
-            <button 
-              className="hint-button" 
-              onClick={useHint}
-              disabled={hintsRemaining <= 0}
-            >
-              💡 Hint ({hintsRemaining})
-            </button>
-          </div>
-        )}
+            {gameStatus === 'already-played' && (
+              <div className="game-over">
+                <h2>✅ Already Played Today</h2>
+                <p>You've already completed today's puzzle. Come back tomorrow for a new word!</p>
+                <p className="stats-preview">
+                  Your streak: <strong>{stats.currentStreak}</strong> | Games played: <strong>{stats.gamesPlayed}</strong>
+                </p>
+              </div>
+            )}
+
+            {gameStatus === 'playing' && (
+              <div className="game-controls">
+                <button
+                  className="hint-button"
+                  onClick={useHint}
+                  disabled={hintsRemaining <= 0}
+                >
+                  💡 Hint ({hintsRemaining})
+                </button>
+              </div>
+            )}
           </>
         )}
       </main>

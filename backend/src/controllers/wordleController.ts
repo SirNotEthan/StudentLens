@@ -4,7 +4,43 @@ import { AppError } from '@/utils/AppError';
 import { getDailyWord, getTodayDateString, validateWordSubmission } from '@/data/wordleWords';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 
-export const getNewWord = async (
+const MAX_GUESSES = 6;
+const WORD_LENGTH = 5;
+
+// Compute letter statuses server-side (green/yellow/grey logic)
+function computeStatuses(guess: string, target: string): string[] {
+  const statuses: string[] = Array(WORD_LENGTH).fill('absent');
+  const guessArr = guess.toUpperCase().split('');
+  const targetArr = target.toUpperCase().split('');
+  const targetCounts: Record<string, number> = {};
+
+  // Count target letter occurrences
+  for (const letter of targetArr) {
+    targetCounts[letter] = (targetCounts[letter] || 0) + 1;
+  }
+
+  // First pass: mark correct (green)
+  for (let i = 0; i < WORD_LENGTH; i++) {
+    if (guessArr[i] === targetArr[i]) {
+      statuses[i] = 'correct';
+      targetCounts[guessArr[i]]--;
+    }
+  }
+
+  // Second pass: mark present (yellow)
+  for (let i = 0; i < WORD_LENGTH; i++) {
+    if (statuses[i] === 'correct') continue;
+    if (targetCounts[guessArr[i]] > 0) {
+      statuses[i] = 'present';
+      targetCounts[guessArr[i]]--;
+    }
+  }
+
+  return statuses;
+}
+
+// Start a new game - does NOT send the word
+export const startGame = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -25,18 +61,18 @@ export const getNewWord = async (
       throw AppError.badRequest('You have already played today. Come back tomorrow for a new word!');
     }
 
-    const word = getDailyWord();
-
     res.json({
       success: true,
-      word: word
+      maxGuesses: MAX_GUESSES,
+      wordLength: WORD_LENGTH
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const validateWord = async (
+// Submit a guess - validates word and returns letter statuses
+export const submitGuess = async (
   req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
@@ -46,18 +82,116 @@ export const validateWord = async (
       throw AppError.unauthorized('User not authenticated');
     }
 
-    const { word } = req.body;
+    const { word, guessNumber } = req.body;
 
     if (!word || typeof word !== 'string') {
       throw AppError.badRequest('Word is required');
     }
 
-    const validationResult = await validateWordSubmission(word);
+    if (typeof guessNumber !== 'number' || guessNumber < 0 || guessNumber >= MAX_GUESSES) {
+      throw AppError.badRequest('Invalid guess number');
+    }
 
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      throw AppError.notFound('User not found');
+    }
+
+    const today = getTodayDateString();
+    if (user.wordleLastPlayedDate === today) {
+      throw AppError.badRequest('You have already completed today\'s game');
+    }
+
+    // Validate the word is a real word
+    const validationResult = await validateWordSubmission(word.toLowerCase());
+    if (!validationResult.isValid) {
+      res.json({
+        success: true,
+        valid: false,
+        reason: validationResult.reason || 'Not in word list'
+      });
+      return;
+    }
+
+    const targetWord = getDailyWord().toUpperCase();
+    const guessWord = word.toUpperCase();
+    const statuses = computeStatuses(guessWord, targetWord);
+
+    const won = guessWord === targetWord;
+    const isLastGuess = guessNumber >= MAX_GUESSES - 1;
+    const gameOver = won || isLastGuess;
+
+    let stats = null;
+    if (gameOver) {
+      const result = await updateWordleStats(user, won);
+      stats = {
+        gamesPlayed: result.newGamesPlayed,
+        currentStreak: result.newCurrentStreak,
+        bestStreak: result.newBestStreak,
+        wins: result.newWins,
+        winRate: result.newGamesPlayed > 0 ? Math.round((result.newWins / result.newGamesPlayed) * 100) : 0
+      };
+    }
+
+    const response: Record<string, any> = {
+      success: true,
+      valid: true,
+      statuses,
+      gameOver,
+      won
+    };
+
+    if (gameOver && !won) {
+      response.answer = targetWord;
+    }
+
+    if (stats) {
+      response.stats = stats;
+    }
+
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get a hint - reveals one letter without exposing the full word
+export const getHint = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw AppError.unauthorized('User not authenticated');
+    }
+
+    const { knownPositions } = req.body;
+    // knownPositions: array of 5 elements, null for unknown, letter string for known
+
+    if (!Array.isArray(knownPositions) || knownPositions.length !== WORD_LENGTH) {
+      throw AppError.badRequest('Invalid knownPositions');
+    }
+
+    const targetWord = getDailyWord().toUpperCase();
+
+    // Find first position not yet known
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (knownPositions[i] === null || knownPositions[i] === undefined) {
+        res.json({
+          success: true,
+          position: i,
+          letter: targetWord[i]
+        });
+        return;
+      }
+    }
+
+    // All positions known
     res.json({
       success: true,
-      isValid: validationResult.isValid,
-      reason: validationResult.reason
+      position: -1,
+      letter: null
     });
   } catch (error) {
     next(error);
@@ -89,44 +223,6 @@ const updateWordleStats = async (user: User, won: boolean) => {
   } as Partial<UpdateUserRequest>);
 
   return { newGamesPlayed, newWins, newCurrentStreak, newBestStreak };
-};
-
-export const submitGameResult = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: NextFunction
-): Promise<void> => {
-  try {
-    if (!req.user) {
-      throw AppError.unauthorized('User not authenticated');
-    }
-
-    const { won } = req.body;
-
-    if (typeof won !== 'boolean') {
-      throw AppError.badRequest('Won parameter must be a boolean');
-    }
-
-    const user = await User.findById(req.user.userId);
-    if (!user) {
-      throw AppError.notFound('User not found');
-    }
-
-    const { newGamesPlayed, newWins, newCurrentStreak, newBestStreak } = await updateWordleStats(user, won);
-
-    res.json({
-      success: true,
-      data: {
-        gamesPlayed: newGamesPlayed,
-        currentStreak: newCurrentStreak,
-        bestStreak: newBestStreak,
-        wins: newWins,
-        winRate: newGamesPlayed > 0 ? Math.round((newWins / newGamesPlayed) * 100) : 0
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
 };
 
 export const getWordleStats = async (

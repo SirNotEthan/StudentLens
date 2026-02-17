@@ -112,7 +112,8 @@ const AboutUs = () => {
           <h2>Contact Information</h2>
           <p>
             <strong>Location:</strong> {settings?.contact?.roomFullName || 'DOC 21'}<br />
-            <strong>Email:</strong> {settings?.contact?.email || 'contact@studentlens.com'}
+            <strong>Email:</strong> {settings?.contact?.email || 'contact@studentlens.com'}<br />
+            <strong>Office Hours:</strong> {settings?.contact?.officeHours || 'Monday-Friday 9AM-5PM'}
           </p>
           <p>
             Have questions or feedback? We'd love to hear from you! Visit our{' '}

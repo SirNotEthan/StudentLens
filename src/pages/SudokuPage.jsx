@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -9,11 +9,12 @@ const SudokuPage = () => {
   const navigate = useNavigate();
   const [grid, setGrid] = useState(Array(9).fill().map(() => Array(9).fill(0)));
   const [initialGrid, setInitialGrid] = useState(Array(9).fill().map(() => Array(9).fill(0)));
-  const [solution, setSolution] = useState(Array(9).fill().map(() => Array(9).fill(0)));
+  const [solutionToken, setSolutionToken] = useState('');
   const [selectedCell, setSelectedCell] = useState(null);
   const [notes, setNotes] = useState({});
   const [notesMode, setNotesMode] = useState(false);
   const [mistakes, setMistakes] = useState(0);
+  const [incorrectCells, setIncorrectCells] = useState(new Set());
   const [hintsUsed, setHintsUsed] = useState(0);
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -26,39 +27,53 @@ const SudokuPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
 
+  // Use refs for values needed in keyboard handler to avoid stale closures
+  const gridRef = useRef(grid);
+  const notesRef = useRef(notes);
+  const notesModeRef = useRef(notesMode);
+  const historyRef = useRef(history);
+  const historyIndexRef = useRef(historyIndex);
+  const solutionTokenRef = useRef(solutionToken);
+  const initialGridRef = useRef(initialGrid);
+  const mistakesRef = useRef(mistakes);
+  const incorrectCellsRef = useRef(incorrectCells);
+
+  gridRef.current = grid;
+  notesRef.current = notes;
+  notesModeRef.current = notesMode;
+  historyRef.current = history;
+  historyIndexRef.current = historyIndex;
+  solutionTokenRef.current = solutionToken;
+  initialGridRef.current = initialGrid;
+  mistakesRef.current = mistakes;
+  incorrectCellsRef.current = incorrectCells;
+
   const MAX_MISTAKES = 3;
   const MAX_HINTS = 3;
   const STORAGE_KEY = 'sudoku_game_state';
 
-  // Calculate how many of each number are placed
-  const getNumberCounts = () => {
+  const numberCounts = useMemo(() => {
     const counts = {};
-    for (let num = 1; num <= 9; num++) {
-      counts[num] = 0;
-    }
+    for (let num = 1; num <= 9; num++) counts[num] = 0;
     for (let row = 0; row < 9; row++) {
       for (let col = 0; col < 9; col++) {
         const num = grid[row][col];
-        if (num !== 0) {
-          counts[num]++;
-        }
+        if (num !== 0) counts[num]++;
       }
     }
     return counts;
-  };
+  }, [grid]);
 
-  const numberCounts = getNumberCounts();
-
-  // Save game state to localStorage
   const saveGameState = (gameData) => {
     if (!user) return;
     try {
       const stateToSave = {
         grid: gameData.grid,
         initialGrid: gameData.initialGrid,
-        solution: gameData.solution,
+        solutionToken: gameData.solutionToken,
         notes: gameData.notes,
         mistakes: gameData.mistakes,
+        incorrectCells: Array.from(gameData.incorrectCells || []),
         hintsUsed: gameData.hintsUsed,
         timer: gameData.timer,
         difficulty: gameData.difficulty,
@@ -74,14 +89,12 @@ const SudokuPage = () => {
     }
   };
 
-  // Load game state from localStorage
   const loadGameState = () => {
     if (!user) return null;
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_${user.id}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Only load if it's from today and game is still in progress
         const today = new Date().toISOString().split('T')[0];
         if (parsed.puzzleDate === today && parsed.gameStatus === 'playing') {
           return parsed;
@@ -93,7 +106,6 @@ const SudokuPage = () => {
     return null;
   };
 
-  // Clear saved game state
   const clearGameState = () => {
     if (!user) return;
     try {
@@ -109,14 +121,14 @@ const SudokuPage = () => {
       return;
     }
 
-    // Try to load saved game first
     const savedState = loadGameState();
-    if (savedState) {
+    if (savedState && savedState.solutionToken) {
       setGrid(savedState.grid);
       setInitialGrid(savedState.initialGrid);
-      setSolution(savedState.solution);
+      setSolutionToken(savedState.solutionToken);
       setNotes(savedState.notes || {});
       setMistakes(savedState.mistakes || 0);
+      setIncorrectCells(new Set(savedState.incorrectCells || []));
       setHintsUsed(savedState.hintsUsed || 0);
       setTimer(savedState.timer || 0);
       setDifficulty(savedState.difficulty || 'medium');
@@ -141,21 +153,12 @@ const SudokuPage = () => {
     return () => clearInterval(interval);
   }, [isRunning, gameStatus]);
 
-  // Auto-save game state when it changes
   useEffect(() => {
     if (gameStatus === 'playing' && !isLoading && grid.some(row => row.some(cell => cell !== 0))) {
       saveGameState({
-        grid,
-        initialGrid,
-        solution,
-        notes,
-        mistakes,
-        hintsUsed,
-        timer,
-        difficulty,
-        gameStatus,
-        history,
-        historyIndex
+        grid, initialGrid, solutionToken, notes, mistakes,
+        incorrectCells, hintsUsed, timer, difficulty, gameStatus,
+        history, historyIndex
       });
     }
   }, [grid, notes, mistakes, hintsUsed, timer, gameStatus]);
@@ -174,18 +177,19 @@ const SudokuPage = () => {
   const startNewGame = async (newDifficulty = difficulty) => {
     try {
       setIsLoading(true);
-      clearGameState(); // Clear any saved state when starting new game
+      clearGameState();
       const response = await axios.get(`/sudoku/new-puzzle?difficulty=${newDifficulty}`);
       if (response.data.success) {
         const puzzle = response.data.puzzle;
         setGrid(puzzle.grid);
         setInitialGrid(puzzle.grid.map(row => [...row]));
-        setSolution(puzzle.solution);
+        setSolutionToken(puzzle.solutionToken);
         setDifficulty(newDifficulty);
         setSelectedCell(null);
         setNotes({});
         setNotesMode(false);
         setMistakes(0);
+        setIncorrectCells(new Set());
         setHintsUsed(0);
         setTimer(0);
         setIsRunning(true);
@@ -209,7 +213,7 @@ const SudokuPage = () => {
   };
 
   const saveToHistory = (newGrid, newNotes) => {
-    const newHistory = history.slice(0, historyIndex + 1);
+    const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1);
     newHistory.push({ grid: newGrid.map(row => [...row]), notes: { ...newNotes } });
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
@@ -217,102 +221,124 @@ const SudokuPage = () => {
 
   const handleCellClick = (row, col) => {
     if (gameStatus !== 'playing') return;
-    if (initialGrid[row][col] !== 0) return; // Can't select pre-filled cells
     setSelectedCell({ row, col });
   };
 
-  const handleNumberInput = (num) => {
+  const handleNumberInput = useCallback(async (num) => {
     if (!selectedCell || gameStatus !== 'playing') return;
     const { row, col } = selectedCell;
-    
-    if (initialGrid[row][col] !== 0) return;
 
-    if (notesMode) {
-      // Toggle note
+    if (initialGridRef.current[row][col] !== 0) return;
+
+    if (notesModeRef.current) {
       const key = `${row}-${col}`;
-      const cellNotes = notes[key] || [];
-      const newNotes = { ...notes };
-      
+      const cellNotes = notesRef.current[key] || [];
+      const newNotes = { ...notesRef.current };
+
       if (cellNotes.includes(num)) {
         newNotes[key] = cellNotes.filter(n => n !== num);
         if (newNotes[key].length === 0) delete newNotes[key];
       } else {
         newNotes[key] = [...cellNotes, num].sort();
       }
-      
+
       setNotes(newNotes);
-      saveToHistory(grid, newNotes);
+      saveToHistory(gridRef.current, newNotes);
     } else {
-      // Place number
-      const newGrid = grid.map(r => [...r]);
+      const newGrid = gridRef.current.map(r => [...r]);
       newGrid[row][col] = num;
-      
-      // Clear notes for this cell
+
       const key = `${row}-${col}`;
-      const newNotes = { ...notes };
+      const newNotes = { ...notesRef.current };
       delete newNotes[key];
-      
+
       setGrid(newGrid);
       setNotes(newNotes);
       saveToHistory(newGrid, newNotes);
 
-      // Check if correct
-      if (solution[row][col] !== num) {
-        setMistakes(prev => {
-          const newMistakes = prev + 1;
-          if (newMistakes >= MAX_MISTAKES) {
-            handleGameOver(false);
-          } else {
-            showMessage(`Mistake ${newMistakes}/${MAX_MISTAKES}`);
-          }
-          return newMistakes;
+      // Validate with server
+      try {
+        const response = await axios.post('/sudoku/check-cell', {
+          solutionToken: solutionTokenRef.current,
+          row, col, value: num
         });
-      } else {
-        // Check if puzzle is complete
-        if (isPuzzleComplete(newGrid)) {
-          handleGameOver(true);
+
+        if (!response.data.correct) {
+          const newIncorrect = new Set(incorrectCellsRef.current);
+          newIncorrect.add(key);
+          setIncorrectCells(newIncorrect);
+
+          setMistakes(prev => {
+            const newMistakes = prev + 1;
+            if (newMistakes >= MAX_MISTAKES) {
+              handleGameOver(false);
+            } else {
+              showMessage(`Mistake ${newMistakes}/${MAX_MISTAKES}`);
+            }
+            return newMistakes;
+          });
+        } else {
+          // Remove from incorrect set if previously wrong
+          const newIncorrect = new Set(incorrectCellsRef.current);
+          newIncorrect.delete(key);
+          setIncorrectCells(newIncorrect);
+
+          // Check completion with server
+          const completeRes = await axios.post('/sudoku/check-complete', {
+            solutionToken: solutionTokenRef.current,
+            grid: newGrid
+          });
+          if (completeRes.data.complete) {
+            handleGameOver(true);
+          }
         }
+      } catch (error) {
+        console.error('Error checking cell:', error);
       }
     }
-  };
+  }, [selectedCell, gameStatus]);
 
-  const handleErase = () => {
+  const handleErase = useCallback(() => {
     if (!selectedCell || gameStatus !== 'playing') return;
     const { row, col } = selectedCell;
-    
-    if (initialGrid[row][col] !== 0) return;
 
-    const newGrid = grid.map(r => [...r]);
+    if (initialGridRef.current[row][col] !== 0) return;
+
+    const newGrid = gridRef.current.map(r => [...r]);
     newGrid[row][col] = 0;
-    
+
     const key = `${row}-${col}`;
-    const newNotes = { ...notes };
+    const newNotes = { ...notesRef.current };
     delete newNotes[key];
-    
+
+    const newIncorrect = new Set(incorrectCellsRef.current);
+    newIncorrect.delete(key);
+    setIncorrectCells(newIncorrect);
+
     setGrid(newGrid);
     setNotes(newNotes);
     saveToHistory(newGrid, newNotes);
-  };
+  }, [selectedCell, gameStatus]);
 
-  const handleUndo = () => {
-    if (historyIndex > 0) {
-      const prevState = history[historyIndex - 1];
+  const handleUndo = useCallback(() => {
+    if (historyIndexRef.current > 0) {
+      const prevState = historyRef.current[historyIndexRef.current - 1];
       setGrid(prevState.grid.map(row => [...row]));
       setNotes({ ...prevState.notes });
-      setHistoryIndex(historyIndex - 1);
+      setHistoryIndex(historyIndexRef.current - 1);
     }
-  };
+  }, []);
 
-  const handleRedo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1];
+  const handleRedo = useCallback(() => {
+    if (historyIndexRef.current < historyRef.current.length - 1) {
+      const nextState = historyRef.current[historyIndexRef.current + 1];
       setGrid(nextState.grid.map(row => [...row]));
       setNotes({ ...nextState.notes });
-      setHistoryIndex(historyIndex + 1);
+      setHistoryIndex(historyIndexRef.current + 1);
     }
-  };
+  }, []);
 
-  const useHint = () => {
+  const useHint = async () => {
     if (hintsUsed >= MAX_HINTS || gameStatus !== 'playing') return;
     if (!selectedCell) {
       showMessage('Select a cell first');
@@ -325,44 +351,47 @@ const SudokuPage = () => {
       return;
     }
 
-    if (grid[row][col] === solution[row][col]) {
-      showMessage('This cell is already correct');
-      return;
-    }
+    try {
+      const response = await axios.post('/sudoku/hint', {
+        solutionToken, row, col
+      });
 
-    const newGrid = grid.map(r => [...r]);
-    newGrid[row][col] = solution[row][col];
-    
-    const key = `${row}-${col}`;
-    const newNotes = { ...notes };
-    delete newNotes[key];
-    
-    setGrid(newGrid);
-    setNotes(newNotes);
-    setHintsUsed(prev => prev + 1);
-    saveToHistory(newGrid, newNotes);
-    showMessage('Hint used!');
+      if (response.data.success) {
+        const correctValue = response.data.value;
+        const newGrid = grid.map(r => [...r]);
+        newGrid[row][col] = correctValue;
 
-    if (isPuzzleComplete(newGrid)) {
-      handleGameOver(true);
-    }
-  };
+        const key = `${row}-${col}`;
+        const newNotes = { ...notes };
+        delete newNotes[key];
 
-  const isPuzzleComplete = (currentGrid) => {
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        if (currentGrid[row][col] !== solution[row][col]) {
-          return false;
+        const newIncorrect = new Set(incorrectCells);
+        newIncorrect.delete(key);
+        setIncorrectCells(newIncorrect);
+
+        setGrid(newGrid);
+        setNotes(newNotes);
+        setHintsUsed(prev => prev + 1);
+        saveToHistory(newGrid, newNotes);
+        showMessage('Hint used!');
+
+        // Check completion
+        const completeRes = await axios.post('/sudoku/check-complete', {
+          solutionToken, grid: newGrid
+        });
+        if (completeRes.data.complete) {
+          handleGameOver(true);
         }
       }
+    } catch (error) {
+      console.error('Error getting hint:', error);
     }
-    return true;
   };
 
   const handleGameOver = async (won) => {
     setIsRunning(false);
     setGameStatus(won ? 'won' : 'lost');
-    clearGameState(); // Clear saved state when game ends
+    clearGameState();
 
     if (won) {
       setShowCelebration(true);
@@ -373,13 +402,7 @@ const SudokuPage = () => {
     }
 
     try {
-      await axios.post('/sudoku/submit-result', {
-        won,
-        time: timer,
-        mistakes,
-        hintsUsed,
-        difficulty
-      });
+      await axios.post('/sudoku/submit-result', { won });
       await fetchStats();
     } catch (error) {
       console.error('Error submitting game result:', error);
@@ -419,8 +442,14 @@ const SudokuPage = () => {
       if (e.key === 'ArrowRight') newCol = Math.min(8, col + 1);
 
       setSelectedCell({ row: newRow, col: newCol });
+    } else if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleUndo();
+    } else if (e.key === 'y' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      handleRedo();
     }
-  }, [selectedCell, gameStatus, notesMode]);
+  }, [selectedCell, gameStatus, handleNumberInput, handleErase, handleUndo, handleRedo]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -429,43 +458,41 @@ const SudokuPage = () => {
 
   const getCellClassName = (row, col) => {
     const classes = ['sudoku-cell'];
-    
+    const key = `${row}-${col}`;
+
     if (initialGrid[row][col] !== 0) {
       classes.push('given');
     } else if (grid[row][col] !== 0) {
-      if (grid[row][col] === solution[row][col]) {
-        classes.push('user-correct');
-      } else {
+      if (incorrectCells.has(key)) {
         classes.push('user-incorrect');
+      } else {
+        classes.push('user-correct');
       }
     }
-    
+
     if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
       classes.push('selected');
     }
-    
-    // Highlight same numbers
+
     if (selectedCell && grid[row][col] !== 0 && grid[row][col] === grid[selectedCell.row][selectedCell.col]) {
       classes.push('highlighted');
     }
-    
-    // Highlight row and column
+
     if (selectedCell && (selectedCell.row === row || selectedCell.col === col)) {
       classes.push('highlighted-line');
     }
-    
-    // Highlight 3x3 box
+
     if (selectedCell) {
       const selectedBoxRow = Math.floor(selectedCell.row / 3);
       const selectedBoxCol = Math.floor(selectedCell.col / 3);
       const cellBoxRow = Math.floor(row / 3);
       const cellBoxCol = Math.floor(col / 3);
-      
+
       if (selectedBoxRow === cellBoxRow && selectedBoxCol === cellBoxCol) {
         classes.push('highlighted-box');
       }
     }
-    
+
     return classes.join(' ');
   };
 
@@ -521,7 +548,7 @@ const SudokuPage = () => {
                     {row.map((cell, colIndex) => {
                       const key = `${rowIndex}-${colIndex}`;
                       const cellNotes = notes[key] || [];
-                      
+
                       return (
                         <div
                           key={key}
@@ -565,35 +592,35 @@ const SudokuPage = () => {
               </div>
 
               <div className="action-buttons">
-                <button 
+                <button
                   className={`action-btn ${notesMode ? 'active' : ''}`}
                   onClick={() => setNotesMode(!notesMode)}
                   disabled={gameStatus !== 'playing'}
                 >
                   ✏️ Notes
                 </button>
-                <button 
+                <button
                   className="action-btn"
                   onClick={handleErase}
                   disabled={gameStatus !== 'playing'}
                 >
                   Erase
                 </button>
-                <button 
+                <button
                   className="action-btn"
                   onClick={handleUndo}
                   disabled={gameStatus !== 'playing' || historyIndex <= 0}
                 >
                   ↶ Undo
                 </button>
-                <button 
+                <button
                   className="action-btn"
                   onClick={handleRedo}
                   disabled={gameStatus !== 'playing' || historyIndex >= history.length - 1}
                 >
                   ↷ Redo
                 </button>
-                <button 
+                <button
                   className="action-btn hint-btn"
                   onClick={useHint}
                   disabled={gameStatus !== 'playing' || hintsUsed >= MAX_HINTS}

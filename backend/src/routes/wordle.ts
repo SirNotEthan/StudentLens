@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { authenticate } from '@/middleware/auth';
 import {
-  getNewWord,
-  validateWord,
-  submitGameResult,
+  startGame,
+  submitGuess,
+  getHint,
   getWordleStats
 } from '@/controllers/wordleController';
 
@@ -11,11 +11,11 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get('/new-word', getNewWord);
+router.get('/start', startGame);
 
-router.post('/validate-word', validateWord);
+router.post('/guess', submitGuess);
 
-router.post('/submit-result', submitGameResult);
+router.post('/hint', getHint);
 
 router.get('/stats', getWordleStats);
 
