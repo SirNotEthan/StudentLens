@@ -4,6 +4,9 @@ import { AppError } from '@/utils/AppError';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 import crypto from 'crypto';
 
+if (!process.env.PUZZLE_SECRET) {
+  console.warn('WARNING: PUZZLE_SECRET env var not set. Sudoku tokens will be invalidated on every server restart. Set PUZZLE_SECRET in your environment variables.');
+}
 const PUZZLE_SECRET = process.env.PUZZLE_SECRET || crypto.randomBytes(32).toString('hex');
 
 interface SudokuPuzzle {

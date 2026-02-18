@@ -293,7 +293,13 @@ const SudokuPage = () => {
           }
         }
       } catch (error) {
-        console.error('Error checking cell:', error);
+        if (error.response?.status === 400) {
+          clearGameState();
+          showMessage('Session expired — loading new puzzle...');
+          setTimeout(() => startNewGame(), 1500);
+        } else {
+          console.error('Error checking cell:', error);
+        }
       }
     }
   }, [selectedCell, gameStatus]);
@@ -384,7 +390,13 @@ const SudokuPage = () => {
         }
       }
     } catch (error) {
-      console.error('Error getting hint:', error);
+      if (error.response?.status === 400) {
+        clearGameState();
+        showMessage('Session expired — loading new puzzle...');
+        setTimeout(() => startNewGame(), 1500);
+      } else {
+        console.error('Error getting hint:', error);
+      }
     }
   };
 
