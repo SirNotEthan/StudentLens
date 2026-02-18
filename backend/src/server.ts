@@ -194,7 +194,6 @@ const startServer = async (): Promise<void> => {
       environment: process.env.NODE_ENV
     });
 
-    // Initialize shared Redis client (used by sessions, token revocation, and security)
     const redisClient = await initRedis();
     const redisConnected = isRedisConnected();
 
@@ -231,8 +230,6 @@ const startServer = async (): Promise<void> => {
       appLogger.warn('Using in-memory session store — sessions will not persist across restarts');
     }
 
-    // Sessions are only needed for the OAuth flow (storing oauthIntent).
-    // JWT Bearer tokens are the primary auth mechanism for all API routes.
     app.use(session(sessionConfig));
     app.use(passport.initialize());
     app.use(passport.session());

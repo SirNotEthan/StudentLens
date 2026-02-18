@@ -14,7 +14,7 @@ const WriteArticle = () => {
     title: '',
     content: '',
     excerpt: '',
-    category: 'ACADEMIC',
+    category: 'ICS',
     tags: '',
     featuredImage: '',
     status: 'draft'
@@ -26,16 +26,12 @@ const WriteArticle = () => {
   const [showPreview, setShowPreview] = useState(true);
 
   const categories = [
+    'ICS',
+    'WORLD',
     'ACADEMIC',
-    'SPORTS',
-    'EVENTS',
-    'CLUBS',
-    'ANNOUNCEMENTS',
-    'NEWS',
+    'SCIENCE_TECH',
     'STUDENT_LIFE',
-    'TECHNOLOGY',
-    'ARTS',
-    'SCIENCE'
+    'CULTURE'
   ];
 
   useEffect(() => {
@@ -75,7 +71,7 @@ const WriteArticle = () => {
           title: post.title || '',
           content: post.content || '',
           excerpt: post.excerpt || '',
-          category: post.category || 'ACADEMIC',
+          category: post.category || 'ICS',
           tags: post.tags ? (Array.isArray(post.tags) ? post.tags.join(', ') : post.tags) : '',
           featuredImage: post.featuredImage || '',
           status: post.status || 'draft'
@@ -213,16 +209,12 @@ const WriteArticle = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
+      ICS: '#6f42c1',
+      WORLD: '#17a2b8',
       ACADEMIC: '#4a90e2',
-      SPORTS: '#28a745',
-      EVENTS: '#fd7e14',
-      CLUBS: '#6f42c1',
-      ANNOUNCEMENTS: '#dc3545',
-      NEWS: '#6c757d',
+      SCIENCE_TECH: '#20c997',
       STUDENT_LIFE: '#e83e8c',
-      TECHNOLOGY: '#17a2b8',
-      ARTS: '#563d7c',
-      SCIENCE: '#20c997'
+      CULTURE: '#563d7c'
     };
     return colors[category] || '#6c757d';
   };
@@ -291,6 +283,86 @@ const WriteArticle = () => {
     }
 
     return parts.length > 0 ? parts : text;
+  };
+
+  const renderPreviewContent = (content) => {
+    const elements = [];
+    const lines = content.split('\n');
+    let i = 0;
+    let key = 0;
+
+    while (i < lines.length) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // Empty line → line break
+      if (!trimmed) {
+        elements.push(<br key={key++} />);
+        i++;
+        continue;
+      }
+
+      // Centered text: lines starting with >>
+      if (trimmed.startsWith('>> ')) {
+        const centeredLines = [];
+        while (i < lines.length && (lines[i].trim().startsWith('>> ') || lines[i].trim() === '')) {
+          if (lines[i].trim()) {
+            centeredLines.push(lines[i].trim().replace(/^>>\s?/, ''));
+          }
+          i++;
+        }
+        elements.push(
+          <div key={key++} className="preview-centered">
+            {centeredLines.map((cl, ci) => (
+              <p key={ci}>{formatTextWithMarkup(cl)}</p>
+            ))}
+          </div>
+        );
+        continue;
+      }
+
+      // Bullet points: lines starting with - or *
+      if (/^\s*[-*+]\s/.test(line)) {
+        const listItems = [];
+        while (i < lines.length && /^\s*[-*+]\s/.test(lines[i])) {
+          listItems.push(lines[i].replace(/^\s*[-*+]\s/, ''));
+          i++;
+        }
+        elements.push(
+          <ul key={key++} className="preview-list">
+            {listItems.map((item, li) => (
+              <li key={li}>{formatTextWithMarkup(item)}</li>
+            ))}
+          </ul>
+        );
+        continue;
+      }
+
+      // Numbered list: lines starting with 1. 2. etc.
+      if (/^\s*\d+\.\s/.test(line)) {
+        const listItems = [];
+        while (i < lines.length && /^\s*\d+\.\s/.test(lines[i])) {
+          listItems.push(lines[i].replace(/^\s*\d+\.\s/, ''));
+          i++;
+        }
+        elements.push(
+          <ol key={key++} className="preview-list">
+            {listItems.map((item, li) => (
+              <li key={li}>{formatTextWithMarkup(item)}</li>
+            ))}
+          </ol>
+        );
+        continue;
+      }
+
+      // Regular paragraph
+      elements.push(
+        <p key={key++} className="preview-paragraph">{formatTextWithMarkup(trimmed)}</p>
+      );
+      i++;
+    }
+
+    return elements;
   };
 
   if (loading && isEditing) {
@@ -375,7 +447,7 @@ const WriteArticle = () => {
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>
-                      {cat.replace(/_/g, ' ')}
+                      {cat === 'SCIENCE_TECH' ? 'Science/Tech' : cat.replace(/_/g, ' ')}
                     </option>
                   ))}
                 </select>
@@ -383,7 +455,7 @@ const WriteArticle = () => {
                   className="category-preview"
                   style={{ backgroundColor: getCategoryColor(article.category) }}
                 >
-                  {article.category.replace(/_/g, ' ')}
+                  {article.category === 'SCIENCE_TECH' ? 'Science/Tech' : article.category.replace(/_/g, ' ')}
                 </span>
               </div>
 
@@ -518,13 +590,7 @@ const WriteArticle = () => {
 
               <div className="preview-body">
                 {article.content ? (
-                  article.content.split('\n').map((paragraph, index) => (
-                    paragraph.trim() ? (
-                      <p key={index} className="preview-paragraph">{formatTextWithMarkup(paragraph)}</p>
-                    ) : (
-                      <br key={index} />
-                    )
-                  ))
+                  renderPreviewContent(article.content)
                 ) : (
                   <p className="preview-placeholder">Your article content will appear here...</p>
                 )}
@@ -575,6 +641,18 @@ const WriteArticle = () => {
                 <div className="format-item">
                   <code>~~strike~~</code>
                   <span>Strike</span>
+                </div>
+                <div className="format-item">
+                  <code>- item</code>
+                  <span>Bullet</span>
+                </div>
+                <div className="format-item">
+                  <code>1. item</code>
+                  <span>Numbered</span>
+                </div>
+                <div className="format-item">
+                  <code>{'>> text'}</code>
+                  <span>Center</span>
                 </div>
               </div>
             </div>

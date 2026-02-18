@@ -249,8 +249,8 @@ const SpellingBeePage = () => {
         {message && <div className="spelling-bee-message">{message}</div>}
 
         {isLoading ? (
-          <div className="loading-spinner">
-            <div className="spinner"></div>
+          <div className="game-loading">
+            <div className="game-spinner"></div>
             <p>Loading puzzle...</p>
           </div>
         ) : (

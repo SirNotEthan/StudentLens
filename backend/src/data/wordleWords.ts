@@ -132,12 +132,10 @@ export async function isValidEnglishWord(word: string): Promise<boolean> {
     return response.status === 200;
   } catch (error) {
     console.error("Error checking word validity:", error);
-    // On API failure, accept words from our extended list to avoid blocking gameplay
     return EXTENDED_VALID_WORDS.includes(word.toLowerCase());
   }
 }
 
-// Extended list of common 5-letter words for fallback validation
 const EXTENDED_VALID_WORDS = [
   ...FALLBACK_WORDLE_WORDS,
   "slate", "crane", "crate", "trace", "slice", "sauce", "adieu", "audio", "stare", "arise",

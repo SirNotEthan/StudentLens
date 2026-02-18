@@ -194,16 +194,12 @@ const MainPage = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
+      ICS: 'ics',
+      WORLD: 'world',
       ACADEMIC: 'academic',
-      SPORTS: 'sports',
-      EVENTS: 'events',
-      CLUBS: 'clubs',
-      ANNOUNCEMENTS: 'announcements',
-      NEWS: 'news',
+      SCIENCE_TECH: 'science-tech',
       STUDENT_LIFE: 'student-life',
-      TECHNOLOGY: 'technology',
-      ARTS: 'arts',
-      SCIENCE: 'science'
+      CULTURE: 'culture'
     };
     return colors[category] || 'gray';
   };
@@ -211,16 +207,12 @@ const MainPage = () => {
   const getCategoryButtonStyle = (category) => {
     const styles = {
       ALL: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
+      ICS: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
+      WORLD: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
       ACADEMIC: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
-      SPORTS: { backgroundColor: '#28a745', color: 'white', backgroundImage: 'none' },
-      EVENTS: { backgroundColor: '#fd7e14', color: 'white', backgroundImage: 'none' },
-      CLUBS: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
-      ANNOUNCEMENTS: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
-      NEWS: { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' },
+      SCIENCE_TECH: { backgroundColor: '#20c997', color: 'white', backgroundImage: 'none' },
       STUDENT_LIFE: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' },
-      TECHNOLOGY: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
-      ARTS: { backgroundColor: '#563d7c', color: 'white', backgroundImage: 'none' },
-      SCIENCE: { backgroundColor: '#20c997', color: 'white', backgroundImage: 'none' }
+      CULTURE: { backgroundColor: '#563d7c', color: 'white', backgroundImage: 'none' },
     };
     return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };
   };
@@ -417,42 +409,6 @@ const MainPage = () => {
         </aside>
 
         <main className="center-content">
-          {showSearchResults ? (
-            <section className="search-results">
-              <div className="search-results-header">
-                <h2 className="section-title">SEARCH RESULTS</h2>
-                {searchResults.length > 0 && <span className="results-count">({searchResults.length} found)</span>}
-                <button className="close-search" onClick={clearSearch}>Close</button>
-              </div>
-              {isSearching ? (
-                <div className="loading-articles">
-                  <p>Searching...</p>
-                </div>
-              ) : searchResults.length > 0 ? (
-                <div className="search-results-grid">
-                  {searchResults.map(post => (
-                    <article key={post.id} className="search-result-item" onClick={() => navigate(`/post/${post.id}`)}>
-                      <div className="search-result-content">
-                        <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                          {post.category?.replace(/_/g, ' ') || 'NEWS'}
-                        </span>
-                        <h3 className="search-result-title">{post.title}</h3>
-                        <p className="search-result-excerpt">{post.excerpt || post.content?.substring(0, 150) + '...' || 'No preview available'}</p>
-                        <div className="search-result-meta">
-                          <span className="search-result-author">{post.authorName || 'Anonymous'}</span>
-                          <span className="search-result-date">{formatDate(post.publishedAt || post.createdAt)}</span>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <div className="no-search-results">
-                  <p>No articles found for "{searchQuery}". Try different keywords.</p>
-                </div>
-              )}
-            </section>
-          ) : (
           <section className="latest-news">
             <h2 className="section-title">LATEST NEWS</h2>
             {error && (
@@ -552,7 +508,6 @@ const MainPage = () => {
               )}
             </div>
           </section>
-          )}
 
         </main>
 
@@ -670,18 +625,55 @@ const MainPage = () => {
             </div>
           </div>
           <div className="category-tags">
-            {['ALL', 'ACADEMIC', 'SPORTS', 'EVENTS', 'CLUBS', 'ANNOUNCEMENTS', 'NEWS', 'STUDENT_LIFE', 'TECHNOLOGY', 'ARTS', 'SCIENCE'].map(cat => (
+            {['ALL', 'ICS', 'WORLD', 'ACADEMIC', 'SCIENCE_TECH', 'STUDENT_LIFE', 'CULTURE'].map(cat => (
               <span
                 key={cat}
                 className={`tag ${selectedCategory === cat ? 'active' : ''}`}
                 style={getCategoryButtonStyle(cat)}
                 onClick={() => setSelectedCategory(cat)}
               >
-                {cat.replace(/_/g, ' ')}
+                {cat === 'SCIENCE_TECH' ? 'Science/Tech' : cat.replace(/_/g, ' ')}
               </span>
             ))}
           </div>
         </div>
+
+        {showSearchResults ? (
+          <section className="search-results">
+            <div className="search-results-header">
+              <h2 className="section-title">SEARCH RESULTS</h2>
+              {searchResults.length > 0 && <span className="results-count">({searchResults.length} found)</span>}
+              <button className="close-search" onClick={clearSearch}>Close</button>
+            </div>
+            {isSearching ? (
+              <div className="loading-articles">
+                <p>Searching...</p>
+              </div>
+            ) : searchResults.length > 0 ? (
+              <div className="search-results-grid">
+                {searchResults.map(post => (
+                  <article key={post.id} className="search-result-item" onClick={() => navigate(`/post/${post.id}`)}>
+                    <div className="search-result-content">
+                      <span className={`category-tag ${getCategoryColor(post.category)}`}>
+                        {post.category?.replace(/_/g, ' ') || 'NEWS'}
+                      </span>
+                      <h3 className="search-result-title">{post.title}</h3>
+                      <p className="search-result-excerpt">{post.excerpt || post.content?.substring(0, 150) + '...' || 'No preview available'}</p>
+                      <div className="search-result-meta">
+                        <span className="search-result-author">{post.authorName || 'Anonymous'}</span>
+                        <span className="search-result-date">{formatDate(post.publishedAt || post.createdAt)}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="no-search-results">
+                <p>No articles found for "{searchQuery}". Try different keywords.</p>
+              </div>
+            )}
+          </section>
+        ) : (
         <div className="news-grid-container">
           {recentPosts
             .filter(post => selectedCategory === 'ALL' || post.category === selectedCategory)
@@ -715,7 +707,8 @@ const MainPage = () => {
               </article>
             ))}
         </div>
-        {hasMorePosts && (
+        )}
+        {hasMorePosts && !showSearchResults && (
           <div className="load-more-container">
             <button
               className="load-more-btn"

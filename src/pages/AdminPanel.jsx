@@ -912,18 +912,85 @@ const AdminPanel = () => {
                       <small className="form-help">Enter values separated by commas (e.g., Authenticity, Community, Growth, Inclusivity)</small>
                     </div>
                     <div className="form-group full-width">
-                      <label htmlFor="aboutLegacy">Our Legacy</label>
-                      <textarea
-                        id="aboutLegacy"
-                        value={settingsForm.about?.legacy || ''}
-                        onChange={(e) => setSettingsForm({
-                          ...settingsForm,
-                          about: { ...settingsForm.about, legacy: e.target.value }
-                        })}
-                        placeholder="Describe the legacy and history of Student Lens, leadership teams, etc."
-                        rows="6"
-                      />
-                      <small className="form-help">This content appears in the "Our Legacy" section of the About Us page. You can use plain text to describe the history and leadership of Student Lens.</small>
+                      <label>Our Legacy</label>
+                      <small className="form-help" style={{ marginBottom: '0.75rem', display: 'block' }}>
+                        Manage the leadership images shown in the "Our Legacy" horizontal scroll on the About Us page.
+                      </small>
+                      {(() => {
+                        let legacyItems = [];
+                        try {
+                          legacyItems = JSON.parse(settingsForm.about?.legacy || '[]');
+                          if (!Array.isArray(legacyItems)) legacyItems = [];
+                        } catch { legacyItems = []; }
+
+                        const updateLegacy = (items) => {
+                          setSettingsForm({
+                            ...settingsForm,
+                            about: { ...settingsForm.about, legacy: JSON.stringify(items) }
+                          });
+                        };
+
+                        const addItem = () => {
+                          updateLegacy([...legacyItems, { imageUrl: '', years: '', description: '' }]);
+                        };
+
+                        const updateItem = (index, field, value) => {
+                          const updated = [...legacyItems];
+                          updated[index] = { ...updated[index], [field]: value };
+                          updateLegacy(updated);
+                        };
+
+                        const removeItem = (index) => {
+                          updateLegacy(legacyItems.filter((_, i) => i !== index));
+                        };
+
+                        return (
+                          <div className="legacy-editor">
+                            {legacyItems.map((item, index) => (
+                              <div key={index} className="legacy-editor-item">
+                                <div className="legacy-editor-preview">
+                                  {item.imageUrl ? (
+                                    <img src={item.imageUrl} alt={item.years} />
+                                  ) : (
+                                    <div className="legacy-editor-placeholder">📸</div>
+                                  )}
+                                </div>
+                                <div className="legacy-editor-fields">
+                                  <input
+                                    type="text"
+                                    value={item.years || ''}
+                                    onChange={(e) => updateItem(index, 'years', e.target.value)}
+                                    placeholder="Years (e.g. 2022-2026)"
+                                  />
+                                  <input
+                                    type="url"
+                                    value={item.imageUrl || ''}
+                                    onChange={(e) => updateItem(index, 'imageUrl', e.target.value)}
+                                    placeholder="Image URL"
+                                  />
+                                  <textarea
+                                    value={item.description || ''}
+                                    onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                    placeholder="Description (shown on click)"
+                                    rows="2"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  className="legacy-editor-remove"
+                                  onClick={() => removeItem(index)}
+                                  title="Remove"
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            ))}
+                            <button type="button" className="legacy-editor-add" onClick={addItem}>
+                              + Add Legacy Entry
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

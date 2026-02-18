@@ -9,7 +9,11 @@ const isHeading = (paragraph) => {
 };
 
 const isList = (paragraph) => {
-  return paragraph.includes('\n-') || paragraph.includes('\n*') || paragraph.includes('\n+');
+  return /^[\s]*[-*+]\s/m.test(paragraph) || /^[\s]*\d+\.\s/m.test(paragraph);
+};
+
+const isCentered = (paragraph) => {
+  return paragraph.split('\n').every(line => line.trim().startsWith('>> ') || line.trim() === '');
 };
 
 const isBlockquote = (paragraph) => {
@@ -134,6 +138,19 @@ export const formatMathBlock = (text, index, formatMathExpressionFn) => {
   );
 };
 
+export const formatCentered = (paragraph, index, formatInlineTextFn) => {
+  const lines = paragraph.split('\n').filter(line => line.trim() !== '');
+  return (
+    <div key={index} className="content-centered">
+      {lines.map((line, lineIndex) => (
+        <p key={lineIndex} className="content-centered-line">
+          {formatInlineTextFn(line.trim().replace(/^>>\s?/, ''))}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 export const formatParagraph = (paragraph, index, formatInlineTextFn) => {
   return (
     <p key={index} className="content-paragraph">
@@ -151,6 +168,10 @@ export const formatContent = (content, formatInlineTextFn, formatMathExpressionF
   return content.split('\n\n').map((paragraph, index) => {
     if (isMathBlock(paragraph)) {
       return formatMathBlock(paragraph, index, formatMathExpressionFn);
+    }
+
+    if (isCentered(paragraph)) {
+      return formatCentered(paragraph, index, formatInlineTextFn);
     }
 
     if (isHeading(paragraph)) {

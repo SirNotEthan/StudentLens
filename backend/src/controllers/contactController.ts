@@ -11,7 +11,6 @@ export const submitContactForm = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       res.status(400).json({ success: false, message: 'Invalid email address.' });

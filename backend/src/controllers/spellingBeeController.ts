@@ -5,7 +5,6 @@ import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 import { getDailySpellingBeePuzzle, getTodayDateString, isValidSpellingBeeWord } from '@/data/spellingBeeWords';
 
 const getCustomPuzzle = (puzzleData: any) => {
-  // Validate and return custom puzzle
   if (!puzzleData.center || !puzzleData.outer || !Array.isArray(puzzleData.outer)) {
     throw AppError.badRequest('Invalid puzzle data');
   }
@@ -35,10 +34,8 @@ export const getNewPuzzle = async (
 
     let puzzle: { center: string; outer: string[]; words: string[] };
     if (custom === 'true' && puzzleData) {
-      // Custom puzzle
       puzzle = getCustomPuzzle(JSON.parse(puzzleData as string));
     } else {
-      // Daily puzzle
       const today = getTodayDateString();
 
       if (user.spellingBeeLastPlayedDate === today) {
@@ -53,7 +50,6 @@ export const getNewPuzzle = async (
       puzzle: {
         center: puzzle.center,
         outer: puzzle.outer,
-        // Don't send the word list to client for validation
       }
     });
   } catch (error) {
@@ -80,13 +76,11 @@ export const validateWord = async (
     const upperWord = word.toUpperCase();
     const upperCenter = center.toUpperCase();
 
-    // Check if word contains center letter
     if (!upperWord.includes(upperCenter)) {
       res.json({ success: true, isValid: false, reason: 'Must contain center letter' });
       return;
     }
 
-    // Check if word only uses allowed letters
     const allowedLetters = new Set([upperCenter, ...outer.map((l: string) => l.toUpperCase())]);
     for (const letter of upperWord) {
       if (!allowedLetters.has(letter)) {
@@ -95,13 +89,11 @@ export const validateWord = async (
       }
     }
 
-    // Check minimum length
     if (upperWord.length < 4) {
       res.json({ success: true, isValid: false, reason: 'Word must be at least 4 letters' });
       return;
     }
 
-    // Validate against dictionary
     const isValid = await isValidSpellingBeeWord(word);
     if (!isValid) {
       res.json({ success: true, isValid: false, reason: 'Not in word list' });
@@ -121,7 +113,7 @@ export const validateWord = async (
 
 const calculatePoints = (word: string, outer: string[]): number => {
   const isPangram = outer.every(letter => word.includes(letter));
-  if (isPangram) return word.length + 7; // Bonus for pangram
+  if (isPangram) return word.length + 7;
   if (word.length === 4) return 1;
   return word.length;
 };
@@ -239,11 +231,9 @@ export const getHint = async (
       throw AppError.badRequest('Missing required fields');
     }
 
-    // Get today's puzzle to find valid words
     const puzzle = getDailySpellingBeePuzzle();
     const upperFoundWords = foundWords.map((w: string) => w.toUpperCase());
 
-    // Find a word from the puzzle's word list that hasn't been found yet
     const hintWord = puzzle.words.find(
       (word: string) => !upperFoundWords.includes(word.toUpperCase())
     );

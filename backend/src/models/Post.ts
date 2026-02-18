@@ -217,37 +217,33 @@ export class Post implements IPost {
 
       let posts = documents.documents.map(doc => new Post(doc));
 
-      // Fallback: if Appwrite search doesn't cover all fields, filter remaining matches
+      // Also check content, excerpt, author name, and tags client-side for completeness
       if (options.search) {
         const searchTerm = options.search.toLowerCase();
         const titleResults = new Set(posts.map(p => p.id));
 
-        // Also check content, excerpt, author, and tags client-side for completeness
-        if (posts.length < (options.limit || 25)) {
-          // Re-fetch without search to check other fields (only if few results from title search)
-          try {
-            const fallbackQueries: string[] = [];
-            if (options.status) fallbackQueries.push(Query.equal('status', options.status));
-            if (options.category) fallbackQueries.push(Query.equal('category', options.category));
-            if (options.authorId) fallbackQueries.push(Query.equal('authorId', options.authorId));
-            fallbackQueries.push(Query.orderDesc('$createdAt'));
-            fallbackQueries.push(Query.limit(options.limit || 25));
+        try {
+          const fallbackQueries: string[] = [];
+          if (options.status) fallbackQueries.push(Query.equal('status', options.status));
+          if (options.category) fallbackQueries.push(Query.equal('category', options.category));
+          if (options.authorId) fallbackQueries.push(Query.equal('authorId', options.authorId));
+          fallbackQueries.push(Query.orderDesc('$createdAt'));
+          fallbackQueries.push(Query.limit(100));
 
-            const fallbackDocs = await databases.listDocuments(DATABASE_ID, POSTS_COLLECTION_ID, fallbackQueries);
-            const additionalPosts = fallbackDocs.documents
-              .map(doc => new Post(doc))
-              .filter(post =>
-                !titleResults.has(post.id) && (
-                  post.content.toLowerCase().includes(searchTerm) ||
-                  post.excerpt.toLowerCase().includes(searchTerm) ||
-                  post.authorName.toLowerCase().includes(searchTerm) ||
-                  post.tags.some(tag => tag.toLowerCase().includes(searchTerm))
-                )
-              );
-            posts = [...posts, ...additionalPosts];
-          } catch {
-            // Fallback search failed, use title-only results
-          }
+          const fallbackDocs = await databases.listDocuments(DATABASE_ID, POSTS_COLLECTION_ID, fallbackQueries);
+          const additionalPosts = fallbackDocs.documents
+            .map(doc => new Post(doc))
+            .filter(post =>
+              !titleResults.has(post.id) && (
+                post.content.toLowerCase().includes(searchTerm) ||
+                post.excerpt.toLowerCase().includes(searchTerm) ||
+                post.authorName.toLowerCase().includes(searchTerm) ||
+                post.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+              )
+            );
+          posts = [...posts, ...additionalPosts];
+        } catch {
+          // Fallback search failed, use title-only results
         }
       }
 

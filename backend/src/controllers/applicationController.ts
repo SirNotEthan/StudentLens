@@ -162,7 +162,6 @@ export const reviewApplication = catchAsync(async (
     if (status === 'approved') {
       const user = await User.findById(application.userId);
       if (user) {
-        // Update both role and permissions when approving writer application
         const writerPermissions = User.getPermissionsByRole('Writer');
         await user.updatePrefs({
           role: 'Writer',

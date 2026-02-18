@@ -185,6 +185,7 @@ const Profile = () => {
   if (loading) {
     return (
       <div className="loading-spinner">
+        <div className="spinner"></div>
         <p>Loading profile...</p>
       </div>
     );

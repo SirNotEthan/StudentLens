@@ -395,8 +395,7 @@ const SudokuPage = () => {
 
     if (won) {
       setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 2000);
-      showMessage('🎉 Congratulations! You solved it!');
+      setTimeout(() => setShowCelebration(false), 4000);
     } else {
       showMessage('Game Over - Too many mistakes');
     }
@@ -517,11 +516,29 @@ const SudokuPage = () => {
 
       <main className="sudoku-main">
         {message && <div className="sudoku-message">{message}</div>}
-        {showCelebration && <div className="celebration-overlay">🎉</div>}
+        {showCelebration && (
+          <div className="celebration-overlay">
+            <div className="confetti-container">
+              {Array.from({ length: 40 }).map((_, i) => (
+                <div key={i} className="confetti-piece" style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 2}s`,
+                  animationDuration: `${2 + Math.random() * 2}s`,
+                  backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6', '#ec4899'][i % 6],
+                }} />
+              ))}
+            </div>
+            <div className="celebration-text">
+              <span className="celebration-emoji">🎉</span>
+              <h2>Puzzle Solved!</h2>
+              <p>Time: {formatTime(timer)}</p>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
-          <div className="loading-spinner">
-            <div className="spinner"></div>
+          <div className="game-loading">
+            <div className="game-spinner"></div>
             <p>Loading puzzle...</p>
           </div>
         ) : (

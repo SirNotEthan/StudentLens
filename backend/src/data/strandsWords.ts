@@ -1,4 +1,3 @@
-// Strands word grid puzzles with valid English words
 export const STRANDS_PUZZLES = [
   {
     theme: 'Nature',

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
 import Footer from '../components/Footer';
@@ -7,6 +7,16 @@ import '../styles/InfoPage.css';
 const AboutUs = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
+  const [selectedLegacy, setSelectedLegacy] = useState(null);
+
+  const legacyItems = useMemo(() => {
+    try {
+      const parsed = JSON.parse(settings?.about?.legacy || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [settings?.about?.legacy]);
 
   const valueDescriptions = {
     'Authenticity': 'We celebrate genuine student voices and original perspectives.',
@@ -80,31 +90,65 @@ const AboutUs = () => {
 
         <section className="info-section legacy-section">
           <h2>Our Legacy</h2>
-          {settings?.about?.legacy ? (
-            <div className="legacy-content" style={{ whiteSpace: 'pre-wrap' }}>
-              {settings.about.legacy}
-            </div>
-          ) : (
-            <>
-              <p>
-                Student Lens has been created with the intention of amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.
-                Each year, the team of student leaders takes on the responsibility of managing and growing the platform.
-              </p>
-              <div className="legacy-timeline">
-                <div className="legacy-year">
-                  <h3>2024-2025</h3>
-                  <div className="legacy-leaders">
-                    <div className="leader-card">
-                      <div className="leader-placeholder">
-                        <span>📸</span>
-                      </div>
-                      <h4>Current Leadership</h4>
-                      <p>Managing Student Lens and continuing the tradition</p>
+          <p>
+            Student Lens has been created with the intention of amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.
+            Each year, the team of student leaders takes on the responsibility of managing and growing the platform.
+          </p>
+          {legacyItems.length > 0 ? (
+            <div className="legacy-scroll-container">
+              <div className="legacy-scroll">
+                {legacyItems.map((item, index) => (
+                  <div
+                    key={index}
+                    className="legacy-card"
+                    onClick={() => setSelectedLegacy(item)}
+                  >
+                    <div className="legacy-card-image">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.years || 'Legacy'} />
+                      ) : (
+                        <div className="legacy-card-placeholder">
+                          <span>📸</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="legacy-card-caption">
+                      {item.years || 'Year'}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="legacy-scroll-container">
+              <div className="legacy-scroll">
+                <div className="legacy-card">
+                  <div className="legacy-card-image">
+                    <div className="legacy-card-placeholder">
+                      <span>📸</span>
+                    </div>
+                  </div>
+                  <div className="legacy-card-caption">2024-2025</div>
                 </div>
               </div>
-            </>
+            </div>
+          )}
+
+          {selectedLegacy && (
+            <div className="legacy-popup-overlay" onClick={() => setSelectedLegacy(null)}>
+              <div className="legacy-popup" onClick={(e) => e.stopPropagation()}>
+                <button className="legacy-popup-close" onClick={() => setSelectedLegacy(null)}>
+                  &times;
+                </button>
+                {selectedLegacy.imageUrl && (
+                  <img src={selectedLegacy.imageUrl} alt={selectedLegacy.years || 'Legacy'} className="legacy-popup-image" />
+                )}
+                <h3>{selectedLegacy.years}</h3>
+                {selectedLegacy.description && (
+                  <p>{selectedLegacy.description}</p>
+                )}
+              </div>
+            </div>
           )}
         </section>
 

@@ -4,6 +4,24 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/WordlePage.css';
 
+const STORAGE_KEY = 'wordle-game-state';
+
+const getSavedState = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return null;
+    const state = JSON.parse(saved);
+    const today = new Date().toISOString().split('T')[0];
+    if (state.date !== today) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return state;
+  } catch {
+    return null;
+  }
+};
+
 const WordlePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -22,12 +40,38 @@ const WordlePage = () => {
   const MAX_GUESSES = 6;
   const WORD_LENGTH = 5;
 
+  const saveGameState = useCallback((newGuesses, newStatuses, newUsedLetters, newGameStatus, newHints, newAnswer) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        date: new Date().toISOString().split('T')[0],
+        guesses: newGuesses,
+        guessStatuses: newStatuses,
+        usedLetters: newUsedLetters,
+        gameStatus: newGameStatus,
+        hintsRemaining: newHints,
+        answer: newAnswer || '',
+      }));
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
-    startNewGame();
+
+    const saved = getSavedState();
+    if (saved) {
+      setGuesses(saved.guesses);
+      setGuessStatuses(saved.guessStatuses);
+      setUsedLetters(saved.usedLetters);
+      setGameStatus(saved.gameStatus);
+      setHintsRemaining(saved.hintsRemaining ?? 3);
+      setAnswer(saved.answer || '');
+      setIsLoading(false);
+    } else {
+      startNewGame();
+    }
     fetchStats();
   }, [user, navigate]);
 
@@ -92,23 +136,40 @@ const WordlePage = () => {
       const newGuesses = [...guesses, currentGuess];
       const newStatuses = [...guessStatuses, statuses];
 
+      const newUsedLetters = { ...usedLetters };
+      for (let i = 0; i < currentGuess.length; i++) {
+        const letter = currentGuess[i];
+        const status = statuses[i];
+        if (!newUsedLetters[letter] || status === 'correct' ||
+            (status === 'present' && newUsedLetters[letter] !== 'correct')) {
+          newUsedLetters[letter] = status;
+        }
+      }
+
       setGuesses(newGuesses);
       setGuessStatuses(newStatuses);
-      updateUsedLetters(currentGuess, statuses);
+      setUsedLetters(newUsedLetters);
       setCurrentGuess('');
 
       if (response.data.gameOver) {
+        let newStatus, newAnswer = '';
         if (response.data.won) {
+          newStatus = 'won';
           setGameStatus('won');
           showMessage('Awesome! You won!');
         } else {
+          newStatus = 'lost';
+          newAnswer = response.data.answer || '';
           setGameStatus('lost');
-          setAnswer(response.data.answer || '');
+          setAnswer(newAnswer);
           showMessage(`The word was ${response.data.answer}`);
         }
         if (response.data.stats) {
           setStats(response.data.stats);
         }
+        saveGameState(newGuesses, newStatuses, newUsedLetters, newStatus, hintsRemaining, newAnswer);
+      } else {
+        saveGameState(newGuesses, newStatuses, newUsedLetters, 'playing', hintsRemaining, '');
       }
     } catch (error) {
       console.error('Error submitting guess:', error);
@@ -117,20 +178,6 @@ const WordlePage = () => {
     }
   }, [currentGuess, guesses, guessStatuses, usedLetters]);
 
-  const updateUsedLetters = (guess, statuses) => {
-    setUsedLetters(prev => {
-      const newUsedLetters = { ...prev };
-      for (let i = 0; i < guess.length; i++) {
-        const letter = guess[i];
-        const status = statuses[i];
-        if (!newUsedLetters[letter] || status === 'correct' ||
-            (status === 'present' && newUsedLetters[letter] !== 'correct')) {
-          newUsedLetters[letter] = status;
-        }
-      }
-      return newUsedLetters;
-    });
-  };
 
   const showMessage = (msg) => {
     setMessage(msg);
@@ -158,7 +205,9 @@ const WordlePage = () => {
       const response = await axios.post('/wordle/hint', { knownPositions });
       if (response.data.success && response.data.position >= 0) {
         showMessage(`Hint: Letter ${response.data.position + 1} is '${response.data.letter}'`);
-        setHintsRemaining(prev => prev - 1);
+        const newHints = hintsRemaining - 1;
+        setHintsRemaining(newHints);
+        saveGameState(guesses, guessStatuses, usedLetters, gameStatus, newHints, answer);
       }
     } catch (error) {
       console.error('Error getting hint:', error);
@@ -245,8 +294,8 @@ const WordlePage = () => {
         {message && <div className="wordle-message">{message}</div>}
 
         {isLoading ? (
-          <div className="loading-spinner">
-            <div className="spinner"></div>
+          <div className="game-loading">
+            <div className="game-spinner"></div>
             <p>Loading puzzle...</p>
           </div>
         ) : (

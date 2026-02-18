@@ -536,7 +536,6 @@ export const deleteAccount = catchAsync(async (
   }
 });
 
-// In-memory fallback for password reset tokens when Redis is unavailable
 const resetTokensFallback = new Map<string, { userId: string; email: string; expires: number }>();
 
 const RESET_TOKEN_TTL = 60 * 60; // 1 hour in seconds
@@ -554,7 +553,6 @@ export const requestPasswordReset = catchAsync(async (
 
   appLogger.info('Password reset requested', { email });
 
-  // Always return success to prevent email enumeration
   const successResponse: ApiResponse = {
     success: true,
     message: 'If an account with that email exists, a password reset link has been sent.'
@@ -562,22 +560,18 @@ export const requestPasswordReset = catchAsync(async (
 
   const user = await User.findByEmail(email);
   if (!user) {
-    // Don't reveal that the email doesn't exist
     res.json(successResponse);
     return;
   }
 
   if (user.provider === 'google') {
-    // Google users don't have passwords to reset
     res.json(successResponse);
     return;
   }
 
-  // Generate a secure random token
   const resetToken = crypto.randomBytes(32).toString('hex');
   const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
 
-  // Store the token hash (not the raw token) with user info
   const redis = isRedisConnected() ? getRedisClient() : null;
   if (redis) {
     await redis.set(
@@ -593,7 +587,6 @@ export const requestPasswordReset = catchAsync(async (
     });
   }
 
-  // Send the email with the raw token (user sends it back, we hash and compare)
   await sendPasswordResetEmail(email, resetToken);
 
   appLogger.info('Password reset token generated', { userId: user.id, email });
@@ -615,7 +608,6 @@ export const resetPassword = catchAsync(async (
     throw AppError.badRequest('New password must be at least 8 characters');
   }
 
-  // Hash the provided token and look it up
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
   let tokenData: { userId: string; email: string } | null = null;
@@ -625,7 +617,6 @@ export const resetPassword = catchAsync(async (
     const stored = await redis.get(`${RESET_REDIS_PREFIX}${tokenHash}`);
     if (stored) {
       tokenData = JSON.parse(stored);
-      // Delete the token so it can't be reused
       await redis.del(`${RESET_REDIS_PREFIX}${tokenHash}`);
     }
   } else {
@@ -634,7 +625,7 @@ export const resetPassword = catchAsync(async (
       tokenData = { userId: stored.userId, email: stored.email };
       resetTokensFallback.delete(tokenHash);
     } else {
-      resetTokensFallback.delete(tokenHash); // Clean up expired
+      resetTokensFallback.delete(tokenHash); 
     }
   }
 
@@ -642,7 +633,6 @@ export const resetPassword = catchAsync(async (
     throw AppError.badRequest('Invalid or expired reset token');
   }
 
-  // Update the password in Appwrite
   try {
     await users.updatePassword(tokenData.userId, newPassword);
     appLogger.info('Password reset successful', { userId: tokenData.userId });
@@ -659,7 +649,6 @@ export const resetPassword = catchAsync(async (
   res.json(response);
 });
 
-// Clean up expired in-memory reset tokens
 setInterval(() => {
   const now = Date.now();
   for (const [hash, data] of resetTokensFallback.entries()) {

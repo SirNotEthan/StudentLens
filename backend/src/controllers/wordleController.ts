@@ -7,19 +7,16 @@ import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 const MAX_GUESSES = 6;
 const WORD_LENGTH = 5;
 
-// Compute letter statuses server-side (green/yellow/grey logic)
 function computeStatuses(guess: string, target: string): string[] {
   const statuses: string[] = Array(WORD_LENGTH).fill('absent');
   const guessArr = guess.toUpperCase().split('');
   const targetArr = target.toUpperCase().split('');
   const targetCounts: Record<string, number> = {};
 
-  // Count target letter occurrences
   for (const letter of targetArr) {
     targetCounts[letter] = (targetCounts[letter] || 0) + 1;
   }
 
-  // First pass: mark correct (green)
   for (let i = 0; i < WORD_LENGTH; i++) {
     if (guessArr[i] === targetArr[i]) {
       statuses[i] = 'correct';
@@ -27,7 +24,6 @@ function computeStatuses(guess: string, target: string): string[] {
     }
   }
 
-  // Second pass: mark present (yellow)
   for (let i = 0; i < WORD_LENGTH; i++) {
     if (statuses[i] === 'correct') continue;
     if (targetCounts[guessArr[i]] > 0) {
@@ -39,7 +35,6 @@ function computeStatuses(guess: string, target: string): string[] {
   return statuses;
 }
 
-// Start a new game - does NOT send the word
 export const startGame = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -71,7 +66,6 @@ export const startGame = async (
   }
 };
 
-// Submit a guess - validates word and returns letter statuses
 export const submitGuess = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -102,7 +96,6 @@ export const submitGuess = async (
       throw AppError.badRequest('You have already completed today\'s game');
     }
 
-    // Validate the word is a real word
     const validationResult = await validateWordSubmission(word.toLowerCase());
     if (!validationResult.isValid) {
       res.json({
@@ -155,7 +148,6 @@ export const submitGuess = async (
   }
 };
 
-// Get a hint - reveals one letter without exposing the full word
 export const getHint = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -167,7 +159,6 @@ export const getHint = async (
     }
 
     const { knownPositions } = req.body;
-    // knownPositions: array of 5 elements, null for unknown, letter string for known
 
     if (!Array.isArray(knownPositions) || knownPositions.length !== WORD_LENGTH) {
       throw AppError.badRequest('Invalid knownPositions');
@@ -175,7 +166,6 @@ export const getHint = async (
 
     const targetWord = getDailyWord().toUpperCase();
 
-    // Find first position not yet known
     for (let i = 0; i < WORD_LENGTH; i++) {
       if (knownPositions[i] === null || knownPositions[i] === undefined) {
         res.json({
@@ -187,7 +177,6 @@ export const getHint = async (
       }
     }
 
-    // All positions known
     res.json({
       success: true,
       position: -1,

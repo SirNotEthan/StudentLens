@@ -5,7 +5,6 @@ import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 import { getDailyStrandsPuzzle, getTodayDateString } from '@/data/strandsWords';
 
 const getCustomPuzzle = (puzzleData: any) => {
-  // Validate and return custom puzzle
   if (!puzzleData.grid || !Array.isArray(puzzleData.grid)) {
     throw AppError.badRequest('Invalid puzzle data');
   }
@@ -35,10 +34,8 @@ export const getNewPuzzle = async (
 
     let puzzle: { theme: string; grid: string[][]; words: string[] };
     if (custom === 'true' && puzzleData) {
-      // Custom puzzle
       puzzle = getCustomPuzzle(JSON.parse(puzzleData as string));
     } else {
-      // Daily puzzle
       const today = getTodayDateString();
 
       if (user.strandsLastPlayedDate === today) {
@@ -77,8 +74,6 @@ export const validateWord = async (
       throw AppError.badRequest('Word is required');
     }
 
-    // Basic validation - in a real app, you'd check against a dictionary
-    // and validate the path through the grid
     const upperWord = word.toUpperCase();
 
     if (upperWord.length < 3) {

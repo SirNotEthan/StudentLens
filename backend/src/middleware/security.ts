@@ -158,7 +158,6 @@ export const ipFilter = (req: Request, res: Response, next: NextFunction): void 
     throw AppError.forbidden('Access denied');
   }
 
-  // Only enforce IP whitelist for admin routes if ADMIN_IP_WHITELIST_ENABLED is true
   const ipWhitelistEnabled = process.env.ADMIN_IP_WHITELIST_ENABLED === 'true';
 
   if (ipWhitelistEnabled && req.originalUrl.includes('/admin/') && !whitelistedIPs.has(clientIp)) {
@@ -184,7 +183,6 @@ export const removeFromBlacklist = (ip: string): void => {
   appLogger.logSecurityEvent('ip_removed_from_blacklist', { ip });
 };
 
-// In-memory fallback for suspicious activity tracking when Redis is unavailable
 const suspiciousActivitiesFallback = new Map<string, {
   count: number;
   firstSeen: number;
@@ -278,7 +276,6 @@ export const detectSuspiciousActivity = async (req: Request, res: Response, next
       activities: []
     };
 
-    // Reset if window has passed
     if (now - activity.firstSeen > SUSPICIOUS_WINDOW_MS) {
       activity.count = 0;
       activity.firstSeen = now;

@@ -4,7 +4,6 @@ import { AppError } from '@/utils/AppError';
 import { AuthenticatedRequest, UpdateUserRequest } from '@/types';
 import crypto from 'crypto';
 
-// Use env secret or generate one (stable per process lifetime)
 const PUZZLE_SECRET = process.env.PUZZLE_SECRET || crypto.randomBytes(32).toString('hex');
 
 interface SudokuPuzzle {
@@ -13,7 +12,6 @@ interface SudokuPuzzle {
   difficulty: string;
 }
 
-// ---- Encryption for solution tokens ----
 function encryptSolution(solution: number[][]): string {
   const key = Buffer.from(PUZZLE_SECRET.slice(0, 64).padEnd(64, '0'), 'hex');
   const iv = crypto.randomBytes(16);
@@ -34,7 +32,6 @@ function decryptSolution(token: string): number[][] {
   return JSON.parse(decrypted);
 }
 
-// ---- Sudoku Generator ----
 class SudokuGenerator {
   private isValid(board: number[][], row: number, col: number, num: number): boolean {
     for (let x = 0; x < 9; x++) {
@@ -107,8 +104,6 @@ class SudokuGenerator {
   }
 }
 
-// ---- Controller endpoints ----
-
 export const getNewPuzzle = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -123,7 +118,6 @@ export const getNewPuzzle = async (
     const generator = new SudokuGenerator();
     const puzzle = generator.generate(difficulty as string);
 
-    // Encrypt solution into a token - client cannot read it
     const solutionToken = encryptSolution(puzzle.solution);
 
     res.json({
@@ -254,7 +248,6 @@ export const checkComplete = async (
   }
 };
 
-// Stats persistence using User model
 const updateSudokuStats = async (user: User, won: boolean) => {
   const newGamesPlayed = (user.prefs?.sudokuGamesPlayed || 0) + 1;
   const newWins = won ? (user.prefs?.sudokuWins || 0) + 1 : (user.prefs?.sudokuWins || 0);

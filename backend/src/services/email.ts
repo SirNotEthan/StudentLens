@@ -12,7 +12,6 @@ let transporter: any = null;
 const getTransporter = async () => {
   if (transporter) return transporter;
 
-  // Only create transporter if SMTP is configured
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
     return null;
   }
@@ -39,14 +38,12 @@ export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
   const mailer = await getTransporter();
 
   if (!mailer) {
-    // In development without SMTP, log the email content
     appLogger.info('Email would be sent (no SMTP configured)', {
       to: options.to,
       subject: options.subject,
-      // Log full HTML in dev so developers can extract reset links
       html: process.env.NODE_ENV !== 'production' ? options.html : '[redacted]'
     });
-    return true; // Return true in dev so the flow continues
+    return true; 
   }
 
   try {

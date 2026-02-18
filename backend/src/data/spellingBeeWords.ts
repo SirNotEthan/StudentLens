@@ -1,4 +1,3 @@
-// Spelling Bee puzzles with valid English words
 export const SPELLING_BEE_PUZZLES = [
   {
     center: 'T',
@@ -17,9 +16,7 @@ export const SPELLING_BEE_PUZZLES = [
   }
 ];
 
-// Common English words for validation (4+ letters)
 export const VALID_SPELLING_BEE_WORDS = new Set([
-  // Common 4-letter words
   'able', 'ache', 'acid', 'acre', 'aged', 'aide', 'akin', 'ally', 'also', 'amid',
   'amid', 'anti', 'aqua', 'arch', 'area', 'aria', 'army', 'arts', 'atom', 'aunt',
   'auto', 'aver', 'avid', 'away', 'awry', 'axle', 'baby', 'back', 'bail', 'bait',
@@ -228,7 +225,6 @@ export const VALID_SPELLING_BEE_WORDS = new Set([
   'wider', 'width', 'winds', 'wines', 'wings', 'witch', 'woman', 'women', 'woods', 'words',
   'works', 'world', 'worry', 'worse', 'worst', 'worth', 'would', 'wound', 'write', 'wrong',
   'wrote', 'yards', 'years', 'yield', 'young', 'yours', 'youth', 'zeros', 'zones',
-  // Additional words for spelling bee puzzles
   'tarts', 'taste', 'tasted', 'taster', 'terns', 'tests', 'treads', 'treats', 'treated', 'trees',
   'trends', 'aster', 'dater', 'drats', 'neats', 'natter', 'rates', 'rated', 'rattan', 'rents',
   'rests', 'rants', 'seats', 'sterns', 'tartan', 'tents', 'anoint', 'antic', 'antics', 'anion',
@@ -243,17 +239,14 @@ export const VALID_SPELLING_BEE_WORDS = new Set([
 
 const DICTIONARY_API_URL = "https://api.dictionaryapi.dev/api/v2/entries/en/";
 
-// Check if a word is valid using the dictionary API (with fallback to our word list)
 export async function isValidSpellingBeeWord(word: string): Promise<boolean> {
   const upperWord = word.toUpperCase();
   const lowerWord = word.toLowerCase();
 
-  // First check our local word list for quick validation
   if (VALID_SPELLING_BEE_WORDS.has(lowerWord)) {
     return true;
   }
 
-  // Then try the dictionary API
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
@@ -265,7 +258,6 @@ export async function isValidSpellingBeeWord(word: string): Promise<boolean> {
     clearTimeout(timeoutId);
     return response.status === 200;
   } catch (error) {
-    // API failed, word is not in our local list, so reject it
     console.error("Error checking word validity:", error);
     return false;
   }
