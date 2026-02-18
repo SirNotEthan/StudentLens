@@ -166,6 +166,11 @@ const WriteArticle = () => {
       return;
     }
 
+    if (!article.featuredImage.trim()) {
+      alert('Please add a featured image before publishing');
+      return;
+    }
+
     const confirmPublish = confirm('Are you sure you want to publish this article? It will be visible to all users.');
     if (confirmPublish) {
       handleSave('published');
@@ -180,6 +185,11 @@ const WriteArticle = () => {
 
     if (!article.excerpt.trim()) {
       alert('Please add an excerpt for your article');
+      return;
+    }
+
+    if (!article.featuredImage.trim()) {
+      alert('Please add a featured image before submitting for review');
       return;
     }
 
@@ -474,7 +484,9 @@ const WriteArticle = () => {
             </div>
 
             <div className="meta-field">
-              <label htmlFor="featuredImage">Featured Image URL (optional)</label>
+              <label htmlFor="featuredImage">
+                Featured Image URL <span className="required-asterisk">*</span>
+              </label>
               <input
                 type="url"
                 id="featuredImage"
@@ -484,6 +496,9 @@ const WriteArticle = () => {
                 placeholder="https://example.com/image.jpg"
                 className="image-input"
               />
+              <small className="image-guidance">
+                Required. Use a landscape image at least 1200×630px for best results.
+              </small>
               {article.featuredImage && (
                 <div className="image-preview">
                   <img src={article.featuredImage} alt="Preview" onError={(e) => e.target.style.display = 'none'} />

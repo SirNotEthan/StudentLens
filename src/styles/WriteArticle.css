@@ -221,6 +221,18 @@
   align-self: flex-start;
 }
 
+.required-asterisk {
+  color: #dc3545;
+  margin-left: 2px;
+}
+
+.image-guidance {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 .image-preview {
   margin-top: 0.5rem;
 }
