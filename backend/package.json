@@ -15,9 +15,8 @@
     "dev": "ts-node -r tsconfig-paths/register src/server.ts",
     "dev:watch": "nodemon --exec \"ts-node -r tsconfig-paths/register\" src/server.ts",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit",
-    "lint": "echo \"Add linting when needed\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "tsc --noEmit",
+    "test": "ts-node -r tsconfig-paths/register src/tests/smoke.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -41,6 +40,7 @@
     "passport-jwt": "^4.0.1",
     "redis": "^4.7.0",
     "sanitize-html": "^2.17.1",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0"
   },
@@ -58,6 +58,7 @@
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
     "@types/sanitize-html": "^2.16.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/winston": "^2.4.4",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",

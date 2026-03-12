@@ -34,11 +34,9 @@ const MainPage = () => {
   useEffect(() => {
     fetchFeaturedPosts();
     fetchRecentPosts();
-    fetchPendingStats();
   }, []);
 
   useEffect(() => {
-    
     if (user) {
       fetchPendingStats();
     }
@@ -114,11 +112,10 @@ const MainPage = () => {
       let count = 0;
 
       if (user.role === 'Writer') {
-        
-        const response = await axios.get('/posts/my?status=pending_review');
+        const response = await axios.get('/posts/my?status=pending_editor');
         if (response.data.success) {
           const posts = response.data.data?.posts || response.data.posts || [];
-          count = posts.filter(post => post.status === 'pending_review').length;
+          count = posts.length;
         }
       } else if (user.role === 'Editor') {
         
@@ -126,8 +123,7 @@ const MainPage = () => {
         if (response.data.success) {
           count = response.data.data?.total || response.data.total || 0;
         }
-      } else if (user.role === 'Reviewer') {
-        
+      } else if (user.role === 'Teacher') {
         const response = await axios.get('/posts/pending/reviewer');
         if (response.data.success) {
           count = response.data.data?.total || response.data.total || 0;
@@ -173,9 +169,9 @@ const MainPage = () => {
   const getRoleDisplayName = (role) => {
     const roleNames = {
       Student: 'Student',
-      Teacher: 'Teacher',
+      Writer: 'Writer',
       Editor: 'Editor',
-      Publisher: 'Publisher',
+      Teacher: 'Teacher',
       Owner: 'Owner'
     };
     return roleNames[role] || role;
@@ -184,9 +180,9 @@ const MainPage = () => {
   const getRoleBadgeColor = (role) => {
     const colors = {
       Student: '#4a90e2',
-      Teacher: '#28a745',
+      Writer: '#dc3545',
       Editor: '#fd7e14',
-      Publisher: '#dc3545',
+      Teacher: '#28a745',
       Owner: '#6f42c1'
     };
     return colors[role] || '#6c757d';
@@ -529,7 +525,6 @@ const MainPage = () => {
               <h4>STUDENT LENS</h4>
               <button className="info-button" onClick={() => navigate('/about')}>ABOUT US</button>
 
-              {}
               {user?.role === 'Student' && (
                 <button className="writer-button" onClick={() => navigate('/apply-writer')}>BECOME A WRITER</button>
               )}
@@ -539,7 +534,6 @@ const MainPage = () => {
               </p>
             </div>
 
-            {}
             {user?.role === 'Writer' && (
               <div className="info-box articles-info">
                 <h4>ARTICLES</h4>
@@ -553,7 +547,6 @@ const MainPage = () => {
               </div>
             )}
 
-            {}
             {user?.role === 'Editor' && (
               <div className="info-box articles-info">
                 <h4>ARTICLES</h4>
@@ -567,8 +560,7 @@ const MainPage = () => {
               </div>
             )}
 
-            {}
-            {user?.role === 'Reviewer' && (
+            {user?.role === 'Teacher' && (
               <div className="info-box articles-info">
                 <h4>ARTICLES</h4>
                 <div className="articles-display">
@@ -581,7 +573,6 @@ const MainPage = () => {
               </div>
             )}
 
-            {}
             {user?.role === 'Owner' && (
               <div className="info-box applications-info">
                 <h4>APPLICATIONS</h4>

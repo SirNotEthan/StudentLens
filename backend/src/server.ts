@@ -28,6 +28,9 @@ import {
   validateUserAgent
 } from '@/middleware/security';
 
+import swaggerUi from 'swagger-ui-express';
+import openApiSpec from '@/docs/openapi';
+
 import authRoutes from '@/routes/auth';
 import userRoutes from '@/routes/users';
 import googleAuthRoutes from '@/routes/googleAuth';
@@ -132,51 +135,18 @@ const useSecureCookies = process.env.SECURE_COOKIES === 'false'
 
 appLogger.info('Session middleware initialization deferred until Redis connection attempt');
 
-app.get('/api/docs', (_req, res): void => {
-  res.json({
-    name: 'StudentLens Backend API',
-    version: '1.0.0',
-    description: 'Backend API for StudentLens application',
-    endpoints: {
-      auth: {
-        'POST /api/auth/register': 'Register a new user',
-        'POST /api/auth/login': 'Login user',
-        'POST /api/auth/logout': 'Logout user',
-        'POST /api/auth/refresh-token': 'Refresh access token',
-        'GET /api/auth/check-username/:username': 'Check username availability',
-        'PUT /api/auth/change-password': 'Change password',
-        'POST /api/auth/complete-setup': 'Complete user setup',
-        'GET /api/auth/google/signup': 'Google OAuth signup (placeholder)',
-        'GET /api/auth/google/callback': 'Google OAuth callback (placeholder)'
-      },
-      users: {
-        'GET /api/users': 'Get all users (admin)',
-        'GET /api/users/statistics': 'Get user statistics (admin)',
-        'GET /api/users/profile': 'Get current user profile',
-        'PUT /api/users/profile': 'Update current user profile',
-        'GET /api/users/:id': 'Get user by ID',
-        'PUT /api/users/:id': 'Update user',
-        'DELETE /api/users/:id': 'Delete user (admin)',
-        'PUT /api/users/:id/role': 'Update user role (admin)',
-        'PUT /api/users/:id/streak': 'Update user streak'
-      },
-      system: {
-        'GET /api/health': 'Health check',
-        'GET /api/docs': 'API documentation'
-      }
-    },
-    authentication: {
-      type: 'Bearer Token',
-      header: 'Authorization: Bearer <token>'
-    },
-    features: {
-      security: ['Rate limiting', 'Input validation', 'CORS protection', 'Security headers'],
-      logging: ['Request logging', 'Performance monitoring', 'Security events', 'Error tracking'],
-      validation: ['Comprehensive input validation', 'Business rule validation', 'Type safety'],
-      auth: ['JWT tokens', 'Role-based access', 'Permission-based access', 'Token refresh']
-    }
-  });
+app.use('/api/docs', (_req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:"
+  );
+  next();
 });
+app.use('/api/docs', swaggerUi.serve);
+app.get('/api/docs', swaggerUi.setup(openApiSpec, {
+  customSiteTitle: 'StudentLens API',
+  swaggerOptions: { persistAuthorization: true }
+}));
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
 appLogger.info('Port Configuration', {

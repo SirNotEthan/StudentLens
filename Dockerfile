@@ -16,7 +16,7 @@ RUN cd backend && npm install
 FROM base AS development
 COPY . .
 EXPOSE 5173 5000
-CMD ["npm", "run", "dev"]
+CMD ["sh", "-c", "trap 'kill 0' TERM INT EXIT; (cd backend && npm run dev) & npm run dev & wait"]
 
 # Build stage
 FROM base AS build
