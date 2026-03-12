@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import { sanitizeHTML } from '../../utils/sanitize';
 
 const WriterDashboard = ({ activeTab, setActiveTab }) => {
   const { user: _user } = useAuth();
@@ -190,7 +191,7 @@ const WriterDashboard = ({ activeTab, setActiveTab }) => {
           </div>
 
           <div className="article-content">
-            <div dangerouslySetInnerHTML={{ __html: selectedArticle.content }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(selectedArticle.content) }} />
           </div>
 
           {selectedArticle.status === 'draft' && (

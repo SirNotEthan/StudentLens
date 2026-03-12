@@ -1,6 +1,7 @@
 const { body, param, query, validationResult } = require('express-validator');
 type ValidationChain = any;
 import { Request, Response, NextFunction } from 'express';
+import sanitizeHtml from 'sanitize-html';
 import { UserRole } from '@/types';
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
@@ -12,24 +13,31 @@ export const sanitizeString = (value: any): string => {
 
 export const sanitizeHTML = (value: any): string => {
   if (typeof value !== 'string') return '';
-  return value
-    // Remove dangerous tags (including multiline content)
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
-    .replace(/<object[\s\S]*?<\/object>/gi, '')
-    .replace(/<embed[\s\S]*?<\/embed>/gi, '')
-    .replace(/<form[\s\S]*?<\/form>/gi, '')
-    // Remove dangerous standalone tags
-    .replace(/<(script|iframe|object|embed|form|base|meta|link)[^>]*\/?>/gi, '')
-    // Remove dangerous protocols (javascript:, data:, vbscript:)
-    .replace(/javascript\s*:/gi, '')
-    .replace(/data\s*:\s*text\/html/gi, '')
-    .replace(/vbscript\s*:/gi, '')
-    // Remove event handlers (onclick, onerror, onload, etc.)
-    .replace(/\bon\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
-    // Remove style expressions (IE-specific CSS attacks)
-    .replace(/expression\s*\(/gi, '')
-    .replace(/url\s*\(\s*['"]?\s*javascript/gi, '');
+  return sanitizeHtml(value, {
+    allowedTags: [
+      'p', 'br', 'hr', 'div', 'span',
+      'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
+      'strong', 'em', 'b', 'i', 'u', 's', 'sub', 'sup',
+      'a', 'img', 'figure', 'figcaption',
+      'table', 'thead', 'tbody', 'tr', 'th', 'td'
+    ],
+    allowedAttributes: {
+      'a': ['href', 'title', 'target', 'rel'],
+      'img': ['src', 'alt', 'title', 'width', 'height'],
+      'td': ['colspan', 'rowspan'],
+      'th': ['colspan', 'rowspan'],
+      '*': ['class']
+    },
+    allowedSchemes: ['https', 'http'],
+    allowedSchemesByTag: { 'img': ['https', 'http'] },
+    transformTags: {
+      'a': (_tagName, attribs) => ({
+        tagName: 'a',
+        attribs: { ...attribs, rel: 'noopener noreferrer' }
+      })
+    }
+  });
 };
 
 export const handleValidationErrors = (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import { sanitizeHTML } from '../../utils/sanitize';
 
 const TeacherDashboard = ({ activeTab, setActiveTab }) => {
   const { user: _user } = useAuth();
@@ -113,7 +114,7 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
           </div>
 
           <div className="article-content">
-            <div dangerouslySetInnerHTML={{ __html: selectedArticle.content }} />
+            <div dangerouslySetInnerHTML={{ __html: sanitizeHTML(selectedArticle.content) }} />
           </div>
 
           <div className="review-actions">
