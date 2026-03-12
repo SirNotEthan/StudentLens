@@ -12,7 +12,8 @@ const ContactUs = () => {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
+    _gotcha: ''
   });
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,8 +86,8 @@ const ContactUs = () => {
               <h3>Email Us</h3>
               <p>
                 <strong>General Inquiries:</strong><br />
-                <a href={`mailto:${settings?.contact?.email || 'contact@studentlens.com'}`}>
-                  {settings?.contact?.email || 'contact@studentlens.com'}
+                <a href={`mailto:${settings?.contact?.email || 'icsnewsubmissions@icsz.ch'}`}>
+                  {settings?.contact?.email || 'icsnewsubmissions@icsz.ch'}
                 </a>
               </p>
             </section>
@@ -159,6 +160,17 @@ const ContactUs = () => {
                   {status.message}
                 </div>
               )}
+
+              {/* Honeypot field — hidden from humans, bots will fill it */}
+              <input
+                type="text"
+                name="_gotcha"
+                value={formData._gotcha}
+                onChange={handleChange}
+                style={{ display: 'none' }}
+                tabIndex={-1}
+                autoComplete="off"
+              />
 
               <button
                 type="submit"

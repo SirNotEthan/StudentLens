@@ -13,6 +13,10 @@ const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [posts, setPosts] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [contactSubmissions, setContactSubmissions] = useState([]);
+  const [contactFilter, setContactFilter] = useState('all');
+  const [contactSearchQuery, setContactSearchQuery] = useState('');
+  const [expandedSubmission, setExpandedSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
@@ -61,16 +65,18 @@ const AdminPanel = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersRes, postsRes, applicationsRes, settingsRes] = await Promise.all([
+      const [usersRes, postsRes, applicationsRes, settingsRes, contactRes] = await Promise.all([
         axios.get('/users'),
         axios.get('/posts?limit=50'),
         axios.get('/applications').catch(() => ({ data: { data: { applications: [] } } })),
-        axios.get('/settings').catch(() => ({ data: { data: { settings: null } } }))
+        axios.get('/settings').catch(() => ({ data: { data: { settings: null } } })),
+        axios.get('/contact/submissions').catch(() => ({ data: { data: { submissions: [] } } }))
       ]);
 
       setUsers(usersRes.data.users || []);
       setPosts(postsRes.data.posts || []);
       setApplications(applicationsRes.data.data?.applications || []);
+      setContactSubmissions(contactRes.data.data?.submissions || []);
 
       if (settingsRes.data.success && settingsRes.data.data?.settings) {
         setSettings(settingsRes.data.data.settings);
@@ -237,6 +243,27 @@ const AdminPanel = () => {
     }
   };
 
+  const handleUpdateSubmissionStatus = async (id, status) => {
+    try {
+      await axios.patch(`/contact/submissions/${id}/status`, { status });
+      setContactSubmissions(prev => prev.map(s => s.id === id ? { ...s, status } : s));
+    } catch (error) {
+      showAlert('Error', error.response?.data?.message || 'Failed to update submission', 'error');
+    }
+  };
+
+  const handleDeleteSubmission = (id) => {
+    showConfirm('Delete Submission', 'Are you sure you want to permanently delete this submission?', async () => {
+      try {
+        await axios.delete(`/contact/submissions/${id}`);
+        setContactSubmissions(prev => prev.filter(s => s.id !== id));
+        if (expandedSubmission === id) setExpandedSubmission(null);
+      } catch (error) {
+        showAlert('Error', error.response?.data?.message || 'Failed to delete submission', 'error');
+      }
+    }, 'danger');
+  };
+
   const getRoleBadgeColor = (role) => {
     const colors = {
       Student: '#4a90e2',
@@ -331,6 +358,20 @@ const AdminPanel = () => {
             {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length > 0 && (
               <span className="notification-badge">
                 {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length}
+              </span>
+            )}
+          </button>
+        )}
+
+        {(hasRole('Owner') || hasRole('Teacher')) && (
+          <button
+            className={`tab-button ${activeTab === 'contact' ? 'active' : ''}`}
+            onClick={() => setActiveTab('contact')}
+          >
+            📬 Contact Submissions
+            {contactSubmissions.filter(s => s.status === 'new').length > 0 && (
+              <span className="notification-badge">
+                {contactSubmissions.filter(s => s.status === 'new').length}
               </span>
             )}
           </button>
@@ -693,6 +734,142 @@ const AdminPanel = () => {
             </div>
           </div>
         )}
+
+        {activeTab === 'contact' && (hasRole('Owner') || hasRole('Teacher')) && (() => {
+          const filteredSubmissions = contactSubmissions.filter(s => {
+            if (contactFilter !== 'all' && s.status !== contactFilter) return false;
+            if (!contactSearchQuery) return true;
+            const q = contactSearchQuery.toLowerCase();
+            return (
+              s.name?.toLowerCase().includes(q) ||
+              s.email?.toLowerCase().includes(q) ||
+              s.subject?.toLowerCase().includes(q)
+            );
+          });
+          return (
+          <div className="submissions-management">
+            <div className="section-header">
+              <h2>Contact Submissions</h2>
+              <p>Messages submitted via the Contact Us form</p>
+            </div>
+
+            <div className="search-bar">
+              <input
+                type="text"
+                placeholder="Search by name, email, or subject..."
+                value={contactSearchQuery}
+                onChange={(e) => setContactSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {contactSearchQuery && (
+                <button className="clear-search" onClick={() => setContactSearchQuery('')}>✕</button>
+              )}
+              <select
+                value={contactFilter}
+                onChange={(e) => setContactFilter(e.target.value)}
+                className="filter-select"
+              >
+                <option value="all">All</option>
+                <option value="new">New</option>
+                <option value="read">Read</option>
+                <option value="archived">Archived</option>
+              </select>
+            </div>
+
+            <div className="applications-list">
+              {filteredSubmissions
+                .map(s => (
+                  <div key={s.id} className={`application-card ${s.status === 'new' ? 'pending' : ''}`}>
+                    <div className="application-header">
+                      <div className="applicant-info">
+                        <div className="applicant-avatar">
+                          {s.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="applicant-details">
+                          <h3>{s.name}</h3>
+                          <p>{s.email}</p>
+                        </div>
+                      </div>
+                      <span className={`status-badge ${s.status}`}>
+                        {s.status.charAt(0).toUpperCase() + s.status.slice(1)}
+                      </span>
+                    </div>
+
+                    <div className="application-content">
+                      <div className="application-section">
+                        <h4>{s.subject}</h4>
+                        {expandedSubmission === s.id ? (
+                          <pre className="application-reason">{s.message}</pre>
+                        ) : (
+                          <p style={{ color: '#666', margin: '4px 0' }}>
+                            {s.message.length > 120 ? s.message.slice(0, 120) + '…' : s.message}
+                          </p>
+                        )}
+                        {s.message.length > 120 && (
+                          <button
+                            className="view-post-btn"
+                            style={{ marginTop: '6px' }}
+                            onClick={() => setExpandedSubmission(expandedSubmission === s.id ? null : s.id)}
+                          >
+                            {expandedSubmission === s.id ? 'Show less' : 'Read more'}
+                          </button>
+                        )}
+                      </div>
+                      <div className="application-meta">
+                        <small>Received: {formatDate(s.createdAt)}</small>
+                      </div>
+                    </div>
+
+                    <div className="application-actions">
+                      {s.status !== 'read' && (
+                        <button
+                          className="approve-btn"
+                          onClick={() => handleUpdateSubmissionStatus(s.id, 'read')}
+                        >
+                          ✓ Mark Read
+                        </button>
+                      )}
+                      {s.status !== 'archived' && (
+                        <button
+                          className="edit-post-btn"
+                          onClick={() => handleUpdateSubmissionStatus(s.id, 'archived')}
+                        >
+                          📁 Archive
+                        </button>
+                      )}
+                      {s.status === 'archived' && (
+                        <button
+                          className="approve-btn"
+                          onClick={() => handleUpdateSubmissionStatus(s.id, 'new')}
+                        >
+                          ↩ Restore
+                        </button>
+                      )}
+                      <a
+                        className="view-post-btn"
+                        href={`mailto:${s.email}?subject=Re: ${encodeURIComponent(s.subject)}`}
+                      >
+                        ✉ Reply
+                      </a>
+                      <button
+                        className="reject-btn"
+                        onClick={() => handleDeleteSubmission(s.id)}
+                      >
+                        🗑 Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+              {filteredSubmissions.length === 0 && (
+                <div className="no-applications">
+                  <p>No {contactFilter !== 'all' ? contactFilter : ''} submissions found.</p>
+                </div>
+              )}
+            </div>
+          </div>
+          );
+        })()}
 
         {activeTab === 'posts' && (
           <div className="posts-management">

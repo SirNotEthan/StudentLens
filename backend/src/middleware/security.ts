@@ -70,6 +70,12 @@ export const uploadLimiter = createRateLimit(
   'Upload rate limit exceeded, please try again after 1 hour.'
 );
 
+export const contactLimiter = createRateLimit(
+  60 * 60 * 1000, // 1 hour
+  5, // 5 contact submissions per hour per IP
+  'Too many messages sent. Please try again after 1 hour.'
+);
+
 export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
   const connectSrc = process.env.NODE_ENV === 'development'
     ? "'self' http://localhost:3000 http://localhost:5173 ws://localhost:*"

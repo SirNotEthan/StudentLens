@@ -180,6 +180,20 @@ export interface IWriterApplication {
 
 export type ApplicationStatus = 'pending' | 'approved' | 'rejected';
 
+export type ContactSubmissionStatus = 'new' | 'read' | 'archived';
+
+export interface IContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: ContactSubmissionStatus;
+  ipAddress?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateApplicationRequest {
   reason: string;
   writingSample?: string;
