@@ -319,10 +319,6 @@ export interface UpdateUserRequest {
   strandsLastPlayedDate?: string;
 }
 
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
 
 export interface AppwriteUser {
   $id: string;

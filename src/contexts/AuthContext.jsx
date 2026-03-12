@@ -21,7 +21,58 @@ axios.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
+  (error) => Promise.reject(error)
+);
+
+let isRefreshing = false;
+let refreshQueue = [];
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config;
+    if (
+      error.response?.status === 401 &&
+      !original._retried &&
+      original.url !== '/auth/refresh-token' &&
+      original.url !== '/auth/login'
+    ) {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) return Promise.reject(error);
+
+      original._retried = true;
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({ resolve, reject });
+        }).then((token) => {
+          original.headers.Authorization = `Bearer ${token}`;
+          return axios(original);
+        });
+      }
+
+      isRefreshing = true;
+      try {
+        const { data } = await axios.post('/auth/refresh-token', { refreshToken });
+        const newToken = data.data.accessToken;
+        localStorage.setItem('token', newToken);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+        refreshQueue.forEach(({ resolve }) => resolve(newToken));
+        refreshQueue = [];
+        original.headers.Authorization = `Bearer ${newToken}`;
+        return axios(original);
+      } catch {
+        refreshQueue.forEach(({ reject }) => reject(error));
+        refreshQueue = [];
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        delete axios.defaults.headers.common['Authorization'];
+        window.location.href = '/login';
+        return Promise.reject(error);
+      } finally {
+        isRefreshing = false;
+      }
+    }
     return Promise.reject(error);
   }
 );
@@ -103,10 +154,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const response = await axios.post('/auth/login', credentials);
-      const { accessToken: token, user: userData } = response.data.data;
+      const { accessToken: token, refreshToken, user: userData } = response.data.data;
       const completeUser = normalizeUserData(userData);
 
       localStorage.setItem('token', token);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(completeUser);
 
@@ -125,10 +177,11 @@ export const AuthProvider = ({ children }) => {
     setError(null);
     try {
       const response = await axios.post('/auth/register', userData);
-      const { accessToken: token, user: newUser } = response.data.data;
+      const { accessToken: token, refreshToken, user: newUser } = response.data.data;
       const completeUser = normalizeUserData(newUser);
 
       localStorage.setItem('token', token);
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(completeUser);
 
@@ -164,6 +217,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setError(null);
@@ -184,21 +238,6 @@ export const AuthProvider = ({ children }) => {
       console.error('Profile update error:', error.message);
 
       const errorMessage = error.response?.data?.message || 'Profile update failed';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const changePassword = async (passwordData) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await axios.put('/auth/change-password', passwordData);
-      return { success: true, message: response.data.message };
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Password change failed';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -289,7 +328,6 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
-    changePassword,
     hasPermission,
     hasRole,
     canAccess,

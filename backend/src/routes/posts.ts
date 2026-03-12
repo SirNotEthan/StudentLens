@@ -80,6 +80,18 @@ router.get('/bookmarks',
   getUserBookmarks
 );
 
+router.get('/pending/editor',
+  authorizePermission('edit_articles'),
+  validate(validatePostQuery),
+  getPendingForEditor
+);
+
+router.get('/pending/reviewer',
+  authorizePermission('review_articles'),
+  validate(validatePostQuery),
+  getPendingForReviewer
+);
+
 router.get('/:id/interactions',
   validate(validatePostId),
   getPostInteractions
@@ -132,18 +144,6 @@ router.patch('/:id/publish-article',
 router.patch('/:id/reject',
   validate(validatePostId),
   rejectForRevision
-);
-
-router.get('/pending/editor',
-  authorizePermission('edit_articles'),
-  validate(validatePostQuery),
-  getPendingForEditor
-);
-
-router.get('/pending/reviewer',
-  authorizePermission('review_articles'),
-  validate(validatePostQuery),
-  getPendingForReviewer
 );
 
 router.patch('/:id/like',

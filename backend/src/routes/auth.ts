@@ -55,6 +55,11 @@ router.post('/reset-password',
   resetPassword
 );
 
+router.post('/refresh-token',
+  authLimiter,
+  refreshToken
+);
+
 router.use((req, res, next) => {
   if (req.path.startsWith('/google/')) {
     return next();
@@ -74,10 +79,6 @@ router.put('/profile',
 router.post('/complete-setup',
   validate(validateProfileUpdate),
   completeSetup
-);
-
-router.post('/refresh-token',
-  refreshToken
 );
 
 router.delete('/account',

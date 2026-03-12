@@ -6,15 +6,16 @@ import { User } from '@/models/User';
 import {
   generateAccessToken,
   generateTokenPair,
-  revokeToken
+  revokeToken,
+  verifyToken,
+  isTokenRevoked
 } from '@/utils/generateToken';
 import {
   AuthenticatedRequest,
   ApiResponse,
   RegisterUserRequest,
   LoginRequest,
-  UpdateUserRequest,
-  ChangePasswordRequest
+  UpdateUserRequest
 } from '@/types';
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
@@ -286,60 +287,6 @@ export const logout = catchAsync(async (
   }
 });
 
-export const changePassword = catchAsync(async (
-  req: AuthenticatedRequest,
-  res: Response
-): Promise<void> => {
-  const startTime = Date.now();
-
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      const errorMessages = errors.array().map((err: any) => err.msg).join(', ');
-      throw AppError.badRequest(`Validation failed: ${errorMessages}`);
-    }
-
-    const { currentPassword, newPassword }: ChangePasswordRequest = req.body;
-    const userId = req.user.id;
-
-    appLogger.debug('Password change attempt', { userId });
-
-    try {
-      await account.createEmailPasswordSession({ email: req.user.email, password: currentPassword });
-
-      await users.updatePassword({ userId, password: newPassword });
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Password changed successfully'
-      };
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('changePassword', duration, { userId });
-
-      appLogger.info('Password changed successfully', { userId });
-
-      res.json(response);
-
-    } catch (authError: any) {
-      appLogger.logAuth('failed_password_change', userId, {
-        reason: 'invalid_current_password'
-      }, req);
-
-      if (authError.code === 401) {
-        throw AppError.badRequest('Current password is incorrect');
-      }
-      throw authError;
-    }
-  } catch (error: any) {
-    const duration = Date.now() - startTime;
-    appLogger.logPerformance('changePassword', duration, {
-      error: true,
-      userId: req.user.id
-    });
-    throw error;
-  }
-});
 
 export const completeSetup = catchAsync(async (
   req: AuthenticatedRequest,
@@ -442,39 +389,36 @@ export const checkUsername = catchAsync(async (
 });
 
 export const refreshToken = catchAsync(async (
-  req: AuthenticatedRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
-  const startTime = Date.now();
+  const { refreshToken: token } = req.body;
 
-  try {
-    const { refreshToken: token } = req.body;
-
-    if (!token) {
-      throw AppError.badRequest('Refresh token is required');
-    }
-
-    appLogger.debug('Token refresh attempt');
-
-    const newAccessToken = generateAccessToken(req.user);
-
-    const response: ApiResponse = {
-      success: true,
-      message: 'Token refreshed successfully',
-      data: {
-        accessToken: newAccessToken
-      }
-    };
-
-    const duration = Date.now() - startTime;
-    appLogger.logPerformance('refreshToken', duration, { userId: req.user.id });
-
-    res.json(response);
-  } catch (error: any) {
-    const duration = Date.now() - startTime;
-    appLogger.logPerformance('refreshToken', duration, { error: true });
-    throw error;
+  if (!token) {
+    throw AppError.badRequest('Refresh token is required');
   }
+
+  const revoked = await isTokenRevoked(token);
+  if (revoked) {
+    throw AppError.unauthorized('Refresh token has been revoked');
+  }
+
+  const decoded = verifyToken(token);
+
+  const user = await User.findById(decoded.id);
+  if (!user || !user.isActive) {
+    throw AppError.unauthorized('Invalid refresh token');
+  }
+
+  const newAccessToken = generateAccessToken(user);
+
+  appLogger.debug('Token refreshed', { userId: user.id });
+
+  res.json({
+    success: true,
+    message: 'Token refreshed successfully',
+    data: { accessToken: newAccessToken }
+  } as ApiResponse);
 });
 
 export const deleteAccount = catchAsync(async (

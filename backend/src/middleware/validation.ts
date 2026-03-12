@@ -202,23 +202,6 @@ export const validateProfileUpdate: ValidationChain[] = [
     .withMessage('Profile image URL too long')
 ];
 
-export const validatePasswordChange: ValidationChain[] = [
-  body('currentPassword')
-    .notEmpty()
-    .withMessage('Current password is required'),
-
-  body('newPassword')
-    .isLength({ min: 8, max: 128 })
-    .withMessage('New password must be between 8 and 128 characters')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('New password must contain at least one lowercase letter, one uppercase letter, one number, and one special character')
-    .custom((value, { req }) => {
-      if (value === req.body.currentPassword) {
-        throw new Error('New password must be different from current password');
-      }
-      return true;
-    })
-];
 
 export const validateRoleUpdate: ValidationChain[] = [
   param('id')
