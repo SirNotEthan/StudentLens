@@ -91,7 +91,7 @@ router.delete('/:id',
 
 router.put('/:id/role',
   validate(validateRoleUpdate),
-  authorize('manage_roles'),
+  authorizeRole('Owner', 'Teacher'),
   validateBusinessRules,
   updateUserRole
 );

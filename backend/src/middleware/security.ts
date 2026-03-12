@@ -76,6 +76,25 @@ export const contactLimiter = createRateLimit(
   'Too many messages sent. Please try again after 1 hour.'
 );
 
+const appwriteImgOrigin = (() => {
+  try {
+    return process.env.APPWRITE_ENDPOINT
+      ? new URL(process.env.APPWRITE_ENDPOINT).origin
+      : '';
+  } catch {
+    return '';
+  }
+})();
+
+const IMG_SRC = [
+  "'self'",
+  'data:',
+  'developers.google.com',       // Google OAuth button logo
+  'lh3.googleusercontent.com',   // Google profile pictures
+  'images.unsplash.com',         // Fallback news image
+  appwriteImgOrigin              // Appwrite file storage
+].filter(Boolean).join(' ');
+
 export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
   const connectSrc = process.env.NODE_ENV === 'development'
     ? "'self' http://localhost:3000 http://localhost:5173 ws://localhost:*"
@@ -85,7 +104,7 @@ export const securityHeaders = (req: Request, res: Response, next: NextFunction)
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
+    `img-src ${IMG_SRC}`,
     "font-src 'self'",
     `connect-src ${connectSrc}`,
     "frame-ancestors 'none'"

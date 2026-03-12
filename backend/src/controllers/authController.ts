@@ -140,11 +140,11 @@ export const login = catchAsync(async (
         login
       }, req);
 
-      throw AppError.unauthorized('Account is inactive');
+      throw AppError.unauthorized('Invalid username or password');
     }
 
     try {
-      const session = await account.createEmailPasswordSession(user.email, password);
+      await account.createEmailPasswordSession({ email: user.email, password });
 
       await user.updateLastLogin();
 
@@ -305,9 +305,9 @@ export const changePassword = catchAsync(async (
     appLogger.debug('Password change attempt', { userId });
 
     try {
-      await account.createEmailPasswordSession(req.user.email, currentPassword);
+      await account.createEmailPasswordSession({ email: req.user.email, password: currentPassword });
 
-      await users.updatePassword(userId, newPassword);
+      await users.updatePassword({ userId, password: newPassword });
 
       const response: ApiResponse = {
         success: true,
@@ -634,7 +634,7 @@ export const resetPassword = catchAsync(async (
   }
 
   try {
-    await users.updatePassword(tokenData.userId, newPassword);
+    await users.updatePassword({ userId: tokenData.userId, password: newPassword });
     appLogger.info('Password reset successful', { userId: tokenData.userId });
   } catch (error: any) {
     appLogger.error('Failed to update password during reset', error, { userId: tokenData.userId });

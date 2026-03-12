@@ -22,8 +22,7 @@ export const generateAccessToken = (user: IUser): string => {
     const token = (jwt.sign as any)(payload, JWT_SECRET, {
       expiresIn: JWT_EXPIRE,
       issuer: 'studentlens-backend',
-      audience: 'studentlens-frontend',
-      subject: user.id
+      audience: 'studentlens-frontend'
     });
 
     appLogger.debug('Access token generated', {
@@ -54,8 +53,7 @@ export const generateRefreshToken = (user: IUser): string => {
     const token = (jwt.sign as any)(payload, JWT_SECRET, {
       expiresIn: JWT_REFRESH_EXPIRE,
       issuer: 'studentlens-backend',
-      audience: 'studentlens-frontend',
-      subject: user.id
+      audience: 'studentlens-frontend'
     });
 
     appLogger.debug('Refresh token generated', {
@@ -177,8 +175,7 @@ export const refreshAccessToken = (refreshToken: string): string => {
     const newAccessToken = (jwt.sign as any)(newPayload, JWT_SECRET, {
       expiresIn: JWT_EXPIRE,
       issuer: 'studentlens-backend',
-      audience: 'studentlens-frontend',
-      subject: decoded.id
+      audience: 'studentlens-frontend'
     });
 
     appLogger.info('Access token refreshed', {

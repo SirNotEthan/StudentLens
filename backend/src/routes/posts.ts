@@ -76,6 +76,10 @@ router.get('/my',
   getMyPosts
 );
 
+router.get('/bookmarks',
+  getUserBookmarks
+);
+
 router.get('/:id/interactions',
   validate(validatePostId),
   getPostInteractions
@@ -150,10 +154,6 @@ router.patch('/:id/like',
 router.patch('/:postId/bookmark',
   validate(validatePostIdParam),
   toggleBookmark
-);
-
-router.get('/bookmarks',
-  getUserBookmarks
 );
 
 export default router;

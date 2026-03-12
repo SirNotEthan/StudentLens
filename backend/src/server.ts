@@ -67,7 +67,7 @@ app.set('trust proxy', 1);
 
 app.use(securityHeaders);
 
-const isProduction = process.env.NODE_ENV === 'production';
+
 const helmetConfig: any = {
   contentSecurityPolicy: {
     directives: {
@@ -108,14 +108,14 @@ app.use(generalLimiter);
 
 app.use(cors(corsOptions));
 
-app.use(limitRequestSize(10 * 1024 * 1024));
+app.use(limitRequestSize(25 * 1024 * 1024));
 
 app.use(validateUserAgent);
 
 app.use(express.json({
-  limit: '10mb',
-  verify: (req, res, buf) => {
-    (req as any).rawBody = buf;
+  limit: '25mb',
+  verify: (_req, _res, buf) => {
+    (_req as any).rawBody = buf;
   }
 }));
 app.use(express.urlencoded({
@@ -132,7 +132,7 @@ const useSecureCookies = process.env.SECURE_COOKIES === 'false'
 
 appLogger.info('Session middleware initialization deferred until Redis connection attempt');
 
-app.get('/api/docs', (req, res): void => {
+app.get('/api/docs', (_req, res): void => {
   res.json({
     name: 'StudentLens Backend API',
     version: '1.0.0',
@@ -236,7 +236,7 @@ const startServer = async (): Promise<void> => {
 
     appLogger.info('Session and Passport middleware initialized (sessions used for OAuth flow only)');
 
-    app.get('/api/health', async (req, res): Promise<void> => {
+    app.get('/api/health', async (_req, res): Promise<void> => {
       const appwriteConnected = await checkAppwriteConnection();
 
       const healthCheck = {

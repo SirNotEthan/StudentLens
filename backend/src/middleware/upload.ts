@@ -4,7 +4,7 @@ import { AppError } from '@/utils/AppError';
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+const fileFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
   if (allowedMimes.includes(file.mimetype)) {
@@ -18,7 +18,7 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: 25 * 1024 * 1024,
   },
 });
 
