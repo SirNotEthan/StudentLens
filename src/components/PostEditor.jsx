@@ -319,7 +319,7 @@ const PostEditor = ({ postId, onPostUpdated, onCancel }) => {
               name="featuredImage"
               value={formData.featuredImage}
               onChange={handleInputChange}
-              placeholder="https:
+              placeholder="https://example.com/image.jpg"
             />
           </div>
         </div>

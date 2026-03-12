@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
@@ -221,8 +221,6 @@ const SpellingBeePage = () => {
     if (score < 200) return 'Amazing';
     return 'Genius';
   };
-
-  const allLetters = [centerLetter, ...outerLetters];
 
   return (
     <div className="spelling-bee-page">

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-const AuthorLink = ({ authorName, authorId, username, className = '' }) => {
+const AuthorLink = ({ authorName, authorId: _authorId, username, className = '' }) => {
   const navigate = useNavigate();
 
   const handleClick = (e) => {

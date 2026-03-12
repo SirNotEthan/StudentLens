@@ -6,7 +6,7 @@ import '../styles/ApplyWriter.css';
 
 const ApplyWriter = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  useAuth();
   const [formData, setFormData] = useState({
     writingSample: '',
     interests: '',

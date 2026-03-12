@@ -5,7 +5,7 @@ import axios from 'axios';
 import '../styles/MyDrafts.css';
 
 const MyDrafts = () => {
-  const { user, hasPermission, getUserDisplayName } = useAuth();
+  const { hasPermission } = useAuth();
   const navigate = useNavigate();
   const [drafts, setDrafts] = useState([]);
   const [published, setPublished] = useState([]);

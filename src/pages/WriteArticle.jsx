@@ -261,7 +261,7 @@ const WriteArticle = () => {
 
     allMatches.sort((a, b) => a.index - b.index);
 
-    allMatches.forEach(({ type, match, content, index, length }) => {
+    allMatches.forEach(({ type, match: _match, content, index, length }) => {
       if (index < currentIndex) return;
       if (index > currentIndex) {
         parts.push(text.substring(currentIndex, index));

@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
 export const useAnalytics = () => {
-  const { user } = useAuth();
+  useAuth();
   const sessionStartTime = useRef(Date.now());
 
   const trackEvent = async (eventType, eventData = {}) => {

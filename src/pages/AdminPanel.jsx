@@ -7,7 +7,7 @@ import { AlertModal, ConfirmModal } from '../components/Modal';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
-  const { user: _user, hasPermission, hasRole } = useAuth();
+  const { user: _user, hasRole } = useAuth();
   const { refreshSettings } = useSettings();
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);

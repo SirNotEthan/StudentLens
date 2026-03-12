@@ -43,7 +43,7 @@ const ContactUs = () => {
         subject: '',
         message: ''
       });
-    } catch (error) {
+    } catch {
       setStatus({
         type: 'error',
         message: 'Sorry, there was an error sending your message. Please try again or contact us directly via email.'
