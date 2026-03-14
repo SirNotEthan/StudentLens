@@ -570,7 +570,7 @@ body {
 
 .articles-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.8fr 1fr;
   gap: 1.25rem;
 }
 
@@ -586,7 +586,8 @@ body {
 }
 
 .article-card.main-feature .article-card-image {
-  height: 180px;
+  flex: 1;
+  min-height: 200px;
 }
 
 .article-card.side-feature {
@@ -596,7 +597,7 @@ body {
 }
 
 .article-card.side-feature .article-card-image {
-  height: 180px;
+  height: 120px;
 }
 
 .article-card {

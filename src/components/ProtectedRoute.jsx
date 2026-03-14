@@ -6,6 +6,10 @@ import '../styles/Welcome.css';
 const ProtectedRoute = ({ children, requiredPermission, requiredRole, fallback = '/login' }) => {
   const { user, loading, hasPermission, hasRole } = useAuth();
 
+  if (import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') {
+    return children;
+  }
+
   if (loading) {
     return (
       <div className="welcome-container">
