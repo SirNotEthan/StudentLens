@@ -113,6 +113,9 @@ const Login = () => {
         </div>
       </div>
     </div>
+    <footer style={{ textAlign: 'center', padding: '16px', fontSize: '12px', color: '#888' }}>
+      <a href="/terms-privacy" style={{ color: '#888', textDecoration: 'underline' }}>Terms &amp; Privacy Policy</a>
+    </footer>
     </>
   );
 };
