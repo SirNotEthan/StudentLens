@@ -570,25 +570,21 @@ body {
 
 .articles-layout {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
 }
 
 .side-articles {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  display: contents;
 }
 
 .article-card.main-feature {
   display: flex;
   flex-direction: column;
-  min-height: 320px;
 }
 
 .article-card.main-feature .article-card-image {
-  min-height: 220px;
-  height: 220px;
+  height: 180px;
 }
 
 .article-card.side-feature {
@@ -598,8 +594,7 @@ body {
 }
 
 .article-card.side-feature .article-card-image {
-  min-height: 160px;
-  height: 160px;
+  height: 180px;
 }
 
 .article-card {
