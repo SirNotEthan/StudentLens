@@ -137,14 +137,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/terms-privacy"
-            element={
-              <ProtectedRoute>
-                <TermsPrivacy />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/terms-privacy" element={<TermsPrivacy />} />
           <Route
             path="/apply-writer"
             element={

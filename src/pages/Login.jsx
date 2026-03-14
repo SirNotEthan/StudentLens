@@ -111,12 +111,10 @@ const Login = () => {
             </button>
           </div>
         </div>
+        <a href="/terms-privacy" style={{ position: 'absolute', bottom: '16px', fontSize: '12px', color: 'rgba(255,255,255,0.6)', textDecoration: 'underline' }}>Terms &amp; Privacy Policy</a>
       </div>
     </div>
-    <footer style={{ textAlign: 'center', padding: '16px', fontSize: '12px', color: '#888' }}>
-      <a href="/terms-privacy" style={{ color: '#888', textDecoration: 'underline' }}>Terms &amp; Privacy Policy</a>
-    </footer>
-    </>
+</>
   );
 };
 
