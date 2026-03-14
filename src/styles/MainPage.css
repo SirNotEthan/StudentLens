@@ -570,12 +570,14 @@ body {
 
 .articles-layout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
 }
 
 .side-articles {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
 .article-card.main-feature {
