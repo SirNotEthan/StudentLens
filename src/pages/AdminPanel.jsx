@@ -26,6 +26,8 @@ const AdminPanel = () => {
   const [applicationSearchQuery, setApplicationSearchQuery] = useState('');
   const [applicationFilter, setApplicationFilter] = useState('pending');
   const [userStatusFilter, setUserStatusFilter] = useState('all');
+  const [userPage, setUserPage] = useState(1);
+  const USERS_PER_PAGE = 15;
   const [settings, setSettings] = useState(null);
   const [settingsForm, setSettingsForm] = useState({});
   const [settingsSaving, setSettingsSaving] = useState(false);
@@ -66,7 +68,7 @@ const AdminPanel = () => {
     try {
       setLoading(true);
       const [usersRes, postsRes, applicationsRes, settingsRes, contactRes] = await Promise.all([
-        axios.get('/users'),
+        axios.get('/users?limit=1000'),
         axios.get('/posts?limit=50'),
         axios.get('/applications').catch(() => ({ data: { data: { applications: [] } } })),
         axios.get('/settings').catch(() => ({ data: { data: { settings: null } } })),
@@ -409,15 +411,15 @@ const AdminPanel = () => {
                 type="text"
                 placeholder="Search users by name, email, or role..."
                 value={userSearchQuery}
-                onChange={(e) => setUserSearchQuery(e.target.value)}
+                onChange={(e) => { setUserSearchQuery(e.target.value); setUserPage(1); }}
                 className="search-input"
               />
               {userSearchQuery && (
-                <button className="clear-search" onClick={() => setUserSearchQuery('')}>✕</button>
+                <button className="clear-search" onClick={() => { setUserSearchQuery(''); setUserPage(1); }}>✕</button>
               )}
               <select
                 value={userStatusFilter}
-                onChange={(e) => setUserStatusFilter(e.target.value)}
+                onChange={(e) => { setUserStatusFilter(e.target.value); setUserPage(1); }}
                 className="filter-select"
               >
                 <option value="all">All Users</option>
@@ -440,25 +442,30 @@ const AdminPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users
-                    .filter(user => {
+                  {(() => {
+                    const filtered = users.filter(user => {
                       if (userSearchQuery) {
                         const query = userSearchQuery.toLowerCase();
+                        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
                         const matchesSearch = (
-                          user.username?.toLowerCase().includes(query) ||
-                          user.email?.toLowerCase().includes(query) ||
+                          fullName.includes(query) ||
                           user.firstName?.toLowerCase().includes(query) ||
                           user.lastName?.toLowerCase().includes(query) ||
+                          user.username?.toLowerCase().includes(query) ||
+                          user.email?.toLowerCase().includes(query) ||
                           user.role?.toLowerCase().includes(query)
                         );
                         if (!matchesSearch) return false;
                       }
-
                       if (userStatusFilter === 'active' && !user.isActive) return false;
                       if (userStatusFilter === 'inactive' && user.isActive) return false;
-
                       return true;
-                    })
+                    });
+                    const totalPages = Math.max(1, Math.ceil(filtered.length / USERS_PER_PAGE));
+                    const safePage = Math.min(userPage, totalPages);
+                    const paginated = filtered.slice((safePage - 1) * USERS_PER_PAGE, safePage * USERS_PER_PAGE);
+                    return paginated;
+                  })()
                     .map(user => (
                     <tr key={user.id} className={!user.isActive ? 'inactive-user' : ''}>
                       <td>
@@ -520,6 +527,66 @@ const AdminPanel = () => {
                 </tbody>
               </table>
             </div>
+            {(() => {
+              const filtered = users.filter(user => {
+                if (userSearchQuery) {
+                  const query = userSearchQuery.toLowerCase();
+                  const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim().toLowerCase();
+                  const matchesSearch = (
+                    fullName.includes(query) ||
+                    user.firstName?.toLowerCase().includes(query) ||
+                    user.lastName?.toLowerCase().includes(query) ||
+                    user.username?.toLowerCase().includes(query) ||
+                    user.email?.toLowerCase().includes(query) ||
+                    user.role?.toLowerCase().includes(query)
+                  );
+                  if (!matchesSearch) return false;
+                }
+                if (userStatusFilter === 'active' && !user.isActive) return false;
+                if (userStatusFilter === 'inactive' && user.isActive) return false;
+                return true;
+              });
+              const totalPages = Math.max(1, Math.ceil(filtered.length / USERS_PER_PAGE));
+              const safePage = Math.min(userPage, totalPages);
+              if (totalPages <= 1) return null;
+              const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+              return (
+                <div className="users-pagination">
+                  <span className="pagination-info">
+                    {filtered.length} user{filtered.length !== 1 ? 's' : ''} &mdash; page {safePage} of {totalPages}
+                  </span>
+                  <div className="pagination-controls">
+                    <button
+                      className="page-btn"
+                      onClick={() => setUserPage(1)}
+                      disabled={safePage === 1}
+                    >«</button>
+                    <button
+                      className="page-btn"
+                      onClick={() => setUserPage(p => Math.max(1, p - 1))}
+                      disabled={safePage === 1}
+                    >‹</button>
+                    {pageNumbers.map(n => (
+                      <button
+                        key={n}
+                        className={`page-btn ${n === safePage ? 'active' : ''}`}
+                        onClick={() => setUserPage(n)}
+                      >{n}</button>
+                    ))}
+                    <button
+                      className="page-btn"
+                      onClick={() => setUserPage(p => Math.min(totalPages, p + 1))}
+                      disabled={safePage === totalPages}
+                    >›</button>
+                    <button
+                      className="page-btn"
+                      onClick={() => setUserPage(totalPages)}
+                      disabled={safePage === totalPages}
+                    >»</button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
