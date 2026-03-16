@@ -2,7 +2,8 @@ import { Response, Request } from 'express';
 const { validationResult } = require('express-validator');
 import { Post } from '@/models/Post';
 import { Bookmark } from '@/models/Bookmark';
-import { databases, DATABASE_ID } from '@/config/appwrite';
+import { databases, DATABASE_ID, storage, STORAGE_BUCKET_ID, ID } from '@/config/appwrite';
+const { InputFile } = require('node-appwrite/file');
 import {
   AuthenticatedRequest,
   ApiResponse,
@@ -1046,4 +1047,36 @@ export const getPostInteractions = catchAsync(async (
     appLogger.logPerformance('getPostInteractions', duration, { error: true });
     throw error;
   }
+});
+
+export const uploadPostImage = catchAsync(async (
+  req: AuthenticatedRequest & { file?: Express.Multer.File },
+  res: Response
+): Promise<void> => {
+  if (!req.file) {
+    throw AppError.badRequest('No file uploaded');
+  }
+
+  if (!req.user.canAccess('articles', 'write') && !req.user.hasPermission('edit_articles')) {
+    throw AppError.forbidden('You do not have permission to upload images');
+  }
+
+  const fileId = ID.unique();
+  const file = await storage.createFile(
+    STORAGE_BUCKET_ID,
+    fileId,
+    InputFile.fromBuffer(req.file.buffer, req.file.originalname)
+  );
+
+  const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${STORAGE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`;
+
+  appLogger.info('Article image uploaded', { userId: req.user.id, fileId: file.$id });
+
+  const response: ApiResponse = {
+    success: true,
+    message: 'Image uploaded successfully',
+    data: { url: fileUrl, fileId: file.$id }
+  };
+
+  res.json(response);
 });

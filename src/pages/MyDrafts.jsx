@@ -10,37 +10,59 @@ const MyDrafts = () => {
   const [drafts, setDrafts] = useState([]);
   const [published, setPublished] = useState([]);
   const [pending, setPending] = useState([]);
+  const [toReview, setToReview] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('drafts');
+  const isEditor = hasPermission('edit_articles');
+  const isWriter = hasPermission('write_articles');
+  const [activeTab, setActiveTab] = useState(isEditor && !isWriter ? 'review' : 'drafts');
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (!hasPermission('write_articles')) {
+    if (!isWriter && !isEditor) {
       navigate('/main');
       return;
     }
     fetchMyArticles();
-  }, [hasPermission, navigate]);
+  }, [isWriter, isEditor, navigate]);
 
   const fetchMyArticles = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/posts/my');
-      if (response.data.success) {
-        const articles = response.data.posts || [];
 
-        setDrafts(articles.filter(a => a.status === 'draft'));
-        setPublished(articles.filter(a => a.status === 'published'));
-        setPending(articles.filter(a =>
-          a.status === 'pending_editor' ||
-          a.status === 'pending_reviewer' ||
-          a.status === 'pending'
-        ));
+      const fetches = [];
+
+      if (isWriter) {
+        fetches.push(
+          axios.get('/posts/my').then(r => {
+            if (r.data.success) {
+              const articles = r.data.posts || [];
+              setDrafts(articles.filter(a => a.status === 'draft'));
+              setPublished(articles.filter(a => a.status === 'published'));
+              setPending(articles.filter(a =>
+                a.status === 'pending_editor' ||
+                a.status === 'pending_reviewer' ||
+                a.status === 'pending'
+              ));
+            }
+          })
+        );
       }
+
+      if (isEditor) {
+        fetches.push(
+          axios.get('/posts/pending/editor?limit=50').then(r => {
+            if (r.data.success) {
+              setToReview(r.data.posts || []);
+            }
+          })
+        );
+      }
+
+      await Promise.all(fetches);
     } catch (error) {
       console.error('Failed to load articles:', error);
-      setError('Failed to load your articles. Please try again.');
+      setError('Failed to load articles. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -65,6 +87,20 @@ const MyDrafts = () => {
     } catch (error) {
       console.error('Failed to delete article:', error);
       alert('Failed to delete article. Please try again.');
+    }
+  };
+
+  const handleForwardToReviewer = async (articleId, articleTitle) => {
+    if (!window.confirm(`Forward "${articleTitle}" to the reviewer?`)) {
+      return;
+    }
+    try {
+      await axios.patch(`/posts/${articleId}/forward`);
+      alert('Article forwarded to reviewer successfully!');
+      fetchMyArticles();
+    } catch (error) {
+      console.error('Failed to forward article:', error);
+      alert('Failed to forward article. Please try again.');
     }
   };
 
@@ -247,8 +283,8 @@ const MyDrafts = () => {
             ← Back to Main
           </button>
           <div className="header-title-section">
-            <h1>My Articles</h1>
-            <p className="header-subtitle">Manage and edit your articles</p>
+            <h1>{isEditor && !isWriter ? 'Editorial Queue' : 'My Articles'}</h1>
+            <p className="header-subtitle">{isEditor && !isWriter ? 'Review and forward articles' : 'Manage and edit your articles'}</p>
           </div>
         </div>
         <button
@@ -268,27 +304,88 @@ const MyDrafts = () => {
 
       <div className="drafts-content">
         <div className="drafts-tabs">
-          <button
-            className={`tab-btn ${activeTab === 'drafts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('drafts')}
-          >
-            Drafts ({drafts.length})
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-            onClick={() => setActiveTab('pending')}
-          >
-            In Review ({pending.length})
-          </button>
-          <button
-            className={`tab-btn ${activeTab === 'published' ? 'active' : ''}`}
-            onClick={() => setActiveTab('published')}
-          >
-            Published ({published.length})
-          </button>
+          {isEditor && (
+            <button
+              className={`tab-btn ${activeTab === 'review' ? 'active' : ''}`}
+              onClick={() => setActiveTab('review')}
+            >
+              Review Queue ({toReview.length})
+            </button>
+          )}
+          {isWriter && (
+            <>
+              <button
+                className={`tab-btn ${activeTab === 'drafts' ? 'active' : ''}`}
+                onClick={() => setActiveTab('drafts')}
+              >
+                Drafts ({drafts.length})
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+                onClick={() => setActiveTab('pending')}
+              >
+                In Review ({pending.length})
+              </button>
+              <button
+                className={`tab-btn ${activeTab === 'published' ? 'active' : ''}`}
+                onClick={() => setActiveTab('published')}
+              >
+                Published ({published.length})
+              </button>
+            </>
+          )}
         </div>
 
         <div className="drafts-grid">
+          {activeTab === 'review' && (
+            <>
+              {toReview.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">✅</div>
+                  <h3>No articles waiting for your review</h3>
+                </div>
+              ) : (
+                toReview
+                  .sort((a, b) => new Date(b.submittedAt || b.updatedAt) - new Date(a.submittedAt || a.updatedAt))
+                  .map(article => (
+                    <div key={article.id} className="draft-card">
+                      {article.featuredImage && (
+                        <div className="draft-image">
+                          <img src={article.featuredImage} alt={article.title} />
+                        </div>
+                      )}
+                      <div className="draft-content">
+                        <div className="draft-header">
+                          <div className="draft-meta-top">
+                            <span className="draft-category" style={{ backgroundColor: getCategoryColor(article.category) }}>
+                              {article.category?.replace(/_/g, ' ') || 'UNCATEGORIZED'}
+                            </span>
+                            <span className="draft-status status-pending_editor">Awaiting Edit</span>
+                          </div>
+                          <h3 className="draft-title">{article.title}</h3>
+                        </div>
+                        {article.excerpt && <p className="draft-excerpt">{article.excerpt}</p>}
+                        <div className="draft-meta">
+                          <div className="draft-info">
+                            <span className="draft-date"><strong>By:</strong> {article.authorName}</span>
+                            <span className="draft-date"><strong>Submitted:</strong> {formatDate(article.submittedAt || article.updatedAt)}</span>
+                          </div>
+                        </div>
+                        <div className="draft-actions">
+                          <button className="action-btn edit-btn" onClick={() => handleEditArticle(article.id)}>
+                            Edit / Review
+                          </button>
+                          <button className="action-btn submit-btn" onClick={() => handleForwardToReviewer(article.id, article.title)}>
+                            Forward to Reviewer
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+              )}
+            </>
+          )}
+
           {activeTab === 'drafts' && (
             <>
               {drafts.length === 0 ? (

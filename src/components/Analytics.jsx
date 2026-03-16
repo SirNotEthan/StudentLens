@@ -58,23 +58,24 @@ const Analytics = () => {
       ];
 
       if (hasPermission('manage_users')) {
-        promises.push(axios.get('/users').catch(() => ({ data: { users: [] } })));
+        promises.push(axios.get('/users?limit=1000').catch(() => ({ data: { users: [], total: 0 } })));
       }
 
       const responses = await Promise.all(promises);
       const [postsRes, myPostsRes, bookmarksRes, usersRes] = responses;
 
-      const allPosts = postsRes.data.posts || [];
-      const myPosts = myPostsRes.data.posts || [];
-      const myBookmarks = bookmarksRes.data.posts || [];
-      const allUsers = usersRes?.data?.users || [];
+      const allPosts = postsRes.data.posts || postsRes.data.data?.posts || [];
+      const myPosts = myPostsRes.data.posts || myPostsRes.data.data?.posts || [];
+      const myBookmarks = bookmarksRes.data.posts || bookmarksRes.data.data?.posts || [];
+      const allUsers = usersRes?.data?.users || usersRes?.data?.data?.users || [];
+      const totalUsersCount = usersRes?.data?.total ?? usersRes?.data?.pagination?.totalUsers ?? allUsers.length;
 
       const overview = {
         totalPosts: allPosts.length,
         totalViews: allPosts.reduce((sum, post) => sum + (post.viewCount || 0), 0),
         totalLikes: allPosts.reduce((sum, post) => sum + (post.likes || 0), 0),
         totalComments: 0,
-        totalUsers: allUsers.length,
+        totalUsers: totalUsersCount,
         totalBookmarks: myBookmarks.length
       };
 

@@ -24,6 +24,21 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
         profileName: profile.displayName
       });
 
+      // 0. Restrict access to allowed emails/domains
+      const ALLOWED_EMAILS = ['ethn.bannister15@gmail.com', 'ethn.bannister19@gmail.com'];
+      const ALLOWED_DOMAINS = ['icsz.ch'];
+      const emailDomain = email.split('@')[1]?.toLowerCase();
+      const isAllowed =
+        ALLOWED_EMAILS.includes(email.toLowerCase()) ||
+        ALLOWED_DOMAINS.includes(emailDomain);
+
+      if (!isAllowed) {
+        appLogger.logSecurityEvent('google_oauth_unauthorized_email', { email, googleId });
+        return done(null, false, {
+          message: 'This Google account is not authorized to access this application.'
+        });
+      }
+
       // 1. Check if user already linked via Google ID
       const existingUser = await User.findByGoogleId(googleId);
       if (existingUser) {

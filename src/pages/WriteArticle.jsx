@@ -24,6 +24,8 @@ const WriteArticle = () => {
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [showPreview, setShowPreview] = useState(true);
+  const [imageMode, setImageMode] = useState('url');
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const categories = [
     'ICS',
@@ -83,6 +85,33 @@ const WriteArticle = () => {
       navigate('/main');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleImageFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    setUploadingImage(true);
+    setSaveStatus('Uploading image...');
+    try {
+      const response = await axios.post('/posts/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (response.data.success) {
+        setArticle(prev => ({ ...prev, featuredImage: response.data.data.url }));
+        setSaveStatus('Image uploaded');
+        setTimeout(() => setSaveStatus(''), 2000);
+      }
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      setSaveStatus('Image upload failed');
+      setTimeout(() => setSaveStatus(''), 3000);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -484,18 +513,50 @@ const WriteArticle = () => {
             </div>
 
             <div className="meta-field">
-              <label htmlFor="featuredImage">
-                Featured Image URL <span className="required-asterisk">*</span>
+              <label>
+                Featured Image <span className="required-asterisk">*</span>
               </label>
-              <input
-                type="url"
-                id="featuredImage"
-                name="featuredImage"
-                value={article.featuredImage}
-                onChange={handleInputChange}
-                placeholder="https://example.com/image.jpg"
-                className="image-input"
-              />
+              <div className="image-mode-tabs">
+                <button
+                  type="button"
+                  className={`image-mode-tab ${imageMode === 'url' ? 'active' : ''}`}
+                  onClick={() => setImageMode('url')}
+                >
+                  URL
+                </button>
+                <button
+                  type="button"
+                  className={`image-mode-tab ${imageMode === 'upload' ? 'active' : ''}`}
+                  onClick={() => setImageMode('upload')}
+                >
+                  Upload File
+                </button>
+              </div>
+              {imageMode === 'url' ? (
+                <input
+                  type="url"
+                  id="featuredImage"
+                  name="featuredImage"
+                  value={article.featuredImage}
+                  onChange={handleInputChange}
+                  placeholder="https://example.com/image.jpg"
+                  className="image-input"
+                />
+              ) : (
+                <div className="image-upload-area">
+                  <input
+                    type="file"
+                    id="imageFileInput"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    onChange={handleImageFileUpload}
+                    disabled={uploadingImage}
+                    className="image-file-input"
+                  />
+                  <label htmlFor="imageFileInput" className={`image-file-label ${uploadingImage ? 'uploading' : ''}`}>
+                    {uploadingImage ? 'Uploading...' : 'Choose image (JPEG, PNG, GIF, WebP — max 25 MB)'}
+                  </label>
+                </div>
+              )}
               <small className="image-guidance">
                 Required. Use a landscape image at least 1200×630px for best results.
               </small>

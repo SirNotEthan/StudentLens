@@ -25,6 +25,9 @@ const Login = () => {
       } else if (message === 'no_token') {
         setErrorTitle('Authentication Error');
         setErrorMessage('No authentication token received. Please try again.');
+      } else if (message === 'unauthorized_account' || urlError === 'unauthorized_account') {
+        setErrorTitle('Access Restricted');
+        setErrorMessage('This Google account is not authorized to access StudentLens. Please use an authorized account.');
       } else if (message === 'email_exists' || urlError === 'email_exists') {
         setErrorTitle('Email Already Registered');
         const customMsg = searchParams.get('message');

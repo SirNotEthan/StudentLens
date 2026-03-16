@@ -449,6 +449,9 @@ const MainPage = () => {
                                     {mainPost.category?.replace(/_/g, ' ') || 'CATEGORY'}
                                   </span>
                                   <h3 className="article-card-title">{mainPost.title}</h3>
+                                  {mainPost.excerpt && (
+                                    <p className="article-card-excerpt">{mainPost.excerpt}</p>
+                                  )}
                                   <p className="article-card-author">
                                     <AuthorLink
                                       authorName={mainPost.authorName}

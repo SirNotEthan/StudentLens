@@ -46,10 +46,11 @@ router.get('/google/callback',
       }
 
       if (!user) {
-        // Passport returned false — likely an email conflict
         const message = info?.message || 'Authentication failed';
         appLogger.warn('Google OAuth authentication rejected', { message });
-        return res.redirect(`${clientUrl}/login?error=email_exists&message=${encodeURIComponent(message)}`);
+        const isUnauthorized = message.includes('not authorized');
+        const errorCode = isUnauthorized ? 'unauthorized_account' : 'email_exists';
+        return res.redirect(`${clientUrl}/login?error=${errorCode}&message=${encodeURIComponent(message)}`);
       }
 
       // Attach user to request and continue

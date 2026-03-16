@@ -20,7 +20,8 @@ import {
   searchPosts,
   toggleBookmark,
   getUserBookmarks,
-  getPostInteractions
+  getPostInteractions,
+  uploadPostImage
 } from '@/controllers/postController';
 import { authenticate, authorizePermission } from '@/middleware/auth';
 import {
@@ -31,7 +32,8 @@ import {
   validatePostQuery,
   validate
 } from '@/middleware/validation';
-import { authLimiter, apiLimiter } from '@/middleware/security';
+import { authLimiter, apiLimiter, uploadLimiter } from '@/middleware/security';
+import { uploadArticleImage } from '@/middleware/upload';
 
 const router = Router();
 
@@ -100,6 +102,12 @@ router.get('/:id/interactions',
 router.get('/:id',
   validate(validatePostId),
   getPost
+);
+
+router.post('/upload-image',
+  uploadLimiter,
+  uploadArticleImage,
+  uploadPostImage
 );
 
 router.post('/',

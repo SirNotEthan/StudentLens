@@ -585,7 +585,20 @@ body {
 
 .article-card.main-feature .article-card-image {
   flex: 1;
-  min-height: 220px;
+  min-height: 260px;
+}
+
+.article-card-excerpt {
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.5;
+  margin: 0.3rem 0 0.4rem 0;
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .article-card.side-feature {
