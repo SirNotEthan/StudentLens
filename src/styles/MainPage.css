@@ -517,10 +517,8 @@ body {
 }
 
 .news-image-section {
-  grid-column: 1 / -1;
-  margin-top: 2rem;
+  margin-top: 1.25rem;
   width: 100%;
-  max-height: 250px;
   overflow: hidden;
   border-radius: 4px;
 }
@@ -587,7 +585,7 @@ body {
 
 .article-card.main-feature .article-card-image {
   flex: 1;
-  min-height: 200px;
+  min-height: 220px;
 }
 
 .article-card.side-feature {
