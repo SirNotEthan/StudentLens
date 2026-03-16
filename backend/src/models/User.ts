@@ -266,12 +266,17 @@ export class User implements IUser {
       appLogger.debug('Finding user by username', { username });
 
       // Try server-side name search first to narrow results
-      const searchList = await users.list(
-        [Query.search('name', username), Query.limit(100)]
-      );
-      let user = searchList.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
+      let user: any = null;
+      try {
+        const searchList = await users.list(
+          [Query.search('name', username), Query.limit(100)]
+        );
+        user = searchList.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
+      } catch (searchError: any) {
+        appLogger.warn('User name search failed, falling back to full pagination', { username, error: searchError.message });
+      }
 
-      // Fallback: paginate through all users if name search didn't match
+      // Fallback: paginate through all users if name search didn't match or failed
       if (!user) {
         const batchSize = 100;
         let offset = 0;

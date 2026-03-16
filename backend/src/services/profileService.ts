@@ -2,6 +2,7 @@ import { Query } from 'node-appwrite';
 import { databases, DATABASE_ID } from '@/config/appwrite';
 import { User } from '@/models/User';
 import { AppError } from '@/utils/AppError';
+import { appLogger } from '@/services/logger';
 
 const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
 const COMMENTS_COLLECTION_ID = process.env.APPWRITE_COMMENTS_COLLECTION_ID || 'comments';
@@ -23,41 +24,53 @@ export class ProfileService {
   }
 
   static async getRecentPosts(userId: string, limit: number = 5) {
-    const postsResponse = await databases.listDocuments(
-      DATABASE_ID,
-      POSTS_COLLECTION_ID,
-      [
-        Query.equal('authorId', userId),
-        Query.equal('status', 'published'),
-        Query.orderDesc('$createdAt'),
-        Query.limit(limit)
-      ]
-    );
-
-    return postsResponse.documents;
+    try {
+      const postsResponse = await databases.listDocuments(
+        DATABASE_ID,
+        POSTS_COLLECTION_ID,
+        [
+          Query.equal('authorId', userId),
+          Query.equal('status', 'published'),
+          Query.orderDesc('$createdAt'),
+          Query.limit(limit)
+        ]
+      );
+      return postsResponse.documents;
+    } catch (error: any) {
+      appLogger.warn('Failed to fetch recent posts for profile', { userId, error: error.message });
+      return [];
+    }
   }
 
   static async getAllPublishedPosts(userId: string) {
-    const allUserPosts = await databases.listDocuments(
-      DATABASE_ID,
-      POSTS_COLLECTION_ID,
-      [
-        Query.equal('authorId', userId),
-        Query.equal('status', 'published')
-      ]
-    );
-
-    return allUserPosts;
+    try {
+      const allUserPosts = await databases.listDocuments(
+        DATABASE_ID,
+        POSTS_COLLECTION_ID,
+        [
+          Query.equal('authorId', userId),
+          Query.equal('status', 'published')
+        ]
+      );
+      return allUserPosts;
+    } catch (error: any) {
+      appLogger.warn('Failed to fetch all published posts for profile', { userId, error: error.message });
+      return { documents: [], total: 0 };
+    }
   }
 
   static async getUserComments(userId: string) {
-    const commentsResponse = await databases.listDocuments(
-      DATABASE_ID,
-      COMMENTS_COLLECTION_ID,
-      [Query.equal('authorId', userId)]
-    );
-
-    return commentsResponse;
+    try {
+      const commentsResponse = await databases.listDocuments(
+        DATABASE_ID,
+        COMMENTS_COLLECTION_ID,
+        [Query.equal('authorId', userId)]
+      );
+      return commentsResponse;
+    } catch (error: any) {
+      appLogger.warn('Failed to fetch comments for profile (authorId index may be missing in comments collection)', { userId, error: error.message });
+      return { documents: [], total: 0 };
+    }
   }
 
   static calculateTotalLikes(posts: any[]): number {
