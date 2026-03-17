@@ -90,7 +90,7 @@ export const getUsers = catchAsync(async (
     });
 
     const pageNum = Math.max(1, parseInt(page as string, 10));
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10)));
+    const limitNum = Math.min(1000, Math.max(1, parseInt(limit as string, 10)));
     const startIndex = (pageNum - 1) * limitNum;
     const endIndex = pageNum * limitNum;
     const paginatedUsers = users.slice(startIndex, endIndex);
