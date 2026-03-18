@@ -68,8 +68,8 @@ const AdminPanel = () => {
     try {
       setLoading(true);
       const [usersRes, postsRes, applicationsRes, settingsRes, contactRes] = await Promise.all([
-        axios.get('/users?limit=1000'),
-        axios.get('/posts?limit=50'),
+        axios.get('/users?limit=1000').catch(() => ({ data: { users: [] } })),
+        axios.get('/posts?limit=50').catch(() => ({ data: { posts: [] } })),
         axios.get('/applications').catch(() => ({ data: { data: { applications: [] } } })),
         axios.get('/settings').catch(() => ({ data: { data: { settings: null } } })),
         axios.get('/contact/submissions').catch(() => ({ data: { data: { submissions: [] } } }))

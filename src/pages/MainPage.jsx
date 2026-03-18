@@ -343,7 +343,7 @@ const MainPage = () => {
                     </button>
                   )}
 
-                  {(hasPermission('write_articles') || hasRole('Writer') || hasRole('Owner')) && (
+                  {(hasPermission('write_articles') || hasRole('Writer') || hasRole('Owner') || hasRole('Editor')) && (
                     <>
                       <button className="dropdown-link" onClick={() => navigate('/my-drafts')}>
                         My Articles
