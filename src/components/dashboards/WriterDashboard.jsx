@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { sanitizeHTML } from '../../utils/sanitize';
@@ -28,7 +28,7 @@ const WriterDashboard = ({ activeTab, setActiveTab }) => {
       const articles = response.data.posts || [];
 
       setMyArticles(articles.filter(a => a.status === 'draft' || a.status === 'published'));
-      setPendingArticles(articles.filter(a => a.status === 'pending_editor' || a.status === 'pending_reviewer'));
+      setPendingArticles(articles.filter(a => a.status === 'pending_editor'));
     } catch (error) {
       console.error('Failed to load articles:', error);
     } finally {
@@ -138,14 +138,8 @@ const WriterDashboard = ({ activeTab, setActiveTab }) => {
               <p className="excerpt">{article.excerpt}</p>
               <div className="workflow-info">
                 <span className={`status-badge status-${article.status}`}>
-                  {article.status === 'pending_editor' ? 'With Editor' : 'With Reviewer'}
+                  Under Review
                 </span>
-                {article.editorName && (
-                  <span className="editor">Editor: {article.editorName}</span>
-                )}
-                {article.reviewerName && (
-                  <span className="reviewer">Reviewer: {article.reviewerName}</span>
-                )}
                 <span className="submitted">
                   Submitted: {new Date(article.submittedAt).toLocaleDateString()}
                 </span>

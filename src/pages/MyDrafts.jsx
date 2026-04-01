@@ -41,7 +41,6 @@ const MyDrafts = () => {
               setPublished(articles.filter(a => a.status === 'published'));
               setPending(articles.filter(a =>
                 a.status === 'pending_editor' ||
-                a.status === 'pending_reviewer' ||
                 a.status === 'pending'
               ));
             }
@@ -90,21 +89,7 @@ const MyDrafts = () => {
     }
   };
 
-  const handleForwardToReviewer = async (articleId, articleTitle) => {
-    if (!window.confirm(`Forward "${articleTitle}" to the reviewer?`)) {
-      return;
-    }
-    try {
-      await axios.patch(`/posts/${articleId}/forward`);
-      alert('Article forwarded to reviewer successfully!');
-      fetchMyArticles();
-    } catch (error) {
-      console.error('Failed to forward article:', error);
-      alert('Failed to forward article. Please try again.');
-    }
-  };
-
-  const handleSubmitForReview = async (articleId, articleTitle) => {
+const handleSubmitForReview = async (articleId, articleTitle) => {
     if (!window.confirm(`Submit "${articleTitle}" for review?`)) {
       return;
     }
@@ -164,8 +149,7 @@ const MyDrafts = () => {
             <span className={`draft-status status-${article.status}`}>
               {article.status === 'draft' && 'Draft'}
               {article.status === 'published' && 'Published'}
-              {article.status === 'pending_editor' && 'With Editor'}
-              {article.status === 'pending_reviewer' && 'With Reviewer'}
+              {article.status === 'pending_editor' && 'Under Review'}
               {article.status === 'pending' && 'Pending Review'}
             </span>
           </div>
@@ -237,7 +221,6 @@ const MyDrafts = () => {
               </>
             )}
             {(article.status === 'pending_editor' ||
-              article.status === 'pending_reviewer' ||
               article.status === 'pending') && (
               <button
                 className="action-btn view-btn"
@@ -374,9 +357,6 @@ const MyDrafts = () => {
                         <div className="draft-actions">
                           <button className="action-btn edit-btn" onClick={() => handleEditArticle(article.id)}>
                             Edit / Review
-                          </button>
-                          <button className="action-btn submit-btn" onClick={() => handleForwardToReviewer(article.id, article.title)}>
-                            Forward to Reviewer
                           </button>
                         </div>
                       </div>

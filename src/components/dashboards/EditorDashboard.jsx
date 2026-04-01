@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
 import { sanitizeHTML } from '../../utils/sanitize';
@@ -6,12 +6,10 @@ import { sanitizeHTML } from '../../utils/sanitize';
 const EditorDashboard = ({ activeTab, setActiveTab }) => {
   const { user: _user } = useAuth();
   const [pendingArticles, setPendingArticles] = useState([]);
-  const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticle, setSelectedArticle] = useState(null);
-  const [editingArticle, setEditingArticle] = useState(null);
-  const [editedContent, setEditedContent] = useState('');
-  const [selectedReviewer, setSelectedReviewer] = useState('');
+  const [rejectingArticle, setRejectingArticle] = useState(null);
+  const [rejectionComment, setRejectionComment] = useState('');
 
   useEffect(() => {
     loadDashboardData();
@@ -20,13 +18,8 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [articlesRes, teachersRes] = await Promise.all([
-        axios.get('/posts/pending/editor'),
-        axios.get('/users?role=Teacher')
-      ]);
-
+      const articlesRes = await axios.get('/posts/pending/editor');
       setPendingArticles(articlesRes.data.posts || []);
-      setTeachers(teachersRes.data.data?.users || []);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -34,36 +27,31 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
     }
   };
 
-  const handleEditAndForward = async (articleId, editedContent, reviewerId, reviewerName) => {
+  const handleRejectArticle = async () => {
+    if (!rejectionComment.trim()) return;
     try {
-      
-      await axios.put(`/posts/${articleId}`, { content: editedContent });
-
-      await axios.patch(`/posts/${articleId}/forward`, {
-        reviewerId,
-        reviewerName
-      });
-
-      await loadDashboardData(); 
-      setEditingArticle(null);
-    } catch (error) {
-      console.error('Failed to edit and forward article:', error);
-    }
-  };
-
-  const handleRejectArticle = async (articleId, reason) => {
-    try {
-      await axios.patch(`/posts/${articleId}/reject`, { reason });
-      await loadDashboardData(); 
+      await axios.patch(`/posts/${rejectingArticle.id}/reject`, { reason: rejectionComment });
+      setRejectingArticle(null);
+      setRejectionComment('');
+      setSelectedArticle(null);
+      await loadDashboardData();
     } catch (error) {
       console.error('Failed to reject article:', error);
     }
   };
 
+  const openRejectModal = (article) => {
+    setRejectingArticle(article);
+    setRejectionComment('');
+  };
+
   const renderPendingArticles = () => (
     <div className="pending-articles">
-      <h3>Pending Articles for Editing</h3>
+      <h3>Article Submissions</h3>
       <div className="articles-list">
+        {pendingArticles.length === 0 && (
+          <p className="no-articles">No pending submissions.</p>
+        )}
         {pendingArticles.map(article => (
           <div key={article.id} className="article-card">
             <div className="article-info">
@@ -86,20 +74,7 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
                 View
               </button>
               <button
-                onClick={() => {
-                  setEditingArticle(article);
-                  setEditedContent(article.content);
-                  setSelectedReviewer('');
-                }}
-                className="edit-btn"
-              >
-                Edit & Forward
-              </button>
-              <button
-                onClick={() => {
-                  const reason = prompt('Reason for rejection:');
-                  if (reason) handleRejectArticle(article.id, reason);
-                }}
+                onClick={() => openRejectModal(article)}
                 className="reject-btn"
               >
                 Reject
@@ -123,7 +98,7 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
           >
             ← Back to List
           </button>
-          <h3>View Article</h3>
+          <h3>View Submission</h3>
         </div>
 
         <div className="article-details">
@@ -142,26 +117,12 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
           <div className="view-actions">
             <button
               onClick={() => {
-                setEditingArticle(selectedArticle);
-                setEditedContent(selectedArticle.content);
-                setSelectedReviewer('');
+                openRejectModal(selectedArticle);
                 setSelectedArticle(null);
-              }}
-              className="edit-btn large"
-            >
-              Edit & Forward
-            </button>
-            <button
-              onClick={() => {
-                const reason = prompt('Reason for rejection:');
-                if (reason) {
-                  handleRejectArticle(selectedArticle.id, reason);
-                  setSelectedArticle(null);
-                }
               }}
               className="reject-btn large"
             >
-              Reject for Revision
+              Reject with Comment
             </button>
           </div>
         </div>
@@ -169,77 +130,38 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
     );
   };
 
-  const handleEditorSubmit = () => {
-    if (!selectedReviewer) {
-      alert('Please select a reviewer');
-      return;
-    }
-
-    const reviewer = teachers.find(t => t.id === selectedReviewer);
-    handleEditAndForward(
-      editingArticle.id,
-      editedContent,
-      reviewer.id,
-      reviewer.firstName + ' ' + reviewer.lastName
-    );
-  };
-
-  const renderArticleEditor = () => {
-    if (!editingArticle) return null;
+  const renderRejectModal = () => {
+    if (!rejectingArticle) return null;
 
     return (
-      <div className="article-editor">
-        <div className="editor-header">
-          <button
-            onClick={() => setEditingArticle(null)}
-            className="back-btn"
-          >
-            ← Back to List
-          </button>
-          <h3>Edit Article</h3>
-        </div>
-
-        <div className="editor-form">
-          <h1>{editingArticle.title}</h1>
-          <div className="article-meta">
-            <span>Author: {editingArticle.authorName}</span>
-            <span>Category: {editingArticle.category}</span>
-          </div>
-
-          <div className="content-editor">
-            <label>Article Content:</label>
-            <textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              rows={20}
-              className="content-textarea"
-            />
-          </div>
-
-          <div className="reviewer-selection">
-            <label>Forward to Reviewer:</label>
-            <select
-              value={selectedReviewer}
-              onChange={(e) => setSelectedReviewer(e.target.value)}
-            >
-              <option value="">Select a reviewer...</option>
-              {teachers.map(teacher => (
-                <option key={teacher.id} value={teacher.id}>
-                  {teacher.firstName} {teacher.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="editor-actions">
+      <div className="modal-overlay">
+        <div className="modal">
+          <h3>Reject Submission</h3>
+          <p>
+            Rejecting: <strong>{rejectingArticle.title}</strong> by {rejectingArticle.authorName}
+          </p>
+          <label htmlFor="rejection-comment">Comment for the author:</label>
+          <textarea
+            id="rejection-comment"
+            value={rejectionComment}
+            onChange={(e) => setRejectionComment(e.target.value)}
+            rows={5}
+            placeholder="Explain why this submission is being rejected..."
+            className="rejection-textarea"
+          />
+          <div className="modal-actions">
             <button
-              onClick={handleEditorSubmit}
-              className="forward-btn large"
+              onClick={handleRejectArticle}
+              disabled={!rejectionComment.trim()}
+              className="reject-btn"
             >
-              Save & Forward to Reviewer
+              Confirm Rejection
             </button>
             <button
-              onClick={() => setEditingArticle(null)}
+              onClick={() => {
+                setRejectingArticle(null);
+                setRejectionComment('');
+              }}
               className="cancel-btn"
             >
               Cancel
@@ -255,17 +177,13 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
       <h3>Editor Dashboard</h3>
       <div className="overview-stats">
         <div className="stat-card">
-          <h4>Pending Edits</h4>
+          <h4>Pending Submissions</h4>
           <span className="stat-number">{pendingArticles.length}</span>
-        </div>
-        <div className="stat-card">
-          <h4>Available Reviewers</h4>
-          <span className="stat-number">{teachers.length}</span>
         </div>
       </div>
 
       <div className="recent-activity">
-        <h4>Recent Articles to Edit</h4>
+        <h4>Recent Submissions</h4>
         <div className="activity-list">
           {pendingArticles.slice(0, 3).map(article => (
             <div key={article.id} className="activity-item">
@@ -284,6 +202,7 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
 
   return (
     <div className="editor-dashboard">
+      {renderRejectModal()}
       <div className="dashboard-tabs">
         <button
           className={activeTab === 'overview' ? 'active' : ''}
@@ -295,7 +214,7 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
           className={activeTab === 'pending' ? 'active' : ''}
           onClick={() => setActiveTab('pending')}
         >
-          Pending Articles ({pendingArticles.length})
+          Submissions ({pendingArticles.length})
         </button>
         <button
           className={activeTab === 'write' ? 'active' : ''}
@@ -308,9 +227,7 @@ const EditorDashboard = ({ activeTab, setActiveTab }) => {
       <div className="dashboard-content">
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'pending' && (
-          editingArticle ? renderArticleEditor() :
-          selectedArticle ? renderArticleView() :
-          renderPendingArticles()
+          selectedArticle ? renderArticleView() : renderPendingArticles()
         )}
         {activeTab === 'write' && (
           <div className="write-article">

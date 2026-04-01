@@ -124,7 +124,7 @@ const MainPage = () => {
           count = response.data.data?.total || response.data.total || 0;
         }
       } else if (user.role === 'Teacher') {
-        const response = await axios.get('/posts/pending/reviewer');
+        const response = await axios.get('/posts/pending/editor');
         if (response.data.success) {
           count = response.data.data?.total || response.data.total || 0;
         }

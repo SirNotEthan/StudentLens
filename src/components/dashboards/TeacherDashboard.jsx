@@ -16,7 +16,7 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
   const loadPendingArticles = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/posts/pending/reviewer');
+      const response = await axios.get('/posts/pending/editor');
       setPendingArticles(response.data.posts || []);
     } catch (error) {
       console.error('Failed to load pending articles:', error);
@@ -45,7 +45,7 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
 
   const renderPendingArticles = () => (
     <div className="pending-articles">
-      <h3>Pending Articles for Review</h3>
+      <h3>Pending Articles</h3>
       <div className="articles-list">
         {pendingArticles.map(article => (
           <div key={article.id} className="article-card">
@@ -54,7 +54,6 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
               <p className="author">By: {article.authorName}</p>
               <p className="excerpt">{article.excerpt}</p>
               <div className="workflow-info">
-                <span className="editor">Edited by: {article.editorName}</span>
                 <span className="submitted">
                   Submitted: {new Date(article.submittedAt).toLocaleDateString()}
                 </span>
@@ -108,7 +107,6 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
           <h1>{selectedArticle.title}</h1>
           <div className="article-meta">
             <span>Author: {selectedArticle.authorName}</span>
-            <span>Editor: {selectedArticle.editorName}</span>
             <span>Category: {selectedArticle.category}</span>
             <span>Tags: {selectedArticle.tags.join(', ')}</span>
           </div>
@@ -144,15 +142,11 @@ const TeacherDashboard = ({ activeTab, setActiveTab }) => {
 
   const renderOverview = () => (
     <div className="overview">
-      <h3>Reviewer Dashboard</h3>
+      <h3>Teacher Dashboard</h3>
       <div className="overview-stats">
         <div className="stat-card">
-          <h4>Pending Reviews</h4>
+          <h4>Pending Articles</h4>
           <span className="stat-number">{pendingArticles.length}</span>
-        </div>
-        <div className="stat-card">
-          <h4>Role</h4>
-          <span className="stat-text">Article Reviewer</span>
         </div>
       </div>
 

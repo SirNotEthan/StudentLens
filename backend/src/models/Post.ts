@@ -29,6 +29,7 @@ export class Post implements IPost {
   reviewerName?: string;
   submittedAt?: string;
   reviewedAt?: string;
+  rejectionComment?: string;
 
   constructor(data: any) {
     this.id = data.$id || data.id;
@@ -54,6 +55,7 @@ export class Post implements IPost {
     this.reviewerName = data.reviewerName;
     this.submittedAt = data.submittedAt;
     this.reviewedAt = data.reviewedAt;
+    this.rejectionComment = data.rejectionComment;
   }
 
   private generateSlug(title: string): string {
@@ -290,6 +292,7 @@ export class Post implements IPost {
         }
       }
       if (updateData.featuredImage !== undefined) documentData.featuredImage = updateData.featuredImage;
+      if (updateData.rejectionComment !== undefined) documentData.rejectionComment = updateData.rejectionComment;
 
       const document = await databases.updateDocument(
         DATABASE_ID,
@@ -433,8 +436,8 @@ export class Post implements IPost {
   }
 
   async publishArticle(): Promise<Post> {
-    if (this.status !== 'pending_reviewer') {
-      throw AppError.badRequest('Post must be pending reviewer approval to publish');
+    if (!['pending_editor', 'pending_reviewer'].includes(this.status)) {
+      throw AppError.badRequest('Post must be pending review to publish');
     }
 
     const updateData: any = {
@@ -454,7 +457,8 @@ export class Post implements IPost {
     }
 
     return await this.update({
-      status: 'draft'
+      status: 'draft',
+      rejectionComment: reason || ''
     });
   }
 

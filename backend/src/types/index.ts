@@ -81,6 +81,7 @@ export interface IPost {
   reviewerName?: string;
   submittedAt?: string;
   reviewedAt?: string;
+  rejectionComment?: string;
 }
 
 export type PostStatus = 'draft' | 'pending_editor' | 'pending_reviewer' | 'published' | 'archived';
@@ -160,6 +161,7 @@ export interface UpdatePostRequest extends Partial<CreatePostRequest> {
   submittedAt?: string;
   reviewedAt?: string;
   publishedAt?: string;
+  rejectionComment?: string;
 }
 
 export interface IWriterApplication {
