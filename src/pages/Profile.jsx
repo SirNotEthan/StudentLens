@@ -216,17 +216,19 @@ const Profile = () => {
       <div className="profile-content">
         <div className="profile-card">
           <div className="profile-avatar-section">
-            <div className="profile-avatar">
-              {user.profileImage ? (
-                <img src={user.profileImage} alt="Profile" />
-              ) : (
-                <div className="avatar-placeholder">
-                  {user.firstName ? user.firstName[0].toUpperCase() :
-                   user.lastName ? user.lastName[0].toUpperCase() :
-                   user.username ? user.username[0].toUpperCase() :
-                   user.email ? user.email[0].toUpperCase() : 'U'}
-                </div>
-              )}
+            <div className="profile-avatar-wrapper">
+              <div className="profile-avatar">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt="Profile" />
+                ) : (
+                  <div className="avatar-placeholder">
+                    {user.firstName ? user.firstName[0].toUpperCase() :
+                     user.lastName ? user.lastName[0].toUpperCase() :
+                     user.username ? user.username[0].toUpperCase() :
+                     user.email ? user.email[0].toUpperCase() : 'U'}
+                  </div>
+                )}
+              </div>
               <button
                 className="edit-avatar-btn"
                 onClick={() => setShowPictureModal(true)}
