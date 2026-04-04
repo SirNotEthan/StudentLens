@@ -58,7 +58,7 @@ const AdminPanel = () => {
     }
 
     if (hasRole('Editor')) {
-      setActiveTab('posts');
+      setActiveTab('submissions');
     }
 
     fetchData();
@@ -351,7 +351,7 @@ const AdminPanel = () => {
         )}
 
         {}
-        {(hasRole('Owner') || hasRole('Teacher')) && (
+        {(hasRole('Owner') || hasRole('Teacher') || hasRole('Editor')) && (
           <button
             className={`tab-button ${activeTab === 'submissions' ? 'active' : ''}`}
             onClick={() => setActiveTab('submissions')}
@@ -380,12 +380,14 @@ const AdminPanel = () => {
         )}
 
         {}
-        <button
-          className={`tab-button ${activeTab === 'posts' ? 'active' : ''}`}
-          onClick={() => setActiveTab('posts')}
-        >
-          📄 Content Management
-        </button>
+        {!hasRole('Editor') && (
+          <button
+            className={`tab-button ${activeTab === 'posts' ? 'active' : ''}`}
+            onClick={() => setActiveTab('posts')}
+          >
+            📄 Content Management
+          </button>
+        )}
 
         {}
         {hasRole('Owner') && (
@@ -725,7 +727,7 @@ const AdminPanel = () => {
         )}
 
         {}
-        {activeTab === 'submissions' && (hasRole('Owner') || hasRole('Teacher')) && (
+        {activeTab === 'submissions' && (hasRole('Owner') || hasRole('Teacher') || hasRole('Editor')) && (
           <div className="submissions-management">
             <div className="section-header">
               <h2>Writer Submissions</h2>

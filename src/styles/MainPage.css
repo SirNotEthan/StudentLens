@@ -336,7 +336,7 @@ body {
 
 .main-content {
   display: grid;
-  grid-template-columns: 160px 1fr 280px;
+  grid-template-columns: 220px 1fr 220px;
   gap: 2.5rem;
   padding: 2rem;
   max-width: 1400px;
