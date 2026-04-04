@@ -216,7 +216,14 @@ const Profile = () => {
       <div className="profile-content">
         <div className="profile-card">
           <div className="profile-avatar-section">
-            <div className="profile-avatar-wrapper">
+            <div
+              className="profile-avatar-wrapper"
+              onClick={() => setShowPictureModal(true)}
+              title="Change profile picture"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && setShowPictureModal(true)}
+            >
               <div className="profile-avatar">
                 {user.profileImage ? (
                   <img src={user.profileImage} alt="Profile" />
@@ -229,14 +236,10 @@ const Profile = () => {
                   </div>
                 )}
               </div>
-              <button
-                className="edit-avatar-btn"
-                onClick={() => setShowPictureModal(true)}
-                title="Change profile picture"
-                aria-label="Change profile picture"
-              >
-                📷
-              </button>
+              <div className="avatar-overlay">
+                <span className="avatar-overlay-icon">📷</span>
+                <span className="avatar-overlay-text">Change</span>
+              </div>
             </div>
             <div className="profile-basic-info">
               <h2>{user.fullName || user.username || user.email.split('@')[0]}</h2>
