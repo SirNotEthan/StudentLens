@@ -390,6 +390,8 @@
 .legacy-section {
   background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
   border-left: 4px solid #2d5a4d;
+  padding: 1.5rem 2rem;
+  border-radius: 0 6px 6px 0;
 }
 
 .legacy-scroll-container {
