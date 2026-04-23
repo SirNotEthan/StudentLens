@@ -446,31 +446,31 @@ body {
 }
 
 .game-icon {
-  width: 50px;
-  height: 50px;
+  width: clamp(24px, 3.5vw, 50px);
+  height: clamp(24px, 3.5vw, 50px);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: clamp(1rem, 2.5vw, 2rem);
   margin-bottom: 0;
 }
 
 .wordle-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 3px;
+  gap: clamp(2px, 0.3vw, 3px);
 }
 
 .wordle-square {
-  width: 15px;
-  height: 15px;
+  width: clamp(7px, 1.1vw, 15px);
+  height: clamp(7px, 1.1vw, 15px);
   background-color: white;
   border: 2px solid rgba(0,0,0,0.3);
   border-radius: 2px;
 }
 
 .game-name {
-  font-size: 0.65rem;
+  font-size: clamp(0.5rem, 1.1vw, 0.65rem);
   font-weight: 700;
   color: #1a1a1a;
   text-align: center;
@@ -1943,15 +1943,6 @@ body {
     padding-right: 0.4rem;
   }
 
-  .game-icon {
-    width: 36px;
-    height: 36px;
-    font-size: 1.5rem;
-  }
-
-  .game-name {
-    font-size: 0.55rem;
-  }
 
   .news-header {
     padding: 0.75rem 1rem;

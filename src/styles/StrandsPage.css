@@ -372,6 +372,12 @@
   cursor: not-allowed;
 }
 
+.grid-cell.found {
+  opacity: 1 !important;
+  cursor: default;
+  pointer-events: none;
+}
+
 .grid-cell:focus-visible {
   outline: 3px solid #f59e0b;
   outline-offset: 2px;
