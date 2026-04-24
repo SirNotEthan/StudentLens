@@ -7,7 +7,7 @@ import '../styles/Analytics.css';
 
 const Analytics = () => {
   const { user: _user, hasPermission } = useAuth();
-  const { getAnalyticsStats, getUserBehavior } = useAnalytics();
+  const { getUserBehavior } = useAnalytics();
   const navigate = useNavigate();
 
   const [analyticsData, setAnalyticsData] = useState({
