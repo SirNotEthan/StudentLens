@@ -226,6 +226,11 @@ const AdminPanel = () => {
         aboutWhatWeDo: settingsForm.about?.whatWeDo,
         aboutValues: settingsForm.about?.values,
         aboutLegacy: settingsForm.about?.legacy,
+        aboutLegacyIntro: settingsForm.about?.legacyIntro,
+        aboutGetInvolved: settingsForm.about?.getInvolved,
+        applyIntro: settingsForm.apply?.intro,
+        applyBenefits: settingsForm.apply?.benefits,
+        applyTimeline: settingsForm.apply?.timeline,
         termsOfService: settingsForm.legal?.termsOfService,
         privacyPolicy: settingsForm.legal?.privacyPolicy,
       });
@@ -1144,18 +1149,97 @@ const AdminPanel = () => {
                       />
                     </div>
                     <div className="form-group full-width">
-                      <label htmlFor="aboutValues">Our Values</label>
+                      <label htmlFor="aboutGetInvolved">Get Involved Text</label>
                       <textarea
-                        id="aboutValues"
-                        value={settingsForm.about?.values || ''}
+                        id="aboutGetInvolved"
+                        value={settingsForm.about?.getInvolved || ''}
                         onChange={(e) => setSettingsForm({
                           ...settingsForm,
-                          about: { ...settingsForm.about, values: e.target.value }
+                          about: { ...settingsForm.about, getInvolved: e.target.value }
                         })}
-                        placeholder="Our core values (comma-separated)"
-                        rows="2"
+                        placeholder="Whether you're a passionate writer, an avid reader..."
+                        rows="3"
                       />
-                      <small className="form-help">Enter values separated by commas (e.g., Authenticity, Community, Growth, Inclusivity)</small>
+                      <small className="form-help">Paragraph shown in the "Get Involved" section of the About Us page</small>
+                    </div>
+                    <div className="form-group full-width">
+                      <label>Our Values</label>
+                      <small className="form-help" style={{ marginBottom: '0.75rem', display: 'block' }}>
+                        Each value card shown on the About Us page. Add a title and a short description for each.
+                      </small>
+                      {(() => {
+                        let valueItems = [];
+                        try {
+                          const parsed = JSON.parse(settingsForm.about?.values || '[]');
+                          valueItems = Array.isArray(parsed) && parsed[0]?.title ? parsed : [];
+                        } catch { valueItems = []; }
+                        if (valueItems.length === 0) {
+                          valueItems = ['Authenticity','Community','Growth','Inclusivity'].map(t => ({ title: t, description: '' }));
+                        }
+
+                        const updateValues = (items) => {
+                          setSettingsForm({
+                            ...settingsForm,
+                            about: { ...settingsForm.about, values: JSON.stringify(items) }
+                          });
+                        };
+
+                        const addValue = () => updateValues([...valueItems, { title: '', description: '' }]);
+                        const updateValue = (index, field, val) => {
+                          const updated = [...valueItems];
+                          updated[index] = { ...updated[index], [field]: val };
+                          updateValues(updated);
+                        };
+                        const removeValue = (index) => updateValues(valueItems.filter((_, i) => i !== index));
+
+                        return (
+                          <div className="legacy-editor">
+                            {valueItems.map((item, index) => (
+                              <div key={index} className="legacy-editor-item">
+                                <div className="legacy-editor-fields">
+                                  <input
+                                    type="text"
+                                    value={item.title || ''}
+                                    onChange={(e) => updateValue(index, 'title', e.target.value)}
+                                    placeholder="Value title (e.g. Authenticity)"
+                                  />
+                                  <textarea
+                                    value={item.description || ''}
+                                    onChange={(e) => updateValue(index, 'description', e.target.value)}
+                                    placeholder="Short description of this value..."
+                                    rows="2"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  className="legacy-editor-remove"
+                                  onClick={() => removeValue(index)}
+                                  title="Remove"
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            ))}
+                            <button type="button" className="legacy-editor-add" onClick={addValue}>
+                              + Add Value
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="aboutLegacyIntro">Legacy Section Intro</label>
+                      <textarea
+                        id="aboutLegacyIntro"
+                        value={settingsForm.about?.legacyIntro || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          about: { ...settingsForm.about, legacyIntro: e.target.value }
+                        })}
+                        placeholder="Student Lens has been created with the intention of..."
+                        rows="3"
+                      />
+                      <small className="form-help">Introductory paragraph displayed above the legacy photo scroll</small>
                     </div>
                     <div className="form-group full-width">
                       <label>Our Legacy</label>
@@ -1237,6 +1321,54 @@ const AdminPanel = () => {
                           </div>
                         );
                       })()}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-section">
+                  <h3 className="settings-section-title">Writer Applications</h3>
+                  <div className="form-grid">
+                    <div className="form-group full-width">
+                      <label htmlFor="applyIntro">Application Page Intro</label>
+                      <textarea
+                        id="applyIntro"
+                        value={settingsForm.apply?.intro || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          apply: { ...settingsForm.apply, intro: e.target.value }
+                        })}
+                        placeholder="We're excited that you want to become a writer..."
+                        rows="3"
+                      />
+                      <small className="form-help">Opening paragraph on the "Apply to Be a Writer" page</small>
+                    </div>
+                    <div className="form-group full-width">
+                      <label htmlFor="applyBenefits">Writer Benefits</label>
+                      <textarea
+                        id="applyBenefits"
+                        value={settingsForm.apply?.benefits || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          apply: { ...settingsForm.apply, benefits: e.target.value }
+                        })}
+                        placeholder="Publish articles across various categories&#10;Build your writing portfolio&#10;Connect with fellow student writers"
+                        rows="6"
+                      />
+                      <small className="form-help">One benefit per line — each line becomes a bullet point</small>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="applyTimeline">Review Timeline</label>
+                      <input
+                        type="text"
+                        id="applyTimeline"
+                        value={settingsForm.apply?.timeline || ''}
+                        onChange={(e) => setSettingsForm({
+                          ...settingsForm,
+                          apply: { ...settingsForm.apply, timeline: e.target.value }
+                        })}
+                        placeholder="3-5 business days"
+                      />
+                      <small className="form-help">How long applicants should expect to wait for a response</small>
                     </div>
                   </div>
                 </div>

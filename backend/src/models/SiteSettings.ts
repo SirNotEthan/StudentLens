@@ -18,6 +18,11 @@ export interface ISiteSettings {
   aboutWhatWeDo?: string;
   aboutValues?: string;
   aboutLegacy?: string;
+  aboutLegacyIntro?: string;
+  aboutGetInvolved?: string;
+  applyIntro?: string;
+  applyBenefits?: string;
+  applyTimeline?: string;
   termsOfService?: string;
   privacyPolicy?: string;
   createdAt: string;
@@ -87,7 +92,7 @@ export class SiteSettings {
       } catch (innerError: any) {
         // If the update fails (e.g. new attributes not in DB schema), retry without them
         const safeData = { ...data };
-        const newFields = ['aboutLegacy', 'termsOfService', 'privacyPolicy'] as const;
+        const newFields = ['aboutLegacy', 'aboutLegacyIntro', 'aboutGetInvolved', 'applyIntro', 'applyBenefits', 'applyTimeline', 'termsOfService', 'privacyPolicy'] as const;
         let hadNewFields = false;
         for (const field of newFields) {
           if (field in safeData) {
@@ -131,6 +136,11 @@ export class SiteSettings {
       aboutWhatWeDo: doc.aboutWhatWeDo || 'We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.',
       aboutValues: doc.aboutValues || 'Authenticity, Community, Growth, Inclusivity',
       aboutLegacy: doc.aboutLegacy || '',
+      aboutLegacyIntro: doc.aboutLegacyIntro || '',
+      aboutGetInvolved: doc.aboutGetInvolved || '',
+      applyIntro: doc.applyIntro || '',
+      applyBenefits: doc.applyBenefits || '',
+      applyTimeline: doc.applyTimeline || '',
       termsOfService: doc.termsOfService || '',
       privacyPolicy: doc.privacyPolicy || '',
       createdAt: doc.$createdAt,

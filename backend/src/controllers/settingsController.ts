@@ -27,6 +27,13 @@ export const getSettings = async (_req: Request, res: Response) => {
             whatWeDo: settings.aboutWhatWeDo,
             values: settings.aboutValues,
             legacy: settings.aboutLegacy,
+            legacyIntro: settings.aboutLegacyIntro,
+            getInvolved: settings.aboutGetInvolved,
+          },
+          apply: {
+            intro: settings.applyIntro,
+            benefits: settings.applyBenefits,
+            timeline: settings.applyTimeline,
           },
           legal: {
             termsOfService: settings.termsOfService,
@@ -59,6 +66,11 @@ export const updateSettings = async (req: Request, res: Response) => {
       aboutWhatWeDo,
       aboutValues,
       aboutLegacy,
+      aboutLegacyIntro,
+      aboutGetInvolved,
+      applyIntro,
+      applyBenefits,
+      applyTimeline,
       termsOfService,
       privacyPolicy,
     } = req.body;
@@ -76,6 +88,11 @@ export const updateSettings = async (req: Request, res: Response) => {
       ...(aboutWhatWeDo !== undefined && { aboutWhatWeDo }),
       ...(aboutValues !== undefined && { aboutValues }),
       ...(aboutLegacy !== undefined && { aboutLegacy }),
+      ...(aboutLegacyIntro !== undefined && { aboutLegacyIntro }),
+      ...(aboutGetInvolved !== undefined && { aboutGetInvolved }),
+      ...(applyIntro !== undefined && { applyIntro }),
+      ...(applyBenefits !== undefined && { applyBenefits }),
+      ...(applyTimeline !== undefined && { applyTimeline }),
       ...(termsOfService !== undefined && { termsOfService }),
       ...(privacyPolicy !== undefined && { privacyPolicy }),
     });
@@ -104,6 +121,13 @@ export const updateSettings = async (req: Request, res: Response) => {
             whatWeDo: settings.aboutWhatWeDo,
             values: settings.aboutValues,
             legacy: settings.aboutLegacy,
+            legacyIntro: settings.aboutLegacyIntro,
+            getInvolved: settings.aboutGetInvolved,
+          },
+          apply: {
+            intro: settings.applyIntro,
+            benefits: settings.applyBenefits,
+            timeline: settings.applyTimeline,
           },
           legal: {
             termsOfService: settings.termsOfService,

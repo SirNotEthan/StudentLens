@@ -18,7 +18,7 @@ const AboutUs = () => {
     }
   }, [settings?.about?.legacy]);
 
-  const valueDescriptions = {
+  const defaultDescriptions = {
     'Authenticity': 'We celebrate genuine student voices and original perspectives.',
     'Community': 'We foster connections between students through shared stories and experiences.',
     'Growth': 'We support student writers in developing their skills and finding their voice.',
@@ -27,18 +27,17 @@ const AboutUs = () => {
 
   const defaultMission = 'Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers. We believe that every student has a unique perspective worth sharing, and we\'re here to provide the platform to make that happen.';
 
-  const renderValueCards = () => {
-    const values = settings?.about?.values || 'Authenticity, Community, Growth, Inclusivity';
-    return values.split(',').map((value, index) => {
-      const trimmedValue = value.trim();
-      return (
-        <div key={index} className="value-card">
-          <h3>{trimmedValue}</h3>
-          <p>{valueDescriptions[trimmedValue] || 'A core value of Student Lens.'}</p>
-        </div>
-      );
-    });
-  };
+  const valueItems = useMemo(() => {
+    const raw = settings?.about?.values || '';
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed[0]?.title) return parsed;
+    } catch {}
+    return (raw || 'Authenticity, Community, Growth, Inclusivity').split(',').map(v => ({
+      title: v.trim(),
+      description: defaultDescriptions[v.trim()] || 'A core value of Student Lens.'
+    }));
+  }, [settings?.about?.values]);
 
   return (
     <div className="info-page">
@@ -67,16 +66,20 @@ const AboutUs = () => {
         <section className="info-section">
           <h2>Our Values</h2>
           <div className="values-grid">
-            {renderValueCards()}
+            {valueItems.map((item, index) => (
+              <div key={index} className="value-card">
+                <h3>{item.title}</h3>
+                <p>{item.description || 'A core value of Student Lens.'}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         <section className="info-section">
           <h2>Get Involved</h2>
           <p>
-            Whether you're a passionate writer, an avid reader, or simply curious about what's
-            happening on campus, there's a place for you at Student Lens. Join our community today
-            and be part of the conversation.
+            {settings?.about?.getInvolved ||
+              "Whether you're a passionate writer, an avid reader, or simply curious about what's happening on campus, there's a place for you at Student Lens. Join our community today and be part of the conversation."}
           </p>
           <div className="cta-buttons">
             <button onClick={() => navigate('/write')} className="cta-button primary">
@@ -91,8 +94,8 @@ const AboutUs = () => {
         <section className="info-section legacy-section">
           <h2>Our Legacy</h2>
           <p>
-            Student Lens has been created with the intention of amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.
-            Each year, the team of student leaders takes on the responsibility of managing and growing the platform.
+            {settings?.about?.legacyIntro ||
+              'Student Lens has been created with the intention of amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers. Each year, the team of student leaders takes on the responsibility of managing and growing the platform.'}
           </p>
           {legacyItems.length > 0 ? (
             <div className="legacy-scroll-container">

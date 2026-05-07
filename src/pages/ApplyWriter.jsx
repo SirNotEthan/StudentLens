@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import axios from 'axios';
 import '../styles/ApplyWriter.css';
 
 const ApplyWriter = () => {
   const navigate = useNavigate();
   useAuth();
+  const { settings } = useSettings();
   const [formData, setFormData] = useState({
     writingSample: '',
     interests: '',
@@ -16,6 +18,23 @@ const ApplyWriter = () => {
   });
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const applyIntro = settings?.apply?.intro ||
+    "We're excited that you want to become a writer for Student Lens! Writers have the opportunity to share their voice, build their portfolio, and contribute to our community. Fill out the application below to get started.";
+
+  const benefitLines = useMemo(() => {
+    const raw = settings?.apply?.benefits || '';
+    if (raw.trim()) return raw.split('\n').map(l => l.trim()).filter(Boolean);
+    return [
+      'Publish articles across various categories',
+      'Build your writing portfolio',
+      'Connect with fellow student writers',
+      'Develop your writing skills',
+      'Gain experience in digital publishing',
+    ];
+  }, [settings?.apply?.benefits]);
+
+  const applyTimeline = settings?.apply?.timeline || '3-5 business days';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,19 +101,13 @@ ${formData.availability}
       <div className="apply-content">
         <section className="apply-intro">
           <h2>Join Our Writing Team</h2>
-          <p>
-            We're excited that you want to become a writer for Student Lens! Writers have the
-            opportunity to share their voice, build their portfolio, and contribute to our
-            community. Fill out the application below to get started.
-          </p>
+          <p>{applyIntro}</p>
           <div className="writer-benefits">
             <h3>Writer Benefits:</h3>
             <ul>
-              <li>Publish articles across various categories</li>
-              <li>Build your writing portfolio</li>
-              <li>Connect with fellow student writers</li>
-              <li>Develop your writing skills</li>
-              <li>Gain experience in digital publishing</li>
+              {benefitLines.map((benefit, i) => (
+                <li key={i}>{benefit}</li>
+              ))}
             </ul>
           </div>
         </section>
@@ -216,7 +229,7 @@ ${formData.availability}
 
         <section className="apply-note">
           <p>
-            <strong>Note:</strong> Applications are typically reviewed within 3-5 business days.
+            <strong>Note:</strong> Applications are typically reviewed within {applyTimeline}.
             You'll receive an email notification once your application has been processed. If you
             have any questions, feel free to{' '}
             <a href="/contact" onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>
