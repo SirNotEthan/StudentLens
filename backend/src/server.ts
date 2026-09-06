@@ -7,6 +7,7 @@ import RedisStore from 'connect-redis';
 import passport from '@/config/passport';
 import { appLogger } from '@/services/logger';
 import { checkAppwriteConnection } from '@/config/appwrite';
+import { checkDatabaseConnection } from '@/config/database';
 import { initRedis, isRedisConnected, closeRedis } from '@/config/redis';
 import crypto from 'crypto';
 import path from 'path';
@@ -208,6 +209,7 @@ const startServer = async (): Promise<void> => {
 
     app.get('/api/health', async (_req, res): Promise<void> => {
       const appwriteConnected = await checkAppwriteConnection();
+      const postgresConnected = await checkDatabaseConnection();
 
       const healthCheck = {
         status: 'OK',
@@ -215,8 +217,10 @@ const startServer = async (): Promise<void> => {
         uptime: process.uptime(),
         environment: process.env.NODE_ENV,
         version: process.env.npm_package_version || '1.0.0',
+        databaseProvider: process.env.DATABASE_PROVIDER || 'appwrite',
         services: {
           appwrite: appwriteConnected ? 'connected' : 'disconnected',
+          postgres: postgresConnected ? 'connected' : 'not configured',
           redis: redisConnected ? 'connected' : 'not configured'
         }
       };
@@ -276,6 +280,7 @@ const startServer = async (): Promise<void> => {
     app.use(errorHandler);
 
     const appwriteConnected = await checkAppwriteConnection();
+    const postgresConnected = await checkDatabaseConnection();
     if (!appwriteConnected) {
       appLogger.warn('Warning: Failed to connect to Appwrite. Some features may not work correctly.');
       appLogger.warn('Server will start anyway. Check your Appwrite configuration.');
@@ -294,7 +299,9 @@ const startServer = async (): Promise<void> => {
         nodeVersion: process.version,
         timestamp: new Date().toISOString(),
         redis: redisConnected ? 'connected' : 'not available (using memory store)',
-        appwrite: appwriteConnected ? 'connected' : 'connection failed (check config)'
+        appwrite: appwriteConnected ? 'connected' : 'connection failed (check config)',
+        postgres: postgresConnected ? 'connected' : 'not configured',
+        databaseProvider: process.env.DATABASE_PROVIDER || 'appwrite'
       });
 
       appLogger.info('Environment Configuration', {

@@ -1,5 +1,5 @@
 # Multi-stage build for production optimization
-FROM node:20-alpine AS base
+FROM node:22-alpine AS base
 
 # Set working directory
 WORKDIR /app
@@ -21,6 +21,8 @@ CMD ["sh", "-c", "trap 'kill 0' TERM INT EXIT; (cd backend && npm run dev) & npm
 # Build stage
 FROM base AS build
 COPY . .
+ARG DATABASE_URL=postgresql://studentlens:studentlens@localhost:5432/studentlens?schema=public
+ENV DATABASE_URL=${DATABASE_URL}
 
 # Build frontend
 RUN npm run build
@@ -29,7 +31,9 @@ RUN npm run build
 RUN cd backend && npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
+ARG DATABASE_URL=postgresql://studentlens:studentlens@localhost:5432/studentlens?schema=public
+ENV DATABASE_URL=${DATABASE_URL}
 
 # Install dumb-init and curl for proper signal handling and health checks
 RUN apk add --no-cache dumb-init curl bash
@@ -50,7 +54,9 @@ COPY --from=build --chown=nodejs:nodejs /app/dist ./public
 
 # Copy package files and install only production dependencies
 COPY --chown=nodejs:nodejs backend/package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+COPY --chown=nodejs:nodejs backend/prisma ./prisma
+COPY --chown=nodejs:nodejs backend/prisma.config.ts ./prisma.config.ts
+RUN npm ci --only=production && npx prisma generate && npm cache clean --force
 
 # Create logs directory with proper permissions
 RUN mkdir -p /app/logs && chown -R nodejs:nodejs /app/logs

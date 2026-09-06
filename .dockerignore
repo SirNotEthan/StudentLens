@@ -2,6 +2,16 @@ node_modules
 npm-debug.log
 .git
 .gitignore
+.github
+.do
+.node-version
+build.sh
+build-optimized.sh
+deploy.sh
+vps-deploy.sh
+docker-compose.yml
+nginx.conf
+eslint.config.js
 README.md
 .env
 .env.local
@@ -17,3 +27,7 @@ dist
 backend/node_modules
 backend/dist
 backend/.env
+backend/logs
+ssl
+.cache
+*.tsbuildinfo

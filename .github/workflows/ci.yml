@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: |
             package-lock.json
@@ -33,6 +33,8 @@ jobs:
 
       - name: Type-check backend
         run: cd backend && npm run lint
+        env:
+          DATABASE_URL: postgresql://studentlens:studentlens@localhost:5432/studentlens?schema=public
 
       - name: Run backend smoke tests
         run: cd backend && npm test
@@ -42,3 +44,5 @@ jobs:
 
       - name: Build backend
         run: cd backend && npm run build
+        env:
+          DATABASE_URL: postgresql://studentlens:studentlens@localhost:5432/studentlens?schema=public

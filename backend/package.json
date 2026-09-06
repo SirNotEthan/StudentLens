@@ -4,11 +4,11 @@
   "description": "",
   "main": "dist/server.js",
   "engines": {
-    "node": ">=20.0.0",
+    "node": ">=22.0.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "build": "tsc && tsc-alias",
+    "build": "prisma generate && tsc && tsc-alias",
     "build:watch": "tsc --watch",
     "start": "node dist/server.js",
     "start:prod": "bash start.sh",
@@ -16,14 +16,22 @@
     "dev:watch": "nodemon --exec \"ts-node -r tsconfig-paths/register\" src/server.ts",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "ts-node -r tsconfig-paths/register src/tests/smoke.test.ts"
+    "test": "ts-node -r tsconfig-paths/register src/tests/smoke.test.ts",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "appwrite:export": "ts-node -r tsconfig-paths/register src/scripts/exportAppwriteData.ts",
+    "local:import": "ts-node -r tsconfig-paths/register src/scripts/importLocalData.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@prisma/client": "^7.10.0",
     "axios": "^1.12.2",
+    "bcryptjs": "^3.0.3",
     "connect-redis": "^7.1.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
@@ -38,6 +46,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
+    "pg": "^8.23.0",
+    "prisma": "^7.10.0",
     "redis": "^4.7.0",
     "sanitize-html": "^2.17.1",
     "swagger-ui-express": "^5.0.1",
@@ -45,6 +55,7 @@
     "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/express-rate-limit": "^5.1.3",
@@ -57,6 +68,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.16",
     "@types/passport-jwt": "^4.0.1",
+    "@types/pg": "^8.23.1",
     "@types/sanitize-html": "^2.16.1",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/winston": "^2.4.4",

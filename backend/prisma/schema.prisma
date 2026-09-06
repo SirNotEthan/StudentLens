@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  Student
+  Writer
+  Editor
+  Teacher
+  Owner
+}
+
+enum AuthProvider {
+  email
+  google
+}
+
+enum PostStatus {
+  draft
+  pending_editor
+  pending_reviewer
+  published
+  archived
+}
+
+enum ApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ContactSubmissionStatus {
+  new
+  read
+  archived
+}
+
+model User {
+  id                       String       @id
+  email                    String       @unique
+  name                     String
+  username                 String       @unique
+  firstName                String       @default("")
+  lastName                 String       @default("")
+  role                     UserRole     @default(Student)
+  permissions              String[]     @default([])
+  isActive                 Boolean      @default(true)
+  streak                   Int          @default(0)
+  lastLogin                DateTime?
+  profileImage             String       @default("")
+  bio                      String       @default("")
+  needsSetup               Boolean      @default(false)
+  provider                 AuthProvider @default(email)
+  googleId                 String?      @unique
+  profileVisibility        Boolean      @default(true)
+  passwordHash             String?
+  prefs                    Json         @default("{}")
+  appwritePrefs            Json         @default("{}")
+
+  wordleGamesPlayed        Int          @default(0)
+  wordleCurrentStreak      Int          @default(0)
+  wordleBestStreak         Int          @default(0)
+  wordleWins               Int          @default(0)
+  wordleLastPlayedDate     DateTime?
+  spellingBeeGamesPlayed   Int          @default(0)
+  spellingBeeCurrentStreak Int          @default(0)
+  spellingBeeBestStreak    Int          @default(0)
+  spellingBeeWins          Int          @default(0)
+  spellingBeeLastPlayedDate DateTime?
+  strandsGamesPlayed       Int          @default(0)
+  strandsCurrentStreak     Int          @default(0)
+  strandsBestStreak        Int          @default(0)
+  strandsWins              Int          @default(0)
+  strandsLastPlayedDate    DateTime?
+
+  posts                    Post[]
+  comments                 Comment[]
+  bookmarks                Bookmark[]
+  writerApplications       WriterApplication[]
+  analyticsEvents          AnalyticsEvent[]
+
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  @@index([role])
+  @@index([isActive])
+  @@index([provider])
+}
+
+model Post {
+  id               String     @id
+  title            String
+  content          String
+  excerpt          String     @default("")
+  authorId         String
+  authorName       String
+  authorUsername   String?
+  category         String
+  tags             String[]   @default([])
+  status           PostStatus @default(draft)
+  featuredImage    String?
+  publishedAt      DateTime?
+  viewCount        Int        @default(0)
+  likes            Int        @default(0)
+  likedUsers       String[]   @default([])
+  slug             String     @unique
+  editorId         String?
+  editorName       String?
+  reviewerId       String?
+  reviewerName     String?
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+  rejectionComment String?
+
+  author           User?      @relation(fields: [authorId], references: [id], onDelete: NoAction)
+  comments         Comment[]
+  bookmarks        Bookmark[]
+
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([authorId])
+  @@index([category])
+  @@index([publishedAt])
+  @@index([status])
+}
+
+model Comment {
+  id        String    @id
+  postId    String
+  authorId  String
+  authorName String
+  content   String
+  parentId  String?
+  isDeleted Boolean   @default(false)
+  likes     Int       @default(0)
+  likedUsers String[] @default([])
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User?     @relation(fields: [authorId], references: [id], onDelete: NoAction)
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   Comment[] @relation("CommentReplies")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([authorId])
+  @@index([isDeleted])
+  @@index([parentId])
+  @@index([postId])
+}
+
+model Bookmark {
+  id        String   @id
+  userId    String
+  postId    String
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model WriterApplication {
+  id            String            @id
+  userId        String
+  userName      String
+  userEmail     String
+  reason        String
+  writingSample String?
+  status        ApplicationStatus @default(pending)
+  submittedAt   DateTime          @default(now())
+  reviewedAt    DateTime?
+  reviewedBy    String?
+  reviewerName  String?
+
+  user          User?             @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([status])
+  @@index([userId])
+}
+
+model AnalyticsEvent {
+  id         String   @id
+  userId     String?
+  eventType  String
+  eventData  Json     @default("{}")
+  page       String?
+  userAgent  String?
+  ipAddress  String?
+  sessionId  String?
+  timestamp  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([eventType])
+  @@index([timestamp])
+  @@index([userId])
+}
+
+model ContactSubmission {
+  id        String                  @id
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    ContactSubmissionStatus @default(new)
+  ipAddress String?
+
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model SiteSettings {
+  id                  String   @id @default("singleton")
+  siteName            String   @default("StudentLens")
+  siteDescription     String   @default("")
+  allowRegistration   Boolean  @default(true)
+  requireWriterApproval Boolean @default(true)
+  maintenanceMode     Boolean  @default(false)
+  contactEmail        String   @default("")
+  metadata            Json     @default("{}")
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model UploadedFile {
+  id             String   @id
+  originalName   String
+  storedName     String
+  mimeType       String
+  sizeBytes      Int
+  publicPath     String
+  ownerId        String?
+  purpose        String
+  appwriteFileId String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([purpose])
+}
