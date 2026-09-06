@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { appLogger } from '@/services/logger';
 
 declare global {
@@ -9,6 +10,9 @@ declare global {
 export const prisma =
   global.studentLensPrisma ??
   new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString: process.env.DATABASE_URL,
+    }),
     log:
       process.env.NODE_ENV === 'development'
         ? ['query', 'warn', 'error']
