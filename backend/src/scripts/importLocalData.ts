@@ -215,8 +215,16 @@ async function importComments() {
 
 async function importBookmarks() {
   const bookmarks = await readJson<any[]>('bookmarks', []);
+  const validUsers = new Set((await prisma.user.findMany({ select: { id: true } })).map(({ id }) => id));
+  const validPosts = new Set((await prisma.post.findMany({ select: { id: true } })).map(({ id }) => id));
+  let skipped = 0;
 
   for (const bookmark of bookmarks) {
+    if (!validUsers.has(bookmark.userId) || !validPosts.has(bookmark.postId)) {
+      skipped += 1;
+      continue;
+    }
+
     await prisma.bookmark.upsert({
       where: { id: documentId(bookmark) },
       update: {
@@ -232,7 +240,7 @@ async function importBookmarks() {
     });
   }
 
-  console.log(`imported ${bookmarks.length} bookmarks`);
+  console.log(`imported ${bookmarks.length - skipped} bookmarks; skipped ${skipped} orphaned legacy bookmarks`);
 }
 
 async function importWriterApplications() {
