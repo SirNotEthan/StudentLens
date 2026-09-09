@@ -28,6 +28,26 @@ const asStringArray = (value: unknown): string[] => {
 
 const documentId = (document: any): string => document.$id || document.id;
 
+type ExportedStorageFile = {
+  bucketId: string;
+  fileId: string;
+  originalName: string;
+  storedName: string;
+  mimeType: string;
+  sizeBytes: number;
+  publicPath: string;
+};
+
+let storageFilesById = new Map<string, ExportedStorageFile>();
+
+const localizeStorageUrls = (value: unknown): string => {
+  const text = String(value || '');
+  return text.replace(
+    /https?:\/\/[^\s"']+\/storage\/buckets\/([^/]+)\/files\/([^/]+)\/(?:view|download|preview)[^\s"']*/g,
+    (original, bucketId, fileId) => storageFilesById.get(`${bucketId}:${fileId}`)?.publicPath || original,
+  );
+};
+
 async function importUsers() {
   const users = await readJson<any[]>('users', []);
 
@@ -48,12 +68,13 @@ async function importUsers() {
         role: (prefs.role || 'Student') as UserRole,
         permissions: asStringArray(prefs.permissions),
         isActive: prefs.isActive ?? user.status ?? true,
-        profileImage: prefs.profileImage || '',
+        profileImage: localizeStorageUrls(prefs.profileImage),
         bio: prefs.bio || '',
         needsSetup: prefs.needsSetup || false,
         provider: (prefs.provider || (prefs.googleId ? 'google' : 'email')) as AuthProvider,
         googleId: prefs.googleId || undefined,
         profileVisibility: prefs.profileVisibility ?? true,
+        passwordHash: user.hash === 'bcrypt' ? user.password : undefined,
         appwritePrefs: prefs,
       },
       create: {
@@ -66,12 +87,13 @@ async function importUsers() {
         role: (prefs.role || 'Student') as UserRole,
         permissions: asStringArray(prefs.permissions),
         isActive: prefs.isActive ?? user.status ?? true,
-        profileImage: prefs.profileImage || '',
+        profileImage: localizeStorageUrls(prefs.profileImage),
         bio: prefs.bio || '',
         needsSetup: prefs.needsSetup || false,
         provider: (prefs.provider || (prefs.googleId ? 'google' : 'email')) as AuthProvider,
         googleId: prefs.googleId || undefined,
         profileVisibility: prefs.profileVisibility ?? true,
+        passwordHash: user.hash === 'bcrypt' ? user.password : undefined,
         prefs,
         appwritePrefs: prefs,
         createdAt: toDate(user.$createdAt),
@@ -91,7 +113,7 @@ async function importPosts() {
       where: { id: post.$id },
       update: {
         title: post.title,
-        content: post.content,
+        content: localizeStorageUrls(post.content),
         excerpt: post.excerpt || '',
         authorId: post.authorId,
         authorName: post.authorName,
@@ -99,7 +121,7 @@ async function importPosts() {
         category: post.category,
         tags: asStringArray(post.tags),
         status: (post.status || 'draft') as PostStatus,
-        featuredImage: post.featuredImage || undefined,
+        featuredImage: post.featuredImage ? localizeStorageUrls(post.featuredImage) : undefined,
         publishedAt: toDate(post.publishedAt),
         viewCount: post.viewCount || 0,
         likes: post.likes || 0,
@@ -116,7 +138,7 @@ async function importPosts() {
       create: {
         id: post.$id,
         title: post.title,
-        content: post.content,
+        content: localizeStorageUrls(post.content),
         excerpt: post.excerpt || '',
         authorId: post.authorId,
         authorName: post.authorName,
@@ -124,7 +146,7 @@ async function importPosts() {
         category: post.category,
         tags: asStringArray(post.tags),
         status: (post.status || 'draft') as PostStatus,
-        featuredImage: post.featuredImage || undefined,
+        featuredImage: post.featuredImage ? localizeStorageUrls(post.featuredImage) : undefined,
         publishedAt: toDate(post.publishedAt),
         viewCount: post.viewCount || 0,
         likes: post.likes || 0,
@@ -149,6 +171,8 @@ async function importPosts() {
 async function importComments() {
   const comments = await readJson<any[]>('comments', []);
 
+  // Import the rows first, then link replies. Appwrite does not guarantee that
+  // parent comments are returned before their children.
   for (const comment of comments) {
     await prisma.comment.upsert({
       where: { id: documentId(comment) },
@@ -157,7 +181,7 @@ async function importComments() {
         authorId: comment.authorId,
         authorName: comment.authorName,
         content: comment.content,
-        parentId: comment.parentId || undefined,
+        parentId: undefined,
         isDeleted: comment.isDeleted || false,
         likes: comment.likes || 0,
         likedUsers: asStringArray(comment.likedUsers),
@@ -168,13 +192,21 @@ async function importComments() {
         authorId: comment.authorId,
         authorName: comment.authorName,
         content: comment.content,
-        parentId: comment.parentId || undefined,
+        parentId: undefined,
         isDeleted: comment.isDeleted || false,
         likes: comment.likes || 0,
         likedUsers: asStringArray(comment.likedUsers),
         createdAt: toDate(comment.$createdAt),
         updatedAt: toDate(comment.$updatedAt),
       },
+    });
+  }
+
+  for (const comment of comments) {
+    if (!comment.parentId) continue;
+    await prisma.comment.update({
+      where: { id: documentId(comment) },
+      data: { parentId: comment.parentId },
     });
   }
 
@@ -354,8 +386,8 @@ async function importSiteSettings() {
       contactRoom: latest.contactRoom || 'S-21',
       contactRoomFullName: latest.contactRoomFullName || 'Room S-21',
       officeHours: latest.officeHours || 'Monday-Friday 9AM-5PM',
-      gamesImage: latest.gamesImage || '',
-      featuredNewsImage: latest.featuredNewsImage || '',
+      gamesImage: localizeStorageUrls(latest.gamesImage),
+      featuredNewsImage: localizeStorageUrls(latest.featuredNewsImage),
       aboutMission: latest.aboutMission || '',
       aboutWhatWeDo: latest.aboutWhatWeDo || '',
       aboutValues: latest.aboutValues || '',
@@ -381,8 +413,8 @@ async function importSiteSettings() {
       contactRoom: latest.contactRoom || 'S-21',
       contactRoomFullName: latest.contactRoomFullName || 'Room S-21',
       officeHours: latest.officeHours || 'Monday-Friday 9AM-5PM',
-      gamesImage: latest.gamesImage || '',
-      featuredNewsImage: latest.featuredNewsImage || '',
+      gamesImage: localizeStorageUrls(latest.gamesImage),
+      featuredNewsImage: localizeStorageUrls(latest.featuredNewsImage),
       aboutMission: latest.aboutMission || '',
       aboutWhatWeDo: latest.aboutWhatWeDo || '',
       aboutValues: latest.aboutValues || '',
@@ -403,7 +435,41 @@ async function importSiteSettings() {
   console.log(`imported ${settings.length} site settings documents into singleton settings`);
 }
 
+async function importStorageFiles() {
+  const files = [...storageFilesById.values()];
+
+  for (const file of files) {
+    await prisma.uploadedFile.upsert({
+      where: { id: `appwrite:${file.bucketId}:${file.fileId}` },
+      update: {
+        originalName: file.originalName,
+        storedName: file.storedName,
+        mimeType: file.mimeType,
+        sizeBytes: file.sizeBytes,
+        publicPath: file.publicPath,
+        purpose: file.bucketId,
+        appwriteFileId: file.fileId,
+      },
+      create: {
+        id: `appwrite:${file.bucketId}:${file.fileId}`,
+        originalName: file.originalName,
+        storedName: file.storedName,
+        mimeType: file.mimeType,
+        sizeBytes: file.sizeBytes,
+        publicPath: file.publicPath,
+        purpose: file.bucketId,
+        appwriteFileId: file.fileId,
+      },
+    });
+  }
+
+  console.log(`imported ${files.length} storage file records`);
+}
+
 async function main() {
+  const storageFiles = await readJson<ExportedStorageFile[]>('storageFiles', []);
+  storageFilesById = new Map(storageFiles.map((file) => [`${file.bucketId}:${file.fileId}`, file]));
+
   await importUsers();
   await importPosts();
   await importComments();
@@ -412,6 +478,7 @@ async function main() {
   await importAnalyticsEvents();
   await importContactSubmissions();
   await importSiteSettings();
+  await importStorageFiles();
 
   console.log('local import complete');
   await prisma.$disconnect();

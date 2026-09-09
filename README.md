@@ -72,6 +72,14 @@ This repository demonstrates experience with:
 
 **Legacy migration**
 - Appwrite export tooling is retained only to move old hosted data into the local database.
+- `npm run appwrite:export` exports users, application collections, and every
+  Appwrite Storage file into `backend/exports/appwrite`.
+- `npm run local:import` upserts the exported records into PostgreSQL, rewrites
+  Appwrite Storage URLs to `/uploads/...`, and registers the local files.
+- Copy `backend/exports/appwrite/storage/*` into the persistent uploads volume
+  at `/app/uploads/appwrite/` before retiring Appwrite.
+- Appwrite bcrypt hashes are retained where compatible. Accounts using another
+  hash algorithm must use the local password-reset flow after migration.
 
 **DevOps / Tooling**
 - Docker
@@ -107,7 +115,7 @@ The current production target is a self-hosted homelab stack with local PostgreS
 
 ## 🔮 Potential Improvements
 
-- Complete local data migration from legacy Appwrite exports
+- Complete the one-time production import from the legacy Appwrite export
 - Expand admin tooling for local account recovery and data management
 - Improved accessibility and UI polish
 - Testing (unit / integration)
