@@ -26,6 +26,12 @@ const asStringArray = (value: unknown): string[] => {
     .filter(Boolean);
 };
 
+const asUserRole = (value: unknown): UserRole => {
+  const role = String(value || 'Student');
+  if (role === 'SchoolAdmin') return UserRole.Teacher;
+  return Object.values(UserRole).includes(role as UserRole) ? (role as UserRole) : UserRole.Student;
+};
+
 const documentId = (document: any): string => document.$id || document.id;
 
 type ExportedStorageFile = {
@@ -65,7 +71,7 @@ async function importUsers() {
         username,
         firstName,
         lastName,
-        role: (prefs.role || 'Student') as UserRole,
+        role: asUserRole(prefs.role),
         permissions: asStringArray(prefs.permissions),
         isActive: prefs.isActive ?? user.status ?? true,
         profileImage: localizeStorageUrls(prefs.profileImage),
@@ -84,7 +90,7 @@ async function importUsers() {
         username,
         firstName,
         lastName,
-        role: (prefs.role || 'Student') as UserRole,
+        role: asUserRole(prefs.role),
         permissions: asStringArray(prefs.permissions),
         isActive: prefs.isActive ?? user.status ?? true,
         profileImage: localizeStorageUrls(prefs.profileImage),
