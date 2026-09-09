@@ -2,8 +2,7 @@ import { Response, Request } from 'express';
 const { validationResult } = require('express-validator');
 import { Post } from '@/models/Post';
 import { Bookmark } from '@/models/Bookmark';
-import { databases, DATABASE_ID, storage, STORAGE_BUCKET_ID, ID } from '@/config/appwrite';
-const { InputFile } = require('node-appwrite/file');
+import { saveUploadedFile } from '@/services/localFiles';
 import {
   AuthenticatedRequest,
   ApiResponse,
@@ -16,8 +15,6 @@ import {
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 import { catchAsync } from '@/middleware/errorHandler';
-
-const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
 
 export const createPost = catchAsync(async (
   req: AuthenticatedRequest,
@@ -1020,9 +1017,7 @@ export const getPostInteractions = catchAsync(async (
       throw AppError.notFound('Post not found');
     }
 
-    const currentDoc = await databases.getDocument(DATABASE_ID, POSTS_COLLECTION_ID, id);
-    const likedUsers = currentDoc.likedUsers || [];
-    const isLiked = likedUsers.includes(req.user.id);
+    const isLiked = post.likedUsers.includes(req.user.id);
     const isBookmarked = await Bookmark.findByUserAndPost(req.user.id, id) !== null;
     const bookmarkCount = await Bookmark.getPostBookmarkCount(id);
 
@@ -1061,21 +1056,17 @@ export const uploadPostImage = catchAsync(async (
     throw AppError.forbidden('You do not have permission to upload images');
   }
 
-  const fileId = ID.unique();
-  const file = await storage.createFile(
-    STORAGE_BUCKET_ID,
-    fileId,
-    InputFile.fromBuffer(req.file.buffer, req.file.originalname)
-  );
+  const file = await saveUploadedFile(req.file, {
+    ownerId: req.user.id,
+    purpose: 'post-images'
+  });
 
-  const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${STORAGE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`;
-
-  appLogger.info('Article image uploaded', { userId: req.user.id, fileId: file.$id });
+  appLogger.info('Article image uploaded', { userId: req.user.id, fileId: file.id });
 
   const response: ApiResponse = {
     success: true,
     message: 'Image uploaded successfully',
-    data: { url: fileUrl, fileId: file.$id }
+    data: { url: file.url, fileId: file.id }
   };
 
   res.json(response);

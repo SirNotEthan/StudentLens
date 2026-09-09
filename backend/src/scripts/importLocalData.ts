@@ -2,7 +2,7 @@ import 'dotenv/config';
 import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/config/database';
-import { AuthProvider, PostStatus, UserRole } from '@prisma/client';
+import { ApplicationStatus, AuthProvider, ContactSubmissionStatus, PostStatus, UserRole } from '@prisma/client';
 
 const exportDir = process.env.STUDENTLENS_EXPORT_DIR || path.resolve(process.cwd(), 'exports', 'appwrite');
 
@@ -25,6 +25,8 @@ const asStringArray = (value: unknown): string[] => {
     .map((item) => item.trim())
     .filter(Boolean);
 };
+
+const documentId = (document: any): string => document.$id || document.id;
 
 async function importUsers() {
   const users = await readJson<any[]>('users', []);
@@ -144,11 +146,274 @@ async function importPosts() {
   console.log(`imported ${posts.length} posts`);
 }
 
+async function importComments() {
+  const comments = await readJson<any[]>('comments', []);
+
+  for (const comment of comments) {
+    await prisma.comment.upsert({
+      where: { id: documentId(comment) },
+      update: {
+        postId: comment.postId,
+        authorId: comment.authorId,
+        authorName: comment.authorName,
+        content: comment.content,
+        parentId: comment.parentId || undefined,
+        isDeleted: comment.isDeleted || false,
+        likes: comment.likes || 0,
+        likedUsers: asStringArray(comment.likedUsers),
+      },
+      create: {
+        id: documentId(comment),
+        postId: comment.postId,
+        authorId: comment.authorId,
+        authorName: comment.authorName,
+        content: comment.content,
+        parentId: comment.parentId || undefined,
+        isDeleted: comment.isDeleted || false,
+        likes: comment.likes || 0,
+        likedUsers: asStringArray(comment.likedUsers),
+        createdAt: toDate(comment.$createdAt),
+        updatedAt: toDate(comment.$updatedAt),
+      },
+    });
+  }
+
+  console.log(`imported ${comments.length} comments`);
+}
+
+async function importBookmarks() {
+  const bookmarks = await readJson<any[]>('bookmarks', []);
+
+  for (const bookmark of bookmarks) {
+    await prisma.bookmark.upsert({
+      where: { id: documentId(bookmark) },
+      update: {
+        userId: bookmark.userId,
+        postId: bookmark.postId,
+      },
+      create: {
+        id: documentId(bookmark),
+        userId: bookmark.userId,
+        postId: bookmark.postId,
+        createdAt: toDate(bookmark.$createdAt),
+      },
+    });
+  }
+
+  console.log(`imported ${bookmarks.length} bookmarks`);
+}
+
+async function importWriterApplications() {
+  const applications = await readJson<any[]>('writerApplications', []);
+
+  for (const application of applications) {
+    await prisma.writerApplication.upsert({
+      where: { id: documentId(application) },
+      update: {
+        userId: application.userId,
+        userName: application.userName,
+        userEmail: application.userEmail,
+        reason: application.reason,
+        writingSample: application.writingSample || undefined,
+        status: (application.status || 'pending') as ApplicationStatus,
+        submittedAt: toDate(application.submittedAt) || new Date(),
+        reviewedAt: toDate(application.reviewedAt),
+        reviewedBy: application.reviewedBy || undefined,
+        reviewerName: application.reviewerName || undefined,
+      },
+      create: {
+        id: documentId(application),
+        userId: application.userId,
+        userName: application.userName,
+        userEmail: application.userEmail,
+        reason: application.reason,
+        writingSample: application.writingSample || undefined,
+        status: (application.status || 'pending') as ApplicationStatus,
+        submittedAt: toDate(application.submittedAt) || toDate(application.$createdAt) || new Date(),
+        reviewedAt: toDate(application.reviewedAt),
+        reviewedBy: application.reviewedBy || undefined,
+        reviewerName: application.reviewerName || undefined,
+        createdAt: toDate(application.$createdAt),
+        updatedAt: toDate(application.$updatedAt),
+      },
+    });
+  }
+
+  console.log(`imported ${applications.length} writer applications`);
+}
+
+async function importAnalyticsEvents() {
+  const events = await readJson<any[]>('analyticsEvents', []);
+
+  for (const event of events) {
+    await prisma.analyticsEvent.upsert({
+      where: { id: documentId(event) },
+      update: {
+        userId: event.userId || undefined,
+        eventType: event.eventType,
+        eventData: event.eventData || {},
+        page: event.page || event.pageUrl || undefined,
+        pageUrl: event.pageUrl || event.page || undefined,
+        pageTitle: event.pageTitle || undefined,
+        referrer: event.referrer || undefined,
+        browser: event.browser || undefined,
+        browserVersion: event.browserVersion || undefined,
+        deviceType: event.deviceType || undefined,
+        operatingSystem: event.operatingSystem || undefined,
+        osVersion: event.osVersion || undefined,
+        postId: event.postId || undefined,
+        commentId: event.commentId || undefined,
+        searchQuery: event.searchQuery || undefined,
+        featureName: event.featureName || undefined,
+        userAgent: event.userAgent || undefined,
+        ipAddress: event.ipAddress || undefined,
+        sessionId: event.sessionId || undefined,
+        timestamp: toDate(event.timestamp) || toDate(event.$createdAt) || new Date(),
+      },
+      create: {
+        id: documentId(event),
+        userId: event.userId || undefined,
+        eventType: event.eventType,
+        eventData: event.eventData || {},
+        page: event.page || event.pageUrl || undefined,
+        pageUrl: event.pageUrl || event.page || undefined,
+        pageTitle: event.pageTitle || undefined,
+        referrer: event.referrer || undefined,
+        browser: event.browser || undefined,
+        browserVersion: event.browserVersion || undefined,
+        deviceType: event.deviceType || undefined,
+        operatingSystem: event.operatingSystem || undefined,
+        osVersion: event.osVersion || undefined,
+        postId: event.postId || undefined,
+        commentId: event.commentId || undefined,
+        searchQuery: event.searchQuery || undefined,
+        featureName: event.featureName || undefined,
+        userAgent: event.userAgent || undefined,
+        ipAddress: event.ipAddress || undefined,
+        sessionId: event.sessionId || undefined,
+        timestamp: toDate(event.timestamp) || toDate(event.$createdAt) || new Date(),
+        createdAt: toDate(event.$createdAt),
+        updatedAt: toDate(event.$updatedAt),
+      },
+    });
+  }
+
+  console.log(`imported ${events.length} analytics events`);
+}
+
+async function importContactSubmissions() {
+  const submissions = await readJson<any[]>('contactSubmissions', []);
+
+  for (const submission of submissions) {
+    await prisma.contactSubmission.upsert({
+      where: { id: documentId(submission) },
+      update: {
+        name: submission.name,
+        email: submission.email,
+        subject: submission.subject,
+        message: submission.message,
+        status: (submission.status || 'new') as ContactSubmissionStatus,
+        ipAddress: submission.ipAddress || undefined,
+      },
+      create: {
+        id: documentId(submission),
+        name: submission.name,
+        email: submission.email,
+        subject: submission.subject,
+        message: submission.message,
+        status: (submission.status || 'new') as ContactSubmissionStatus,
+        ipAddress: submission.ipAddress || undefined,
+        createdAt: toDate(submission.$createdAt),
+        updatedAt: toDate(submission.$updatedAt),
+      },
+    });
+  }
+
+  console.log(`imported ${submissions.length} contact submissions`);
+}
+
+async function importSiteSettings() {
+  const settings = await readJson<any[]>('siteSettings', []);
+  const latest = settings[settings.length - 1];
+
+  if (!latest) {
+    console.log('imported 0 site settings');
+    return;
+  }
+
+  await prisma.siteSettings.upsert({
+    where: { id: 'singleton' },
+    update: {
+      siteName: latest.siteName || 'STUDENT LENS',
+      siteDescription: latest.siteDescription || '',
+      tagline: latest.tagline || 'Your Student News Hub',
+      allowRegistration: latest.allowRegistration ?? true,
+      requireWriterApproval: latest.requireWriterApproval ?? true,
+      maintenanceMode: latest.maintenanceMode ?? false,
+      contactEmail: latest.contactEmail || 'contact@studentlens.com',
+      contactRoom: latest.contactRoom || 'S-21',
+      contactRoomFullName: latest.contactRoomFullName || 'Room S-21',
+      officeHours: latest.officeHours || 'Monday-Friday 9AM-5PM',
+      gamesImage: latest.gamesImage || '',
+      featuredNewsImage: latest.featuredNewsImage || '',
+      aboutMission: latest.aboutMission || '',
+      aboutWhatWeDo: latest.aboutWhatWeDo || '',
+      aboutValues: latest.aboutValues || '',
+      aboutLegacy: latest.aboutLegacy || '',
+      aboutLegacyIntro: latest.aboutLegacyIntro || '',
+      aboutGetInvolved: latest.aboutGetInvolved || '',
+      applyIntro: latest.applyIntro || '',
+      applyBenefits: latest.applyBenefits || '',
+      applyTimeline: latest.applyTimeline || '',
+      termsOfService: latest.termsOfService || '',
+      privacyPolicy: latest.privacyPolicy || '',
+      metadata: latest.metadata || {},
+    },
+    create: {
+      id: 'singleton',
+      siteName: latest.siteName || 'STUDENT LENS',
+      siteDescription: latest.siteDescription || '',
+      tagline: latest.tagline || 'Your Student News Hub',
+      allowRegistration: latest.allowRegistration ?? true,
+      requireWriterApproval: latest.requireWriterApproval ?? true,
+      maintenanceMode: latest.maintenanceMode ?? false,
+      contactEmail: latest.contactEmail || 'contact@studentlens.com',
+      contactRoom: latest.contactRoom || 'S-21',
+      contactRoomFullName: latest.contactRoomFullName || 'Room S-21',
+      officeHours: latest.officeHours || 'Monday-Friday 9AM-5PM',
+      gamesImage: latest.gamesImage || '',
+      featuredNewsImage: latest.featuredNewsImage || '',
+      aboutMission: latest.aboutMission || '',
+      aboutWhatWeDo: latest.aboutWhatWeDo || '',
+      aboutValues: latest.aboutValues || '',
+      aboutLegacy: latest.aboutLegacy || '',
+      aboutLegacyIntro: latest.aboutLegacyIntro || '',
+      aboutGetInvolved: latest.aboutGetInvolved || '',
+      applyIntro: latest.applyIntro || '',
+      applyBenefits: latest.applyBenefits || '',
+      applyTimeline: latest.applyTimeline || '',
+      termsOfService: latest.termsOfService || '',
+      privacyPolicy: latest.privacyPolicy || '',
+      metadata: latest.metadata || {},
+      createdAt: toDate(latest.$createdAt),
+      updatedAt: toDate(latest.$updatedAt),
+    },
+  });
+
+  console.log(`imported ${settings.length} site settings documents into singleton settings`);
+}
+
 async function main() {
   await importUsers();
   await importPosts();
+  await importComments();
+  await importBookmarks();
+  await importWriterApplications();
+  await importAnalyticsEvents();
+  await importContactSubmissions();
+  await importSiteSettings();
 
-  console.log('local import foundation complete; comments/bookmarks/applications are next migration targets');
+  console.log('local import complete');
   await prisma.$disconnect();
 }
 

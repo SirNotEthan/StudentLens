@@ -1,9 +1,9 @@
-import { databases, DATABASE_ID, ID, Query } from '@/config/appwrite';
+import crypto from 'crypto';
+import { prisma } from '@/config/database';
 import { IWriterApplication, CreateApplicationRequest, UpdateApplicationRequest, ApplicationStatus } from '@/types';
 import { AppError } from '@/utils/AppError';
-import { appLogger } from '@/services/logger';
 
-const APPLICATIONS_COLLECTION_ID = process.env.APPWRITE_APPLICATIONS_COLLECTION_ID || 'writer_applications';
+const toIso = (value?: Date | string | null): string | undefined => value ? (value instanceof Date ? value.toISOString() : new Date(value).toISOString()) : undefined;
 
 export class WriterApplication implements IWriterApplication {
   id: string;
@@ -26,218 +26,68 @@ export class WriterApplication implements IWriterApplication {
     this.userName = data.userName;
     this.userEmail = data.userEmail;
     this.reason = data.reason;
-    this.writingSample = data.writingSample;
+    this.writingSample = data.writingSample || undefined;
     this.status = data.status || 'pending';
-    this.submittedAt = data.submittedAt || new Date().toISOString();
-    this.reviewedAt = data.reviewedAt;
-    this.reviewedBy = data.reviewedBy;
-    this.reviewerName = data.reviewerName;
-    this.createdAt = data.$createdAt || data.createdAt || new Date().toISOString();
-    this.updatedAt = data.$updatedAt || data.updatedAt || new Date().toISOString();
+    this.submittedAt = toIso(data.submittedAt) || new Date().toISOString();
+    this.reviewedAt = toIso(data.reviewedAt);
+    this.reviewedBy = data.reviewedBy || undefined;
+    this.reviewerName = data.reviewerName || undefined;
+    this.createdAt = data.$createdAt || toIso(data.createdAt) || new Date().toISOString();
+    this.updatedAt = data.$updatedAt || toIso(data.updatedAt) || new Date().toISOString();
   }
 
   static async create(applicationData: CreateApplicationRequest, userId: string, userName: string, userEmail: string): Promise<WriterApplication> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Creating new writer application', { userId, userName });
-
-      const existingApplication = await this.findByUserId(userId);
-      if (existingApplication && existingApplication.status === 'pending') {
-        throw AppError.conflict('You already have a pending writer application');
-      }
-
-      const now = new Date().toISOString();
-
-      const documentData = {
+    const existing = await this.findByUserId(userId);
+    if (existing && existing.status === 'pending') throw AppError.conflict('You already have a pending writer application');
+    const app = await prisma.writerApplication.create({
+      data: {
+        id: crypto.randomUUID(),
         userId,
         userName,
         userEmail,
         reason: applicationData.reason,
-        writingSample: applicationData.writingSample || '',
-        status: 'pending' as ApplicationStatus,
-        submittedAt: now,
-        reviewedAt: '',
-        reviewedBy: '',
-        reviewerName: ''
-      };
-
-      const document = await databases.createDocument(
-        DATABASE_ID,
-        APPLICATIONS_COLLECTION_ID,
-        ID.unique(),
-        documentData
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.create', duration, { applicationId: document.$id });
-      appLogger.logDatabase('create', 'writer_applications', { userId }, null);
-
-      return new WriterApplication(document);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('create', 'writer_applications', { userId }, error);
-      appLogger.logPerformance('WriterApplication.create', duration, { error: true });
-      throw AppError.internal(`Failed to create writer application: ${error.message}`);
-    }
+        writingSample: applicationData.writingSample || undefined,
+      },
+    });
+    return new WriterApplication(app);
   }
 
   static async findById(id: string): Promise<WriterApplication | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding writer application by ID', { id });
-
-      const document = await databases.getDocument(DATABASE_ID, APPLICATIONS_COLLECTION_ID, id);
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.findById', duration, { id, found: !!document });
-
-      return new WriterApplication(document);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.findById', duration, { id, error: true });
-
-      if (error.code === 404) {
-        return null;
-      }
-
-      appLogger.logDatabase('findById', 'writer_applications', { id }, error);
-      throw AppError.internal(`Failed to find writer application: ${error.message}`);
-    }
+    const app = await prisma.writerApplication.findUnique({ where: { id } });
+    return app ? new WriterApplication(app) : null;
   }
 
   static async findByUserId(userId: string): Promise<WriterApplication | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding writer application by user ID', { userId });
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        APPLICATIONS_COLLECTION_ID,
-        [Query.equal('userId', userId), Query.orderDesc('$createdAt'), Query.limit(1)]
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.findByUserId', duration, { userId, found: documents.documents.length > 0 });
-
-      if (documents.documents.length === 0) {
-        return null;
-      }
-
-      return new WriterApplication(documents.documents[0]);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findByUserId', 'writer_applications', { userId }, error);
-      appLogger.logPerformance('WriterApplication.findByUserId', duration, { userId, error: true });
-      throw AppError.internal(`Failed to find writer application by user ID: ${error.message}`);
-    }
+    const app = await prisma.writerApplication.findFirst({ where: { userId }, orderBy: { createdAt: 'desc' } });
+    return app ? new WriterApplication(app) : null;
   }
 
-  static async findMany(options: {
-    status?: ApplicationStatus;
-    limit?: number;
-    offset?: number;
-  } = {}): Promise<{ applications: WriterApplication[]; total: number }> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding writer applications with options', options);
-
-      const queries: string[] = [];
-
-      if (options.status) {
-        queries.push(Query.equal('status', options.status));
-      }
-
-      queries.push(Query.orderDesc('$createdAt'));
-
-      if (options.limit) {
-        queries.push(Query.limit(options.limit));
-      }
-      if (options.offset) {
-        queries.push(Query.offset(options.offset));
-      }
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        APPLICATIONS_COLLECTION_ID,
-        queries
-      );
-
-      const applications = documents.documents.map(doc => new WriterApplication(doc));
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.findMany', duration, {
-        count: applications.length,
-        total: documents.total
-      });
-
-      return {
-        applications,
-        total: documents.total
-      };
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findMany', 'writer_applications', options, error);
-      appLogger.logPerformance('WriterApplication.findMany', duration, { error: true });
-      throw AppError.internal(`Failed to find writer applications: ${error.message}`);
-    }
+  static async findMany(options: { status?: ApplicationStatus; limit?: number; offset?: number } = {}): Promise<{ applications: WriterApplication[]; total: number }> {
+    const where: any = {};
+    if (options.status) where.status = options.status;
+    const [applications, total] = await prisma.$transaction([
+      prisma.writerApplication.findMany({ where, orderBy: { createdAt: 'desc' }, take: options.limit, skip: options.offset }),
+      prisma.writerApplication.count({ where }),
+    ]);
+    return { applications: applications.map(item => new WriterApplication(item)), total };
   }
 
   async updateStatus(updateData: UpdateApplicationRequest): Promise<WriterApplication> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Updating writer application status', { id: this.id, updateData });
-
-      const now = new Date().toISOString();
-      const documentData: any = {
-        status: updateData.status,
-        reviewedAt: now,
-        reviewedBy: updateData.reviewedBy || '',
-        reviewerName: updateData.reviewerName || ''
-      };
-
-      const document = await databases.updateDocument(
-        DATABASE_ID,
-        APPLICATIONS_COLLECTION_ID,
-        this.id,
-        documentData
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.updateStatus', duration, { id: this.id });
-      appLogger.logDatabase('updateStatus', 'writer_applications', { id: this.id }, null);
-
-      Object.assign(this, new WriterApplication(document));
-      return this;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('updateStatus', 'writer_applications', { id: this.id }, error);
-      appLogger.logPerformance('WriterApplication.updateStatus', duration, { id: this.id, error: true });
-      throw AppError.internal(`Failed to update writer application status: ${error.message}`);
-    }
+    const updated = await prisma.writerApplication.update({
+      where: { id: this.id },
+      data: {
+        status: updateData.status as any,
+        reviewedAt: new Date(),
+        reviewedBy: updateData.reviewedBy || undefined,
+        reviewerName: updateData.reviewerName || undefined,
+      },
+    });
+    Object.assign(this, new WriterApplication(updated));
+    return this;
   }
 
   async delete(): Promise<void> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Deleting writer application', { id: this.id });
-
-      await databases.deleteDocument(DATABASE_ID, APPLICATIONS_COLLECTION_ID, this.id);
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('WriterApplication.delete', duration, { id: this.id });
-      appLogger.logDatabase('delete', 'writer_applications', { id: this.id }, null);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('delete', 'writer_applications', { id: this.id }, error);
-      appLogger.logPerformance('WriterApplication.delete', duration, { id: this.id, error: true });
-      throw AppError.internal(`Failed to delete writer application: ${error.message}`);
-    }
+    await prisma.writerApplication.delete({ where: { id: this.id } });
   }
 
   toJSON(): IWriterApplication {

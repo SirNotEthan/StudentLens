@@ -1,9 +1,9 @@
-import { databases, DATABASE_ID, ID, Query } from '@/config/appwrite';
+import crypto from 'crypto';
+import { prisma } from '@/config/database';
 import { IPost, CreatePostRequest, UpdatePostRequest, PostStatus } from '@/types';
 import { AppError } from '@/utils/AppError';
-import { appLogger } from '@/services/logger';
 
-const POSTS_COLLECTION_ID = process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts';
+const toIso = (value?: Date | string | null): string | undefined => value ? (value instanceof Date ? value.toISOString() : new Date(value).toISOString()) : undefined;
 
 export class Post implements IPost {
   id: string;
@@ -22,6 +22,7 @@ export class Post implements IPost {
   updatedAt: string;
   viewCount: number;
   likes: number;
+  likedUsers: string[];
   slug: string;
   editorId?: string;
   editorName?: string;
@@ -35,140 +36,70 @@ export class Post implements IPost {
     this.id = data.$id || data.id;
     this.title = data.title;
     this.content = data.content;
-    this.excerpt = data.excerpt;
+    this.excerpt = data.excerpt || '';
     this.authorId = data.authorId;
     this.authorName = data.authorName;
-    this.authorUsername = data.authorUsername;
+    this.authorUsername = data.authorUsername || undefined;
     this.category = data.category;
-    this.tags = Array.isArray(data.tags) ? data.tags : (data.tags ? (typeof data.tags === 'string' ? data.tags.split(',') : []) : []);
+    this.tags = Array.isArray(data.tags) ? data.tags : [];
     this.status = data.status || 'draft';
-    this.featuredImage = data.featuredImage;
-    this.publishedAt = data.publishedAt;
-    this.createdAt = data.$createdAt || data.createdAt || new Date().toISOString();
-    this.updatedAt = data.$updatedAt || data.updatedAt || new Date().toISOString();
+    this.featuredImage = data.featuredImage || undefined;
+    this.publishedAt = toIso(data.publishedAt);
+    this.createdAt = data.$createdAt || toIso(data.createdAt) || new Date().toISOString();
+    this.updatedAt = data.$updatedAt || toIso(data.updatedAt) || new Date().toISOString();
     this.viewCount = data.viewCount || 0;
     this.likes = data.likes || 0;
+    this.likedUsers = Array.isArray(data.likedUsers) ? data.likedUsers : [];
     this.slug = data.slug || this.generateSlug(data.title);
-    this.editorId = data.editorId;
-    this.editorName = data.editorName;
-    this.reviewerId = data.reviewerId;
-    this.reviewerName = data.reviewerName;
-    this.submittedAt = data.submittedAt;
-    this.reviewedAt = data.reviewedAt;
-    this.rejectionComment = data.rejectionComment;
+    this.editorId = data.editorId || undefined;
+    this.editorName = data.editorName || undefined;
+    this.reviewerId = data.reviewerId || undefined;
+    this.reviewerName = data.reviewerName || undefined;
+    this.submittedAt = toIso(data.submittedAt);
+    this.reviewedAt = toIso(data.reviewedAt);
+    this.rejectionComment = data.rejectionComment || undefined;
   }
 
   private generateSlug(title: string): string {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  private static fromDb(data: any): Post {
+    return new Post(data);
   }
 
   static async create(postData: CreatePostRequest, authorId: string, authorName: string, authorUsername?: string): Promise<Post> {
-    const startTime = Date.now();
-
-    try {
-      
-      if (!authorName || authorName.trim() === '') {
-        throw AppError.badRequest('Author name is required and cannot be empty');
-      }
-
-      appLogger.debug('Creating new post', { title: postData.title, authorId, authorName });
-
-      const slug = new Post({ title: postData.title }).generateSlug(postData.title);
-      const now = new Date().toISOString();
-
-      const documentData: any = {
+    if (!authorName?.trim()) throw AppError.badRequest('Author name is required and cannot be empty');
+    const baseSlug = new Post({ title: postData.title }).generateSlug(postData.title);
+    const status = postData.status || 'draft';
+    const created = await prisma.post.create({
+      data: {
+        id: crypto.randomUUID(),
         title: postData.title,
         content: postData.content,
-        excerpt: postData.excerpt || postData.content.substring(0, 150) + '...',
+        excerpt: postData.excerpt || `${postData.content.substring(0, 150)}...`,
         authorId,
         authorName,
+        authorUsername,
         category: postData.category,
         tags: Array.isArray(postData.tags) ? postData.tags : [],
-        status: postData.status || 'draft',
-        featuredImage: postData.featuredImage || '',
-        viewCount: 0,
-        likes: 0,
-        slug: slug + '-' + Date.now() 
-      };
-
-      if (postData.status === 'published') {
-        documentData.publishedAt = now;
-      }
-
-      const document = await databases.createDocument(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        ID.unique(),
-        documentData
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.create', duration, { postId: document.$id });
-      appLogger.logDatabase('create', 'posts', { title: postData.title }, null);
-
-      return new Post(document);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('create', 'posts', { title: postData.title }, error);
-      appLogger.logPerformance('Post.create', duration, { error: true });
-      throw AppError.internal(`Failed to create post: ${error.message}`);
-    }
+        status: status as any,
+        featuredImage: postData.featuredImage || undefined,
+        publishedAt: status === 'published' ? new Date() : undefined,
+        slug: `${baseSlug}-${Date.now()}`,
+      },
+    });
+    return Post.fromDb(created);
   }
 
   static async findById(id: string): Promise<Post | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding post by ID', { id });
-
-      const document = await databases.getDocument(DATABASE_ID, POSTS_COLLECTION_ID, id);
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.findById', duration, { id, found: !!document });
-
-      return new Post(document);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.findById', duration, { id, error: true });
-
-      if (error.code === 404) {
-        return null;
-      }
-
-      appLogger.logDatabase('findById', 'posts', { id }, error);
-      throw AppError.internal(`Failed to find post: ${error.message}`);
-    }
+    const post = await prisma.post.findUnique({ where: { id } });
+    return post ? Post.fromDb(post) : null;
   }
 
   static async findBySlug(slug: string): Promise<Post | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding post by slug', { slug });
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        [Query.equal('slug', slug)]
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.findBySlug', duration, { slug, found: documents.documents.length > 0 });
-
-      if (documents.documents.length === 0) {
-        return null;
-      }
-
-      return new Post(documents.documents[0]);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findBySlug', 'posts', { slug }, error);
-      appLogger.logPerformance('Post.findBySlug', duration, { slug, error: true });
-      throw AppError.internal(`Failed to find post by slug: ${error.message}`);
-    }
+    const post = await prisma.post.findUnique({ where: { slug } });
+    return post ? Post.fromDb(post) : null;
   }
 
   static async findMany(options: {
@@ -180,312 +111,106 @@ export class Post implements IPost {
     offset?: number;
     orderBy?: string;
   } = {}): Promise<{ posts: Post[]; total: number }> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding posts with options', options);
-
-      const queries: string[] = [];
-
-      if (options.status) {
-        queries.push(Query.equal('status', options.status));
-      }
-      if (options.category) {
-        queries.push(Query.equal('category', options.category));
-      }
-      if (options.authorId) {
-        queries.push(Query.equal('authorId', options.authorId));
-      }
-
-      // Use Appwrite search query for server-side filtering when possible
-      if (options.search) {
-        queries.push(Query.search('title', options.search));
-      }
-
-      queries.push(Query.orderDesc('$createdAt'));
-
-      if (options.limit) {
-        queries.push(Query.limit(options.limit));
-      }
-      if (options.offset) {
-        queries.push(Query.offset(options.offset));
-      }
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        queries
-      );
-
-      let posts = documents.documents.map(doc => new Post(doc));
-
-      // Also check content, excerpt, author name, and tags client-side for completeness
-      if (options.search) {
-        const searchTerm = options.search.toLowerCase();
-        const titleResults = new Set(posts.map(p => p.id));
-
-        try {
-          const fallbackQueries: string[] = [];
-          if (options.status) fallbackQueries.push(Query.equal('status', options.status));
-          if (options.category) fallbackQueries.push(Query.equal('category', options.category));
-          if (options.authorId) fallbackQueries.push(Query.equal('authorId', options.authorId));
-          fallbackQueries.push(Query.orderDesc('$createdAt'));
-          fallbackQueries.push(Query.limit(100));
-
-          const fallbackDocs = await databases.listDocuments(DATABASE_ID, POSTS_COLLECTION_ID, fallbackQueries);
-          const additionalPosts = fallbackDocs.documents
-            .map(doc => new Post(doc))
-            .filter(post =>
-              !titleResults.has(post.id) && (
-                post.content.toLowerCase().includes(searchTerm) ||
-                post.excerpt.toLowerCase().includes(searchTerm) ||
-                post.authorName.toLowerCase().includes(searchTerm) ||
-                post.tags.some(tag => tag.toLowerCase().includes(searchTerm))
-              )
-            );
-          posts = [...posts, ...additionalPosts];
-        } catch {
-          // Fallback search failed, use title-only results
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.findMany', duration, {
-        count: posts.length,
-        total: documents.total
-      });
-
-      return {
-        posts,
-        total: options.search ? posts.length : documents.total
-      };
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findMany', 'posts', options, error);
-      appLogger.logPerformance('Post.findMany', duration, { error: true });
-      throw AppError.internal(`Failed to find posts: ${error.message}`);
+    const where: any = {};
+    if (options.status) where.status = options.status;
+    if (options.category) where.category = options.category;
+    if (options.authorId) where.authorId = options.authorId;
+    if (options.search) {
+      where.OR = [
+        { title: { contains: options.search, mode: 'insensitive' } },
+        { content: { contains: options.search, mode: 'insensitive' } },
+        { excerpt: { contains: options.search, mode: 'insensitive' } },
+        { authorName: { contains: options.search, mode: 'insensitive' } },
+        { tags: { has: options.search } },
+      ];
     }
+
+    const orderField = options.orderBy === 'viewCount' ? 'viewCount' : options.orderBy === 'publishedAt' ? 'publishedAt' : 'createdAt';
+    const [posts, total] = await prisma.$transaction([
+      prisma.post.findMany({ where, orderBy: { [orderField]: 'desc' }, take: options.limit, skip: options.offset }),
+      prisma.post.count({ where }),
+    ]);
+    return { posts: posts.map(Post.fromDb), total };
   }
 
   async update(updateData: Partial<UpdatePostRequest>): Promise<Post> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Updating post', { id: this.id, updateData });
-
-      const documentData: any = {};
-
-      if (updateData.title !== undefined) {
-        documentData.title = updateData.title;
-        documentData.slug = this.generateSlug(updateData.title) + '-' + Date.now();
-      }
-      if (updateData.content !== undefined) documentData.content = updateData.content;
-      if (updateData.excerpt !== undefined) documentData.excerpt = updateData.excerpt;
-      if (updateData.category !== undefined) documentData.category = updateData.category;
-      if (updateData.tags !== undefined) {
-        documentData.tags = Array.isArray(updateData.tags) ? updateData.tags : [];
-      }
-      if (updateData.status !== undefined) {
-        documentData.status = updateData.status;
-        if (updateData.status === 'published' && !this.publishedAt) {
-          documentData.publishedAt = new Date().toISOString();
-        }
-      }
-      if (updateData.featuredImage !== undefined) documentData.featuredImage = updateData.featuredImage;
-      if (updateData.rejectionComment !== undefined) documentData.rejectionComment = updateData.rejectionComment;
-
-      const document = await databases.updateDocument(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        this.id,
-        documentData
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.update', duration, { id: this.id });
-      appLogger.logDatabase('update', 'posts', { id: this.id }, null);
-
-      Object.assign(this, new Post(document));
-      return this;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('update', 'posts', { id: this.id }, error);
-      appLogger.logPerformance('Post.update', duration, { id: this.id, error: true });
-      throw AppError.internal(`Failed to update post: ${error.message}`);
+    const data: any = {};
+    if (updateData.title !== undefined) {
+      data.title = updateData.title;
+      data.slug = `${this.generateSlug(updateData.title)}-${Date.now()}`;
     }
+    for (const key of ['content', 'excerpt', 'category', 'featuredImage', 'rejectionComment', 'editorId', 'editorName', 'reviewerId', 'reviewerName']) {
+      if ((updateData as any)[key] !== undefined) data[key] = (updateData as any)[key] || undefined;
+    }
+    if (updateData.tags !== undefined) data.tags = Array.isArray(updateData.tags) ? updateData.tags : [];
+    if (updateData.status !== undefined) {
+      data.status = updateData.status;
+      if (updateData.status === 'published' && !this.publishedAt) data.publishedAt = new Date();
+    }
+    for (const key of ['submittedAt', 'reviewedAt', 'publishedAt']) {
+      if ((updateData as any)[key] !== undefined) data[key] = (updateData as any)[key] ? new Date((updateData as any)[key]) : null;
+    }
+    const updated = await prisma.post.update({ where: { id: this.id }, data });
+    Object.assign(this, Post.fromDb(updated));
+    return this;
   }
 
   async delete(): Promise<void> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Deleting post', { id: this.id });
-
-      await databases.deleteDocument(DATABASE_ID, POSTS_COLLECTION_ID, this.id);
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.delete', duration, { id: this.id });
-      appLogger.logDatabase('delete', 'posts', { id: this.id }, null);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('delete', 'posts', { id: this.id }, error);
-      appLogger.logPerformance('Post.delete', duration, { id: this.id, error: true });
-      throw AppError.internal(`Failed to delete post: ${error.message}`);
-    }
+    await prisma.post.delete({ where: { id: this.id } });
   }
 
   async incrementViewCount(): Promise<void> {
-    try {
-      await databases.updateDocument(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        this.id,
-        { viewCount: this.viewCount + 1 }
-      );
-      this.viewCount += 1;
-    } catch (error: any) {
-      appLogger.error('Failed to increment view count', error, { id: this.id });
-    }
+    const updated = await prisma.post.update({ where: { id: this.id }, data: { viewCount: { increment: 1 } } });
+    this.viewCount = updated.viewCount;
   }
 
   async toggleLike(userId: string): Promise<{ isLiked: boolean; likeCount: number }> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Toggling post like', { postId: this.id, userId, currentLikes: this.likes });
-
-      const currentDoc = await databases.getDocument(DATABASE_ID, POSTS_COLLECTION_ID, this.id);
-      const likedUsers = currentDoc.likedUsers || [];
-
-      const userIndex = likedUsers.indexOf(userId);
-      let newLikedUsers: string[];
-      let newLikes: number;
-      let isLiked: boolean;
-
-      if (userIndex === -1) {
-        newLikedUsers = [...likedUsers, userId];
-        newLikes = this.likes + 1;
-        isLiked = true;
-        appLogger.debug('Adding like', { postId: this.id, userId, newLikes });
-      } else {
-        newLikedUsers = likedUsers.filter((id: string) => id !== userId);
-        newLikes = Math.max(0, this.likes - 1);
-        isLiked = false;
-        appLogger.debug('Removing like', { postId: this.id, userId, newLikes });
-      }
-
-      await databases.updateDocument(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        this.id,
-        {
-          likes: newLikes,
-          likedUsers: newLikedUsers
-        }
-      );
-
-      this.likes = newLikes;
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Post.toggleLike', duration, { postId: this.id, isLiked });
-
-      return { isLiked, likeCount: newLikes };
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('toggleLike', 'posts', { id: this.id }, error);
-      appLogger.logPerformance('Post.toggleLike', duration, { postId: this.id, error: true });
-      throw AppError.internal(`Failed to toggle post like: ${error.message}`);
-    }
+    const current = await prisma.post.findUnique({ where: { id: this.id } });
+    if (!current) throw AppError.notFound('Post not found');
+    const likedUsers = current.likedUsers || [];
+    const isLiked = !likedUsers.includes(userId);
+    const nextLikedUsers = isLiked ? [...likedUsers, userId] : likedUsers.filter(id => id !== userId);
+    const updated = await prisma.post.update({ where: { id: this.id }, data: { likedUsers: nextLikedUsers, likes: nextLikedUsers.length } });
+    this.likes = updated.likes;
+    this.likedUsers = updated.likedUsers;
+    return { isLiked, likeCount: updated.likes };
   }
 
   async submitForReview(): Promise<Post> {
-    if (this.status !== 'draft') {
-      throw AppError.badRequest('Only draft posts can be submitted for review');
-    }
-
-    const now = new Date().toISOString();
-    return await this.update({
-      status: 'pending_editor',
-      submittedAt: now
-    });
+    if (this.status !== 'draft') throw AppError.badRequest('Only draft posts can be submitted for review');
+    return this.update({ status: 'pending_editor', submittedAt: new Date().toISOString() });
   }
 
   async assignToEditor(editorId: string, editorName: string): Promise<Post> {
-    if (this.status !== 'pending_editor') {
-      throw AppError.badRequest('Post must be pending editor review to assign editor');
-    }
-
-    return await this.update({
-      editorId,
-      editorName
-    });
+    if (this.status !== 'pending_editor') throw AppError.badRequest('Post must be pending editor review to assign editor');
+    return this.update({ editorId, editorName });
   }
 
   async forwardToReviewer(reviewerId: string, reviewerName: string): Promise<Post> {
-    if (this.status !== 'pending_editor') {
-      throw AppError.badRequest('Post must be pending editor review to forward to reviewer');
-    }
-
-    const now = new Date().toISOString();
-    return await this.update({
-      status: 'pending_reviewer',
-      reviewerId,
-      reviewerName,
-      reviewedAt: now
-    });
+    if (this.status !== 'pending_editor') throw AppError.badRequest('Post must be pending editor review to forward to reviewer');
+    return this.update({ status: 'pending_reviewer', reviewerId, reviewerName, reviewedAt: new Date().toISOString() });
   }
 
   async publishArticle(): Promise<Post> {
-    if (!['pending_editor', 'pending_reviewer'].includes(this.status)) {
-      throw AppError.badRequest('Post must be pending review to publish');
-    }
-
-    const updateData: any = {
-      status: 'published'
-    };
-
-    if (!this.publishedAt) {
-      updateData.publishedAt = new Date().toISOString();
-    }
-
-    return await this.update(updateData);
+    if (!['pending_editor', 'pending_reviewer'].includes(this.status)) throw AppError.badRequest('Post must be pending review to publish');
+    return this.update({ status: 'published', publishedAt: this.publishedAt || new Date().toISOString() });
   }
 
   async rejectForRevision(reason?: string): Promise<Post> {
-    if (!['pending_editor', 'pending_reviewer'].includes(this.status)) {
-      throw AppError.badRequest('Post must be pending review to reject');
-    }
-
-    return await this.update({
-      status: 'draft',
-      rejectionComment: reason || ''
-    });
+    if (!['pending_editor', 'pending_reviewer'].includes(this.status)) throw AppError.badRequest('Post must be pending review to reject');
+    return this.update({ status: 'draft', rejectionComment: reason || '' });
   }
 
   static async findPendingForEditor(limit?: number, offset?: number): Promise<{ posts: Post[]; total: number }> {
-    return await this.findMany({
-      status: 'pending_editor',
-      limit,
-      offset,
-      orderBy: '$createdAt'
-    });
+    return this.findMany({ status: 'pending_editor', limit, offset });
   }
 
   static async findPendingForReviewer(limit?: number, offset?: number): Promise<{ posts: Post[]; total: number }> {
-    return await this.findMany({
-      status: 'pending_reviewer',
-      limit,
-      offset,
-      orderBy: '$createdAt'
-    });
+    return this.findMany({ status: 'pending_reviewer', limit, offset });
   }
 
   static async findByAuthor(authorId: string, status?: PostStatus): Promise<{ posts: Post[]; total: number }> {
-    return await this.findMany({
-      authorId,
-      status,
-      orderBy: '$createdAt'
-    });
+    return this.findMany({ authorId, status });
   }
 
   toJSON(): IPost {
@@ -511,15 +236,14 @@ export class Post implements IPost {
       reviewerId: this.reviewerId,
       reviewerName: this.reviewerName,
       submittedAt: this.submittedAt,
-      reviewedAt: this.reviewedAt
+      reviewedAt: this.reviewedAt,
+      rejectionComment: this.rejectionComment
     };
   }
 
-  toJSONWithInteractions(isBookmarked: boolean = false, bookmarkCount: number = 0): IPost & { isBookmarked: boolean; bookmarkCount: number } {
-    return {
-      ...this.toJSON(),
-      isBookmarked,
-      bookmarkCount
-    };
+  toJSONWithInteractions(isBookmarked = false, bookmarkCount = 0): IPost & { isBookmarked: boolean; bookmarkCount: number } {
+    return { ...this.toJSON(), isBookmarked, bookmarkCount };
   }
 }
+
+export default Post;

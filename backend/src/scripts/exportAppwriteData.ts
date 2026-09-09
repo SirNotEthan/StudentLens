@@ -1,10 +1,30 @@
 import 'dotenv/config';
 import fs from 'fs/promises';
 import path from 'path';
-import { databases, users, DATABASE_ID } from '@/config/appwrite';
-import { Query } from 'node-appwrite';
+import { Client, Databases, Query, Users } from 'node-appwrite';
 
 const exportDir = process.env.STUDENTLENS_EXPORT_DIR || path.resolve(process.cwd(), 'exports', 'appwrite');
+const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
+
+const requiredConfig = [
+  'APPWRITE_ENDPOINT',
+  'APPWRITE_PROJECT_ID',
+  'APPWRITE_API_KEY',
+  'APPWRITE_DATABASE_ID',
+];
+
+const missingConfig = requiredConfig.filter((key) => !process.env[key]);
+if (missingConfig.length > 0) {
+  throw new Error(`Missing Appwrite export configuration: ${missingConfig.join(', ')}`);
+}
+
+const client = new Client()
+  .setEndpoint(process.env.APPWRITE_ENDPOINT!)
+  .setProject(process.env.APPWRITE_PROJECT_ID!)
+  .setKey(process.env.APPWRITE_API_KEY!);
+
+const databases = new Databases(client);
+const users = new Users(client);
 
 const collections = {
   posts: process.env.APPWRITE_POSTS_COLLECTION_ID || 'posts',

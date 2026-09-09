@@ -76,23 +76,12 @@ export const contactLimiter = createRateLimit(
   'Too many messages sent. Please try again after 1 hour.'
 );
 
-const appwriteImgOrigin = (() => {
-  try {
-    return process.env.APPWRITE_ENDPOINT
-      ? new URL(process.env.APPWRITE_ENDPOINT).origin
-      : '';
-  } catch {
-    return '';
-  }
-})();
-
 const IMG_SRC = [
   "'self'",
   'data:',
   'developers.google.com',       // Google OAuth button logo
   'lh3.googleusercontent.com',   // Google profile pictures
-  'images.unsplash.com',         // Fallback news image
-  appwriteImgOrigin              // Appwrite file storage
+  'images.unsplash.com'          // Fallback news image
 ].filter(Boolean).join(' ');
 
 export const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {

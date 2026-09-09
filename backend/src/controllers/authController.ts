@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 const validationResult = require('express-validator').validationResult;
 import crypto from 'crypto';
-import { account, users } from '@/config/appwrite';
 import { User } from '@/models/User';
 import {
   generateAccessToken,
@@ -144,38 +143,34 @@ export const login = catchAsync(async (
       throw AppError.unauthorized('Invalid username or password');
     }
 
-    try {
-      await account.createEmailPasswordSession({ email: user.email, password });
-
-      await user.updateLastLogin();
-
-      const { accessToken, refreshToken } = generateTokenPair(user);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Login successful',
-        data: {
-          accessToken,
-          refreshToken,
-          user: user.toJSON()
-        }
-      };
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('login', duration, { userId: user.id });
-      appLogger.logAuth('login', user.id, { login }, req);
-
-      res.json(response);
-
-    } catch (authError: any) {
+    if (!(await user.verifyPassword(password))) {
       appLogger.logAuth('failed_login', user.id, {
         reason: 'invalid_password',
-        login,
-        error: authError.message
+        login
       }, req);
 
       throw AppError.unauthorized('Invalid credentials');
     }
+
+    await user.updateLastLogin();
+
+    const { accessToken, refreshToken } = generateTokenPair(user);
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'Login successful',
+      data: {
+        accessToken,
+        refreshToken,
+        user: user.toJSON()
+      }
+    };
+
+    const duration = Date.now() - startTime;
+    appLogger.logPerformance('login', duration, { userId: user.id });
+    appLogger.logAuth('login', user.id, { login }, req);
+
+    res.json(response);
   } catch (error: any) {
     const duration = Date.now() - startTime;
     appLogger.logPerformance('login', duration, { error: true });
@@ -577,13 +572,10 @@ export const resetPassword = catchAsync(async (
     throw AppError.badRequest('Invalid or expired reset token');
   }
 
-  try {
-    await users.updatePassword({ userId: tokenData.userId, password: newPassword });
-    appLogger.info('Password reset successful', { userId: tokenData.userId });
-  } catch (error: any) {
-    appLogger.error('Failed to update password during reset', error, { userId: tokenData.userId });
-    throw AppError.internal('Failed to reset password');
-  }
+  const user = await User.findById(tokenData.userId);
+  if (!user) throw AppError.badRequest('Invalid or expired reset token');
+  await user.setPassword(newPassword);
+  appLogger.info('Password reset successful', { userId: tokenData.userId });
 
   const response: ApiResponse = {
     success: true,

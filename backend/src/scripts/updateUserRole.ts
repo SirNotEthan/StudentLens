@@ -4,28 +4,27 @@ import { config } from 'dotenv';
 import path from 'path';
 config({ path: path.resolve(__dirname, '../../.env') });
 
-import { users } from '../config/appwrite';
 import { User } from '../models/User';
 import { UserRole } from '../types';
 
 async function listUsers(): Promise<any[]> {
   try {
-    console.log('📋 Listing all users...');
-    const usersList = await users.list();
+    console.log('📋 Listing all local users...');
+    const usersList = await User.find({});
 
     console.log('\n=== USERS LIST ===');
-    usersList.users.forEach((user: any, index: number) => {
-      console.log(`${index + 1}. ID: ${user.$id}`);
+    usersList.forEach((user: any, index: number) => {
+      console.log(`${index + 1}. ID: ${user.id}`);
       console.log(`   Email: ${user.email}`);
       console.log(`   Name: ${user.name}`);
-      console.log(`   Username: ${user.prefs?.username || 'Not set'}`);
-      console.log(`   Current Role: ${user.prefs?.role || 'Student'}`);
-      console.log(`   Active: ${user.prefs?.isActive !== false ? 'Yes' : 'No'}`);
-      console.log(`   Created: ${new Date(user.$createdAt).toLocaleDateString()}`);
+      console.log(`   Username: ${user.username || 'Not set'}`);
+      console.log(`   Current Role: ${user.role || 'Student'}`);
+      console.log(`   Active: ${user.isActive !== false ? 'Yes' : 'No'}`);
+      console.log(`   Created: ${new Date(user.createdAt).toLocaleDateString()}`);
       console.log('---');
     });
 
-    return usersList.users;
+    return usersList;
   } catch (error: any) {
     console.error('❌ Error listing users:', error.message);
     throw error;
@@ -97,7 +96,7 @@ Usage:
   npx ts-node src/scripts/updateUserRole.ts find <email>            # Find user by email
   npx ts-node src/scripts/updateUserRole.ts promote <email>         # Promote user to Owner role
 
-Available roles: Student, Teacher, Editor, Publisher, Owner
+Available roles: Student, Writer, Editor, Teacher, Owner
 
 Examples:
   npx ts-node src/scripts/updateUserRole.ts list

@@ -1,4 +1,6 @@
-import { users, databases, DATABASE_ID, USERS_COLLECTION_ID, ID, Query } from '@/config/appwrite';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/config/database';
 import {
   IUser,
   UserRole,
@@ -8,7 +10,14 @@ import {
   UpdateUserRequest
 } from '@/types';
 import { AppError } from '@/utils/AppError';
-import { appLogger } from '@/services/logger';
+
+const toIso = (value?: Date | string | null): string | undefined => {
+  if (!value) return undefined;
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+};
+
+const asStringArray = (value: unknown): string[] => Array.isArray(value) ? value.map(String) : [];
+const fromDb = (data: any): User => new User({ ...data, $id: data.id, $createdAt: toIso(data.createdAt), $updatedAt: toIso(data.updatedAt) });
 
 export class User implements IUser {
   public id: string;
@@ -46,753 +55,239 @@ export class User implements IUser {
   public createdAt: string;
   public updatedAt: string;
   public prefs: Record<string, any>;
+  private passwordHash?: string | null;
 
-  constructor(userData: AppwriteUser) {
-    this.id = userData.$id;
+  constructor(userData: AppwriteUser & any) {
+    const prefs = userData.prefs || {};
+    this.id = userData.$id || userData.id;
     this.email = userData.email;
-    this.name = userData.name;
-    this.username = userData.prefs?.username || '';
-    this.firstName = userData.prefs?.firstName || '';
-    this.lastName = userData.prefs?.lastName || '';
-    this.role = userData.prefs?.role || 'Student';
-    this.permissions = userData.prefs?.permissions || User.getPermissionsByRole(this.role);
-    this.isActive = userData.prefs?.isActive !== false;
-    this.streak = userData.prefs?.streak || 0;
-    this.lastLogin = userData.prefs?.lastLogin;
-    this.profileImage = userData.prefs?.profileImage || '';
-    this.bio = userData.prefs?.bio || '';
-    this.needsSetup = userData.prefs?.needsSetup !== undefined ? userData.prefs.needsSetup : false;
-    this.provider = userData.prefs?.provider || 'email';
-    this.googleId = userData.prefs?.googleId;
-    this.profileVisibility = userData.prefs?.profileVisibility !== false; 
-    this.wordleGamesPlayed = userData.prefs?.wordleGamesPlayed || 0;
-    this.wordleCurrentStreak = userData.prefs?.wordleCurrentStreak || 0;
-    this.wordleBestStreak = userData.prefs?.wordleBestStreak || 0;
-    this.wordleWins = userData.prefs?.wordleWins || 0;
-    this.wordleLastPlayedDate = userData.prefs?.wordleLastPlayedDate;
-    this.spellingBeeGamesPlayed = userData.prefs?.spellingBeeGamesPlayed || 0;
-    this.spellingBeeCurrentStreak = userData.prefs?.spellingBeeCurrentStreak || 0;
-    this.spellingBeeBestStreak = userData.prefs?.spellingBeeBestStreak || 0;
-    this.spellingBeeWins = userData.prefs?.spellingBeeWins || 0;
-    this.spellingBeeLastPlayedDate = userData.prefs?.spellingBeeLastPlayedDate;
-    this.strandsGamesPlayed = userData.prefs?.strandsGamesPlayed || 0;
-    this.strandsCurrentStreak = userData.prefs?.strandsCurrentStreak || 0;
-    this.strandsBestStreak = userData.prefs?.strandsBestStreak || 0;
-    this.strandsWins = userData.prefs?.strandsWins || 0;
-    this.strandsLastPlayedDate = userData.prefs?.strandsLastPlayedDate;
-    this.createdAt = userData.$createdAt;
-    this.updatedAt = userData.$updatedAt;
-    this.prefs = userData.prefs || {};
+    this.name = userData.name || userData.username || userData.email;
+    this.username = userData.username || prefs.username || '';
+    this.firstName = userData.firstName || prefs.firstName || '';
+    this.lastName = userData.lastName || prefs.lastName || '';
+    this.role = (userData.role || prefs.role || 'Student') as UserRole;
+    this.permissions = asStringArray(userData.permissions || prefs.permissions) as Permission[];
+    if (this.permissions.length === 0) this.permissions = User.getPermissionsByRole(this.role);
+    this.isActive = userData.isActive ?? prefs.isActive ?? true;
+    this.streak = userData.streak || prefs.streak || 0;
+    this.lastLogin = toIso(userData.lastLogin) || prefs.lastLogin;
+    this.profileImage = userData.profileImage || prefs.profileImage || '';
+    this.bio = userData.bio || prefs.bio || '';
+    this.needsSetup = userData.needsSetup ?? prefs.needsSetup ?? false;
+    this.provider = (userData.provider || prefs.provider || 'email') as 'email' | 'google';
+    this.googleId = userData.googleId || prefs.googleId || undefined;
+    this.profileVisibility = userData.profileVisibility ?? prefs.profileVisibility ?? true;
+    this.wordleGamesPlayed = userData.wordleGamesPlayed || prefs.wordleGamesPlayed || 0;
+    this.wordleCurrentStreak = userData.wordleCurrentStreak || prefs.wordleCurrentStreak || 0;
+    this.wordleBestStreak = userData.wordleBestStreak || prefs.wordleBestStreak || 0;
+    this.wordleWins = userData.wordleWins || prefs.wordleWins || 0;
+    this.wordleLastPlayedDate = toIso(userData.wordleLastPlayedDate) || prefs.wordleLastPlayedDate;
+    this.spellingBeeGamesPlayed = userData.spellingBeeGamesPlayed || prefs.spellingBeeGamesPlayed || 0;
+    this.spellingBeeCurrentStreak = userData.spellingBeeCurrentStreak || prefs.spellingBeeCurrentStreak || 0;
+    this.spellingBeeBestStreak = userData.spellingBeeBestStreak || prefs.spellingBeeBestStreak || 0;
+    this.spellingBeeWins = userData.spellingBeeWins || prefs.spellingBeeWins || 0;
+    this.spellingBeeLastPlayedDate = toIso(userData.spellingBeeLastPlayedDate) || prefs.spellingBeeLastPlayedDate;
+    this.strandsGamesPlayed = userData.strandsGamesPlayed || prefs.strandsGamesPlayed || 0;
+    this.strandsCurrentStreak = userData.strandsCurrentStreak || prefs.strandsCurrentStreak || 0;
+    this.strandsBestStreak = userData.strandsBestStreak || prefs.strandsBestStreak || 0;
+    this.strandsWins = userData.strandsWins || prefs.strandsWins || 0;
+    this.strandsLastPlayedDate = toIso(userData.strandsLastPlayedDate) || prefs.strandsLastPlayedDate;
+    this.createdAt = userData.$createdAt || toIso(userData.createdAt) || new Date().toISOString();
+    this.updatedAt = userData.$updatedAt || toIso(userData.updatedAt) || new Date().toISOString();
+    this.prefs = prefs;
+    this.passwordHash = userData.passwordHash;
   }
 
   static async create(userData: RegisterUserRequest): Promise<User> {
-    const startTime = Date.now();
-
     try {
-      appLogger.debug('Creating new user', { email: userData.email, username: userData.username });
+      if (userData.provider !== 'google' && !userData.password) throw AppError.badRequest('Password is required for email registration');
+      const role = userData.role || 'Student';
+      const username = userData.username || userData.email.split('@')[0];
+      const firstName = userData.firstName || '';
+      const lastName = userData.lastName || '';
+      const name = userData.name || `${firstName} ${lastName}`.trim() || username;
+      const passwordHash = userData.password ? await bcrypt.hash(userData.password, 12) : null;
 
-      // Enforce password for email-based registration (OAuth users handled separately)
-      if (userData.provider !== 'google' && !userData.password) {
-        throw AppError.badRequest('Password is required for email registration');
-      }
-
-      const user = await users.create(
-        ID.unique(),
-        userData.email,
-        undefined,
-        userData.password || ID.unique(), // ID.unique() only for OAuth users
-        userData.username || userData.email.split('@')[0]
-      );
-
-      try {
-        await users.updatePrefs(user.$id, {
-          username: userData.username,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          role: userData.role || 'Student',
-          permissions: User.getPermissionsByRole(userData.role || 'Student'),
-          isActive: userData.isActive !== undefined ? userData.isActive : true,
-          streak: 0,
+      const created = await prisma.user.create({
+        data: {
+          id: crypto.randomUUID(),
+          email: userData.email,
+          name,
+          username,
+          firstName,
+          lastName,
+          role: role as any,
+          permissions: User.getPermissionsByRole(role),
+          isActive: userData.isActive ?? true,
           profileImage: userData.profileImage || '',
           bio: userData.bio || '',
-          needsSetup: userData.needsSetup !== undefined ? userData.needsSetup : true,
-          provider: userData.provider || 'email',
-          googleId: userData.googleId || undefined,
-          profileVisibility: true,
-          wordleGamesPlayed: 0,
-          wordleCurrentStreak: 0,
-          wordleBestStreak: 0,
-          wordleWins: 0,
-          wordleLastPlayedDate: undefined,
-          spellingBeeGamesPlayed: 0,
-          spellingBeeCurrentStreak: 0,
-          spellingBeeBestStreak: 0,
-          spellingBeeWins: 0,
-          spellingBeeLastPlayedDate: undefined,
-          strandsGamesPlayed: 0,
-          strandsCurrentStreak: 0,
-          strandsBestStreak: 0,
-          strandsWins: 0,
-          strandsLastPlayedDate: undefined
-        });
-      } catch (prefsError: any) {
-        // Rollback: delete the auth user if prefs update fails
-        appLogger.error('Failed to set user prefs, rolling back auth user creation', prefsError, { userId: user.$id });
-        try {
-          await users.delete(user.$id);
-        } catch (rollbackError: any) {
-          appLogger.error('Rollback failed: could not delete orphaned auth user', rollbackError, { userId: user.$id });
-        }
-        throw AppError.internal('Failed to create user profile');
-      }
+          needsSetup: userData.needsSetup ?? true,
+          provider: (userData.provider || 'email') as any,
+          googleId: userData.googleId,
+          passwordHash,
+          prefs: { showBio: true, showStats: true, showPosts: true },
+        },
+      });
 
-      const updatedUser = await users.get(user.$id);
-      const newUser = new User(updatedUser);
-
-      if (USERS_COLLECTION_ID && USERS_COLLECTION_ID !== 'not-needed-for-appwrite-auth') {
-        try {
-          const documentData = User.prepareDatabaseData({
-            userId: newUser.id,
-            email: newUser.email,
-            username: newUser.username,
-            firstName: newUser.firstName,
-            lastName: newUser.lastName,
-            role: newUser.role,
-            isActive: newUser.isActive,
-            streak: newUser.streak,
-            provider: newUser.provider,
-            googleId: newUser.googleId,
-            profileImage: newUser.profileImage,
-            bio: newUser.bio,
-            needsSetup: newUser.needsSetup
-          });
-
-          await databases.createDocument(
-            DATABASE_ID,
-            USERS_COLLECTION_ID,
-            newUser.id,
-            documentData
-          );
-          appLogger.info('User document created in database', { userId: newUser.id });
-        } catch (dbError: any) {
-          // Non-fatal: auth user exists and has prefs, just log the db sync failure
-          appLogger.warn('Failed to create user document in database (non-fatal)', {
-            error: dbError.message,
-            userId: newUser.id
-          });
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.create', duration, { userId: newUser.id });
-      appLogger.info('User created successfully', { userId: newUser.id, email: newUser.email });
-
-      return newUser;
+      return fromDb(created);
     } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('create', 'users', userData, error);
-      appLogger.logPerformance('User.create', duration, { error: true });
-
-      if (error.code === 409) {
-        throw AppError.conflict('User with this email already exists');
-      }
+      if (error.code === 'P2002') throw AppError.conflict('User with this email or username already exists');
       throw AppError.internal(`Failed to create user: ${error.message}`);
     }
   }
 
   static async findById(userId: string): Promise<User | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding user by ID', { userId });
-
-      const user = await users.get(userId);
-      const foundUser = new User(user);
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.findById', duration, { userId, found: true });
-
-      return foundUser;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.findById', duration, { userId, found: false });
-
-      if (error.code === 404) {
-        appLogger.debug('User not found', { userId });
-        return null;
-      }
-
-      appLogger.logDatabase('findById', 'users', { userId }, error);
-      throw AppError.internal(`Failed to find user: ${error.message}`);
-    }
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    return user && !user.email.startsWith('DELETED_') ? fromDb(user) : null;
   }
 
   static async findByEmail(email: string): Promise<User | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding user by email', { email });
-
-      // Use Appwrite query to filter server-side instead of loading all users
-      const usersList = await users.list(
-        [Query.equal('email', email)]
-      );
-      const user = usersList.users.find(u =>
-        !u.prefs?.isDeleted &&
-        !u.email.startsWith('DELETED_')
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.findByEmail', duration, { email, found: !!user });
-
-      if (!user) {
-        appLogger.debug('User not found by email', { email });
-        return null;
-      }
-
-      return new User(user);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findByEmail', 'users', { email }, error);
-      appLogger.logPerformance('User.findByEmail', duration, { email, error: true });
-      throw AppError.internal(`Failed to find user by email: ${error.message}`);
-    }
+    const user = await prisma.user.findUnique({ where: { email } });
+    return user && !user.email.startsWith('DELETED_') ? fromDb(user) : null;
   }
 
   static async findByUsername(username: string): Promise<User | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding user by username', { username });
-
-      // Try server-side name search first to narrow results
-      let user: any = null;
-      try {
-        const searchList = await users.list(
-          [Query.search('name', username), Query.limit(100)]
-        );
-        user = searchList.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
-      } catch (searchError: any) {
-        appLogger.warn('User name search failed, falling back to full pagination', { username, error: searchError.message });
-      }
-
-      // Fallback: paginate through all users if name search didn't match or failed
-      if (!user) {
-        const batchSize = 100;
-        let offset = 0;
-        let hasMore = true;
-
-        while (hasMore && !user) {
-          const batch = await users.list([Query.limit(batchSize), Query.offset(offset)]);
-          user = batch.users.find(u => u.prefs?.username === username && !u.prefs?.isDeleted);
-          offset += batchSize;
-          hasMore = batch.users.length === batchSize;
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.findByUsername', duration, { username, found: !!user });
-
-      if (!user) {
-        appLogger.debug('User not found by username', { username });
-        return null;
-      }
-
-      return new User(user);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findByUsername', 'users', { username }, error);
-      appLogger.logPerformance('User.findByUsername', duration, { username, error: true });
-      throw AppError.internal(`Failed to find user by username: ${error.message}`);
-    }
+    const user = await prisma.user.findUnique({ where: { username } });
+    return user && !user.username.startsWith('DELETED_') ? fromDb(user) : null;
   }
 
   static async findByGoogleId(googleId: string): Promise<User | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding user by Google ID', { googleId });
-
-      // Paginate through users since googleId is stored in prefs
-      const batchSize = 100;
-      let offset = 0;
-      let hasMore = true;
-      let matchingUser: any = null;
-
-      while (hasMore && !matchingUser) {
-        const batch = await users.list([Query.limit(batchSize), Query.offset(offset)]);
-        matchingUser = batch.users.find((user: any) =>
-          user.prefs?.googleId === googleId &&
-          user.prefs?.googleId != null &&
-          !user.prefs?.isDeleted
-        );
-        offset += batchSize;
-        hasMore = batch.users.length === batchSize;
-      }
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.findByGoogleId', duration, { googleId, found: !!matchingUser });
-
-      if (!matchingUser) {
-        return null;
-      }
-
-      return new User(matchingUser);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findByGoogleId', 'users', { googleId }, error);
-      appLogger.logPerformance('User.findByGoogleId', duration, { googleId, error: true });
-      throw AppError.internal(`Failed to find user by Google ID: ${error.message}`);
-    }
+    const user = await prisma.user.findUnique({ where: { googleId } });
+    return user ? fromDb(user) : null;
   }
 
   static async findByEmailOrUsername(email: string, username: string): Promise<User | null> {
-    try {
-      const emailUser = await this.findByEmail(email);
-      if (emailUser) return emailUser;
-
-      const usernameUser = await this.findByUsername(username);
-      return usernameUser;
-    } catch (error: any) {
-      appLogger.error('Failed to find user by email or username', error, { email, username });
-      throw error;
-    }
+    return (await this.findByEmail(email)) || (await this.findByUsername(username));
   }
 
-  /**
-   * Fetches all users from Appwrite in paginated batches to avoid loading
-   * everything in a single API call. Applies client-side filtering for
-   * prefs-based fields that can't be queried server-side.
-   */
   static async find(query: any = {}): Promise<User[]> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding users with query', { query });
-
-      // Paginate through users in batches of 100
-      const allUsers: any[] = [];
-      const batchSize = 100;
-      let offset = 0;
-      let hasMore = true;
-
-      // If there's a search term, try server-side search first to narrow results
-      const searchTerm = query.$or?.[0]?.username?.$regex ||
-                        query.$or?.[0]?.email?.$regex ||
-                        query.$or?.[0]?.firstName?.$regex ||
-                        query.$or?.[0]?.lastName?.$regex;
-
-      const queries = [Query.limit(batchSize)];
-      if (searchTerm) {
-        // Appwrite can search on the 'name' and 'email' fields
-        queries.push(Query.search('name', searchTerm));
-      }
-
-      while (hasMore) {
-        const batch = await users.list([...queries, Query.offset(offset)]);
-        allUsers.push(...batch.users);
-        offset += batchSize;
-        hasMore = batch.users.length === batchSize;
-      }
-
-      // If we did a server-side name search, also search by email to be thorough
-      if (searchTerm) {
-        try {
-          const emailBatch = await users.list([
-            Query.limit(batchSize),
-            Query.search('email', searchTerm)
-          ]);
-          // Merge without duplicates
-          const existingIds = new Set(allUsers.map(u => u.$id));
-          for (const u of emailBatch.users) {
-            if (!existingIds.has(u.$id)) {
-              allUsers.push(u);
-            }
-          }
-        } catch {
-          // email search may not be supported, continue with what we have
-        }
-      }
-
-      let filteredUsers = allUsers;
-
-      if (query.isActive !== undefined) {
-        filteredUsers = filteredUsers.filter(u => u.prefs?.isActive === query.isActive);
-      }
-
-      if (query.role && query.role !== 'all') {
-        filteredUsers = filteredUsers.filter(u => u.prefs?.role === query.role);
-      }
-
-      // Client-side search for prefs-based fields not covered by server search
-      if (searchTerm) {
-        const regex = new RegExp(searchTerm, 'i');
-        filteredUsers = filteredUsers.filter(u =>
-          regex.test(u.prefs?.username || '') ||
-          regex.test(u.email || '') ||
-          regex.test(u.prefs?.firstName || '') ||
-          regex.test(u.prefs?.lastName || '') ||
-          regex.test(u.name || '')
-        );
-      }
-
-      const result = filteredUsers.map(user => new User(user));
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.find', duration, {
-        query,
-        totalFound: result.length,
-        totalScanned: allUsers.length
-      });
-
-      return result;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('find', 'users', { query }, error);
-      appLogger.logPerformance('User.find', duration, { query, error: true });
-      throw AppError.internal(`Failed to find users: ${error.message}`);
+    const searchTerm = query.$or?.[0]?.username?.$regex;
+    const where: any = {};
+    if (query.isActive !== undefined) where.isActive = query.isActive;
+    if (query.role && query.role !== 'all') where.role = query.role;
+    if (searchTerm) {
+      where.OR = [
+        { username: { contains: searchTerm, mode: 'insensitive' } },
+        { email: { contains: searchTerm, mode: 'insensitive' } },
+        { firstName: { contains: searchTerm, mode: 'insensitive' } },
+        { lastName: { contains: searchTerm, mode: 'insensitive' } },
+        { name: { contains: searchTerm, mode: 'insensitive' } },
+      ];
     }
+
+    const users = await prisma.user.findMany({ where, orderBy: { createdAt: 'desc' } });
+    return users.filter(user => !user.email.startsWith('DELETED_')).map(fromDb);
   }
 
   static async countDocuments(query: any = {}): Promise<number> {
-    const startTime = Date.now();
-    try {
-      // For simple counts without filters, use pagination to count without creating User objects
-      if (Object.keys(query).length === 0) {
-        const batch = await users.list([Query.limit(1)]);
-        const duration = Date.now() - startTime;
-        appLogger.logPerformance('User.countDocuments', duration, { total: batch.total });
-        return batch.total;
-      }
-
-      // For filtered counts, we still need to fetch and filter
-      const allUsers = await this.find(query);
-      return allUsers.length;
-    } catch (error: any) {
-      appLogger.logDatabase('countDocuments', 'users', { query }, error);
-      throw error;
-    }
-  }
-
-  private static prepareDatabaseData(data: any): any {
-    const cleanData = { ...data };
-
-    if (!cleanData.profileImage || cleanData.profileImage.trim() === '') {
-      delete cleanData.profileImage;
-    }
-
-    if (!cleanData.googleId) {
-      delete cleanData.googleId;
-    }
-
-    return cleanData;
+    return (await this.find(query)).length;
   }
 
   async ensureDatabaseRecord(): Promise<void> {
-    if (!USERS_COLLECTION_ID || USERS_COLLECTION_ID === 'not-needed-for-appwrite-auth') {
-      return;
-    }
-
-    try {
-      await databases.getDocument(DATABASE_ID, USERS_COLLECTION_ID, this.id);
-      appLogger.debug('User document already exists in database', { userId: this.id });
-    } catch (error: any) {
-      if (error.code === 404) {
-        try {
-          const documentData = User.prepareDatabaseData({
-            userId: this.id,
-            email: this.email,
-            username: this.username,
-            firstName: this.firstName,
-            lastName: this.lastName,
-            role: this.role,
-            isActive: this.isActive,
-            streak: this.streak,
-            provider: this.provider,
-            googleId: this.googleId,
-            profileImage: this.profileImage,
-            bio: this.bio,
-            needsSetup: this.needsSetup
-          });
-
-          await databases.createDocument(
-            DATABASE_ID,
-            USERS_COLLECTION_ID,
-            this.id,
-            documentData
-          );
-          appLogger.info('User document synced to database', { userId: this.id });
-        } catch (createError: any) {
-          appLogger.warn('Failed to sync user document to database', {
-            error: createError.message,
-            userId: this.id
-          });
-        }
-      } else {
-        appLogger.warn('Failed to check user document in database', {
-          error: error.message,
-          userId: this.id
-        });
-      }
-    }
+    await prisma.user.upsert({
+      where: { id: this.id },
+      update: {},
+      create: {
+        id: this.id,
+        email: this.email,
+        name: this.name,
+        username: this.username || this.email.split('@')[0],
+        firstName: this.firstName,
+        lastName: this.lastName,
+        role: this.role as any,
+        permissions: this.permissions,
+        isActive: this.isActive,
+        streak: this.streak,
+        profileImage: this.profileImage,
+        bio: this.bio,
+        needsSetup: this.needsSetup,
+        provider: this.provider as any,
+        googleId: this.googleId,
+        profileVisibility: this.profileVisibility,
+        prefs: this.prefs,
+      },
+    });
   }
 
   async updatePrefs(prefs: Partial<UpdateUserRequest>): Promise<this> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Updating user preferences', { userId: this.id, prefs });
-
-      const mergedPrefs = { ...this.prefs, ...prefs };
-      await users.updatePrefs(this.id, mergedPrefs);
-
-      Object.assign(this, prefs);
-      this.updatedAt = new Date().toISOString();
-
-      if (USERS_COLLECTION_ID && USERS_COLLECTION_ID !== 'not-needed-for-appwrite-auth') {
-        try {
-          await databases.updateDocument(
-            DATABASE_ID,
-            USERS_COLLECTION_ID,
-            this.id,
-            User.prepareDatabaseData(prefs)
-          );
-          appLogger.debug('User document updated in database', { userId: this.id });
-        } catch (dbError: any) {
-          if (dbError.code === 404) {
-            appLogger.info('Creating missing user database document', { userId: this.id });
-            await this.ensureDatabaseRecord();
-            try {
-              await databases.updateDocument(
-                DATABASE_ID,
-                USERS_COLLECTION_ID,
-                this.id,
-                User.prepareDatabaseData(prefs)
-              );
-              appLogger.debug('User document updated after creation', { userId: this.id });
-            } catch (retryError: any) {
-              appLogger.warn('Failed to update user document after creation', {
-                error: retryError.message,
-                userId: this.id
-              });
-            }
-          } else {
-            appLogger.warn('Failed to update user document in database', {
-              error: dbError.message,
-              userId: this.id
-            });
-          }
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.updatePrefs', duration, { userId: this.id });
-      appLogger.info('User preferences updated', { userId: this.id });
-
-      return this;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('updatePrefs', 'users', { userId: this.id, prefs }, error);
-      appLogger.logPerformance('User.updatePrefs', duration, { userId: this.id, error: true });
-      throw AppError.internal(`Failed to update user preferences: ${error.message}`);
+    const mergedPrefs = { ...this.prefs, ...prefs };
+    const updateData: any = { prefs: mergedPrefs };
+    const directFields = [
+      'username', 'firstName', 'lastName', 'bio', 'profileImage', 'role', 'permissions',
+      'isActive', 'needsSetup', 'streak', 'googleId', 'provider', 'profileVisibility',
+      'wordleGamesPlayed', 'wordleCurrentStreak', 'wordleBestStreak', 'wordleWins',
+      'spellingBeeGamesPlayed', 'spellingBeeCurrentStreak', 'spellingBeeBestStreak', 'spellingBeeWins',
+      'strandsGamesPlayed', 'strandsCurrentStreak', 'strandsBestStreak', 'strandsWins'
+    ];
+    for (const key of directFields) if ((prefs as any)[key] !== undefined) updateData[key] = (prefs as any)[key];
+    for (const key of ['lastLogin', 'wordleLastPlayedDate', 'spellingBeeLastPlayedDate', 'strandsLastPlayedDate']) {
+      if ((prefs as any)[key] !== undefined) updateData[key] = (prefs as any)[key] ? new Date((prefs as any)[key]) : null;
     }
+    if (prefs.role && !prefs.permissions) updateData.permissions = User.getPermissionsByRole(prefs.role);
+
+    const updated = await prisma.user.update({ where: { id: this.id }, data: updateData });
+    Object.assign(this, fromDb(updated));
+    return this;
+  }
+
+  async verifyPassword(password: string): Promise<boolean> {
+    return this.passwordHash ? bcrypt.compare(password, this.passwordHash) : false;
+  }
+
+  async setPassword(password: string): Promise<void> {
+    const passwordHash = await bcrypt.hash(password, 12);
+    await prisma.user.update({ where: { id: this.id }, data: { passwordHash, provider: 'email' as any } });
+    this.passwordHash = passwordHash;
+    this.provider = 'email';
   }
 
   async updateLastLogin(): Promise<this> {
-    try {
-      const now = new Date();
-      const nowISO = now.toISOString();
-
-      let newStreak = this.streak || 0;
-      if (this.lastLogin) {
-        const lastLoginDate = new Date(this.lastLogin);
-        const daysDifference = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
-
-        if (daysDifference === 0) {
-          
-          newStreak = this.streak || 1;
-        } else if (daysDifference === 1) {
-          
-          newStreak = (this.streak || 0) + 1;
-          appLogger.info('Login streak increased', { userId: this.id, newStreak, previousStreak: this.streak });
-        } else {
-          
-          if (this.streak && this.streak > 1) {
-            appLogger.info('Login streak broken', { userId: this.id, previousStreak: this.streak, daysMissed: daysDifference });
-          }
-          newStreak = 1;
-        }
-      } else {
-        
-        newStreak = 1;
-        appLogger.info('Login streak started', { userId: this.id });
-      }
-
-      await this.updatePrefs({
-        lastLogin: nowISO,
-        streak: newStreak
-      });
-      this.lastLogin = nowISO;
-      this.streak = newStreak;
-
-      appLogger.logAuth('login', this.id, {
-        timestamp: nowISO,
-        streak: newStreak
-      });
-      return this;
-    } catch (error: any) {
-      appLogger.error('Failed to update last login', error, { userId: this.id });
-      throw error;
+    const nowISO = new Date().toISOString();
+    let streak = this.streak || 0;
+    if (this.lastLogin) {
+      const days = Math.floor((Date.now() - new Date(this.lastLogin).getTime()) / 86400000);
+      streak = days === 0 ? (this.streak || 1) : days === 1 ? (this.streak || 0) + 1 : 1;
+    } else {
+      streak = 1;
     }
+    return this.updatePrefs({ lastLogin: nowISO, streak });
   }
 
   async completeSetup(setupData: Partial<UpdateUserRequest>): Promise<this> {
-    try {
-      if (setupData.username) {
-        const existingUser = await User.findByUsername(setupData.username);
-        if (existingUser && existingUser.id !== this.id) {
-          throw AppError.conflict('Username already taken');
-        }
-      }
-
-      const updateData: Partial<UpdateUserRequest> = {
-        username: setupData.username || this.username,
-        firstName: setupData.firstName || this.firstName,
-        lastName: setupData.lastName || this.lastName,
-        bio: setupData.bio || this.bio,
-        needsSetup: false
-      };
-
-      await this.updatePrefs(updateData);
-
-      Object.assign(this, updateData);
-
-      appLogger.info('User setup completed', { userId: this.id });
-      return this;
-    } catch (error: any) {
-      appLogger.error('Failed to complete user setup', error, { userId: this.id, setupData });
-      throw error;
+    if (setupData.username) {
+      const existing = await User.findByUsername(setupData.username);
+      if (existing && existing.id !== this.id) throw AppError.conflict('Username already taken');
     }
+    return this.updatePrefs({
+      username: setupData.username || this.username,
+      firstName: setupData.firstName || this.firstName,
+      lastName: setupData.lastName || this.lastName,
+      bio: setupData.bio || this.bio,
+      needsSetup: false
+    });
   }
 
   async deleteAccount(): Promise<void> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.warn('User account deletion initiated', {
-        userId: this.id,
-        email: this.email,
-        username: this.username
-      });
-
-      if (USERS_COLLECTION_ID && USERS_COLLECTION_ID !== 'not-needed-for-appwrite-auth') {
-        try {
-          await databases.deleteDocument(DATABASE_ID, USERS_COLLECTION_ID, this.id);
-          appLogger.info('User document deleted from database', { userId: this.id });
-        } catch (dbError: any) {
-          if (dbError.code !== 404) {
-            appLogger.warn('Failed to delete user document from database', {
-              error: dbError.message,
-              userId: this.id
-            });
-          }
-        }
-      }
-
-      const deletedEmail = `DELETED_${Date.now()}_${this.email}`;
-      const deletedUsername = `DELETED_${Date.now()}_${this.username}`;
-
-      try {
-        await users.updateEmail(this.id, deletedEmail);
-        appLogger.info('User email scrambled in Appwrite Auth', { userId: this.id, newEmail: deletedEmail });
-      } catch (emailUpdateError: any) {
-        appLogger.warn('Failed to update user email in Appwrite Auth', {
-          error: emailUpdateError.message,
-          userId: this.id
-        });
-      }
-
-      try {
-        await users.updatePrefs(this.id, {
-          ...this.prefs,
-          isDeleted: true,
-          deletedAt: new Date().toISOString(),
-          email: deletedEmail, 
-          googleId: null, 
-          username: deletedUsername 
-        });
-        appLogger.info('User marked as deleted in preferences', { userId: this.id });
-      } catch (prefsError: any) {
-        appLogger.warn('Failed to mark user as deleted in preferences', {
-          error: prefsError.message,
-          userId: this.id
-        });
-      }
-
-      // Delete the auth user with retry logic instead of a fragile timeout
-      const maxRetries = 3;
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          await users.delete(this.id);
-          appLogger.warn('User successfully deleted from Appwrite Auth', { userId: this.id });
-          break;
-        } catch (deleteError: any) {
-          if (attempt === maxRetries) {
-            appLogger.error('Failed to delete user from Appwrite Auth after retries', deleteError, {
-              userId: this.id,
-              attempts: maxRetries
-            });
-          } else {
-            appLogger.warn(`Retrying user deletion (attempt ${attempt}/${maxRetries})`, { userId: this.id });
-            await new Promise(resolve => setTimeout(resolve, 500 * attempt));
-          }
-        }
-      }
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.deleteAccount', duration, { userId: this.id });
-      appLogger.warn('User account deletion process completed', {
-        userId: this.id,
-        email: this.email,
-        username: this.username,
-        deletedAt: new Date().toISOString()
-      });
-
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('User.deleteAccount', duration, { userId: this.id, error: true });
-      appLogger.error('Failed to delete user account', error, { userId: this.id });
-      throw AppError.internal(`Failed to delete account: ${error.message}`);
-    }
+    const stamp = Date.now();
+    await prisma.user.update({
+      where: { id: this.id },
+      data: {
+        email: `DELETED_${stamp}_${this.email}`,
+        username: `DELETED_${stamp}_${this.username}`,
+        googleId: null,
+        isActive: false,
+        prefs: { ...this.prefs, isDeleted: true, deletedAt: new Date().toISOString() },
+      },
+    });
   }
 
   async fixUserDataConsistency(): Promise<void> {
-    try {
-      appLogger.info('Fixing user data consistency', { userId: this.id });
-
-      if (this.name && this.name.includes(' ') && !this.username) {
-        const baseUsername = this.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-        let newUsername = baseUsername;
-        let counter = 1;
-
-        while (await User.findByUsername(newUsername)) {
-          newUsername = `${baseUsername}${counter}`;
-          counter++;
-        }
-
-        await this.updatePrefs({
-          username: newUsername
-        });
-
-        appLogger.info('Fixed user data consistency', {
-          userId: this.id,
-          oldName: this.name,
-          newUsername: newUsername
-        });
-      }
-    } catch (error: any) {
-      appLogger.error('Failed to fix user data consistency', error, { userId: this.id });
-    }
+    if (this.username) return;
+    const base = this.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '') || `user${Date.now()}`;
+    let username = base;
+    let counter = 1;
+    while (await User.findByUsername(username)) username = `${base}${counter++}`;
+    await this.updatePrefs({ username });
   }
 
   static getPermissionsByRole(role: UserRole): Permission[] {
@@ -803,7 +298,6 @@ export class User implements IUser {
       Teacher: ['read_articles', 'review_articles', 'publish_articles', 'manage_users', 'view_analytics'],
       Owner: ['read_articles', 'write_articles', 'edit_articles', 'delete_articles', 'publish_articles', 'review_articles', 'moderate_content', 'view_analytics', 'manage_categories', 'manage_users', 'manage_roles', 'manage_system', 'manage_applications']
     };
-
     return rolePermissions[role] || ['read_articles'];
   }
 
@@ -817,21 +311,10 @@ export class User implements IUser {
 
   canAccess(resource: string, action: string): boolean {
     const permissionMap: Record<string, Record<string, Permission>> = {
-      articles: {
-        read: 'read_articles',
-        write: 'write_articles',
-        edit: 'edit_articles',
-        delete: 'delete_articles',
-        publish: 'publish_articles'
-      },
-      users: {
-        manage: 'manage_users'
-      },
-      system: {
-        manage: 'manage_system'
-      }
+      articles: { read: 'read_articles', write: 'write_articles', edit: 'edit_articles', delete: 'delete_articles', publish: 'publish_articles' },
+      users: { manage: 'manage_users' },
+      system: { manage: 'manage_system' }
     };
-
     const requiredPermission = permissionMap[resource]?.[action];
     return requiredPermission ? this.hasPermission(requiredPermission) : false;
   }

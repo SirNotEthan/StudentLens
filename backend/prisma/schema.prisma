@@ -196,6 +196,18 @@ model AnalyticsEvent {
   eventType  String
   eventData  Json     @default("{}")
   page       String?
+  pageUrl    String?
+  pageTitle  String?
+  referrer   String?
+  browser    String?
+  browserVersion String?
+  deviceType String?
+  operatingSystem String?
+  osVersion  String?
+  postId     String?
+  commentId  String?
+  searchQuery String?
+  featureName String?
   userAgent  String?
   ipAddress  String?
   sessionId  String?
@@ -229,12 +241,29 @@ model ContactSubmission {
 
 model SiteSettings {
   id                  String   @id @default("singleton")
-  siteName            String   @default("StudentLens")
+  siteName            String   @default("STUDENT LENS")
   siteDescription     String   @default("")
+  tagline             String   @default("Your Student News Hub")
   allowRegistration   Boolean  @default(true)
   requireWriterApproval Boolean @default(true)
   maintenanceMode     Boolean  @default(false)
-  contactEmail        String   @default("")
+  contactEmail        String   @default("contact@studentlens.com")
+  contactRoom         String   @default("S-21")
+  contactRoomFullName String   @default("Room S-21")
+  officeHours         String   @default("Monday-Friday 9AM-5PM")
+  gamesImage          String   @default("")
+  featuredNewsImage   String   @default("")
+  aboutMission        String   @default("Student Lens is dedicated to amplifying student voices and fostering a vibrant community of young writers, thinkers, and storytellers.")
+  aboutWhatWeDo       String   @default("We provide a digital publishing platform where students can share articles, engage with content, connect with fellow writers, and stay informed about campus news.")
+  aboutValues         String   @default("Authenticity, Community, Growth, Inclusivity")
+  aboutLegacy         String   @default("")
+  aboutLegacyIntro    String   @default("")
+  aboutGetInvolved    String   @default("")
+  applyIntro          String   @default("")
+  applyBenefits       String   @default("")
+  applyTimeline       String   @default("")
+  termsOfService      String   @default("")
+  privacyPolicy       String   @default("")
   metadata            Json     @default("{}")
 
   createdAt           DateTime @default(now())

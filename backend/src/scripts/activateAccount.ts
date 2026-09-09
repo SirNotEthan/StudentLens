@@ -1,50 +1,36 @@
 #!/usr/bin/env ts-node
 
 import 'dotenv/config';
-import { users } from '../config/appwrite';
-import { appLogger } from '../services/logger';
+import { User } from '../models/User';
 
 async function activateAccount(email: string) {
-  try {
-    console.log(`🔍 Searching for user with email: ${email}`);
+  console.log(`Searching for local user with email: ${email}`);
 
-    const usersList = await users.list();
-    const user = usersList.users.find(u => u.email === email);
-
-    if (!user) {
-      console.error(`❌ User with email ${email} not found`);
-      return;
-    }
-
-    console.log(`✅ Found user: ${user.name} (ID: ${user.$id})`);
-    console.log(`📊 Current status: isActive = ${user.prefs?.isActive !== false}`);
-
-    await users.updatePrefs(user.$id, {
-      ...user.prefs,
-      isActive: true
-    });
-
-    console.log(`✅ Account activated successfully!`);
-    console.log(`📧 Email: ${email}`);
-    console.log(`👤 Name: ${user.name}`);
-    console.log(`🆔 User ID: ${user.$id}`);
-
-  } catch (error: any) {
-    console.error('❌ Failed to activate account:', error.message);
-    throw error;
+  const user = await User.findByEmail(email);
+  if (!user) {
+    throw new Error(`User with email ${email} was not found`);
   }
+
+  await user.updatePrefs({ isActive: true, needsSetup: false });
+
+  console.log('Account activated successfully');
+  console.log(`Email: ${user.email}`);
+  console.log(`Name: ${user.name}`);
+  console.log(`User ID: ${user.id}`);
 }
 
-const email = process.argv[2] || 'ethn.bannister15@gmail.com';
+const email = process.argv[2];
 
 if (require.main === module) {
+  if (!email) {
+    console.error('Usage: npx ts-node -r tsconfig-paths/register src/scripts/activateAccount.ts <email>');
+    process.exit(1);
+  }
+
   activateAccount(email)
-    .then(() => {
-      console.log('\n🎉 Account activation completed successfully!');
-      process.exit(0);
-    })
+    .then(() => process.exit(0))
     .catch((error) => {
-      console.error('\n💥 Account activation failed:', error);
+      console.error(`Account activation failed: ${error.message}`);
       process.exit(1);
     });
 }

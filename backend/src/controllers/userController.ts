@@ -12,8 +12,7 @@ import {
 import { AppError } from '@/utils/AppError';
 import { appLogger } from '@/services/logger';
 import { catchAsync } from '@/middleware/errorHandler';
-import { storage, STORAGE_BUCKET_ID, ID } from '@/config/appwrite';
-const { InputFile } = require('node-appwrite/file');
+import { deleteUploadedFileByPublicPath, saveUploadedFile } from '@/services/localFiles';
 
 export const getUsers = catchAsync(async (
   req: AuthenticatedRequest,
@@ -699,15 +698,8 @@ export const uploadProfilePicture = catchAsync(async (
 
     if (req.user.profileImage) {
       try {
-        const oldImageUrl = req.user.profileImage;
-        const fileIdMatch = oldImageUrl.match(/files\/([^\/]+)\//);
-        if (fileIdMatch && fileIdMatch[1]) {
-          await storage.deleteFile(STORAGE_BUCKET_ID, fileIdMatch[1]);
-          appLogger.debug('Deleted old profile image', {
-            userId: req.user.id,
-            oldFileId: fileIdMatch[1]
-          });
-        }
+        await deleteUploadedFileByPublicPath(req.user.profileImage);
+        appLogger.debug('Deleted old profile image', { userId: req.user.id });
       } catch (error) {
         appLogger.warn('Failed to delete old profile image', {
           userId: req.user.id,
@@ -716,28 +708,24 @@ export const uploadProfilePicture = catchAsync(async (
       }
     }
 
-    const fileId = ID.unique();
-    const file = await storage.createFile(
-      STORAGE_BUCKET_ID,
-      fileId,
-      InputFile.fromBuffer(req.file.buffer, req.file.originalname)
-    );
-
-    appLogger.debug('File uploaded to Appwrite Storage', {
-      userId: req.user.id,
-      fileId: file.$id
+    const file = await saveUploadedFile(req.file, {
+      ownerId: req.user.id,
+      purpose: 'profile-pictures'
     });
 
-    const fileUrl = `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${STORAGE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`;
+    appLogger.debug('File uploaded to local storage', {
+      userId: req.user.id,
+      fileId: file.id
+    });
 
-    await req.user.updatePrefs({ profileImage: fileUrl });
+    await req.user.updatePrefs({ profileImage: file.url });
 
     const response: ApiResponse = {
       success: true,
       message: 'Profile picture uploaded successfully',
       data: {
-        profileImage: fileUrl,
-        fileId: file.$id
+        profileImage: file.url,
+        fileId: file.id
       }
     };
 
@@ -749,7 +737,7 @@ export const uploadProfilePicture = catchAsync(async (
 
     appLogger.info('Profile picture uploaded successfully', {
       userId: req.user.id,
-      fileId: file.$id,
+      fileId: file.id,
       fileSize: req.file.size
     });
 

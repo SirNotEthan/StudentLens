@@ -1,9 +1,9 @@
-import { databases, DATABASE_ID, ID, Query } from '@/config/appwrite';
-import { IBookmark, CreateBookmarkRequest } from '@/types';
+import crypto from 'crypto';
+import { prisma } from '@/config/database';
+import { IBookmark } from '@/types';
 import { AppError } from '@/utils/AppError';
-import { appLogger } from '@/services/logger';
 
-const BOOKMARKS_COLLECTION_ID = process.env.APPWRITE_BOOKMARKS_COLLECTION_ID || 'bookmarks';
+const toIso = (value?: Date | string | null): string => value ? (value instanceof Date ? value.toISOString() : new Date(value).toISOString()) : new Date().toISOString();
 
 export class Bookmark implements IBookmark {
   id: string;
@@ -15,200 +15,46 @@ export class Bookmark implements IBookmark {
     this.id = data.$id || data.id;
     this.userId = data.userId;
     this.postId = data.postId;
-    this.createdAt = data.$createdAt || data.createdAt || new Date().toISOString();
+    this.createdAt = data.$createdAt || toIso(data.createdAt);
   }
 
   static async create(userId: string, postId: string): Promise<Bookmark> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Creating bookmark', { userId, postId });
-
-      const existing = await this.findByUserAndPost(userId, postId);
-      if (existing) {
-        throw AppError.badRequest('Post is already bookmarked');
-      }
-
-      const docData = {
-        userId,
-        postId
-      };
-
-      const document = await databases.createDocument(
-        DATABASE_ID,
-        BOOKMARKS_COLLECTION_ID,
-        ID.unique(),
-        docData
-      );
-
-      const bookmark = new Bookmark(document);
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Bookmark.create', duration, { bookmarkId: bookmark.id });
-      appLogger.info('Bookmark created successfully', {
-        bookmarkId: bookmark.id,
-        userId,
-        postId
-      });
-
-      return bookmark;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('create', 'bookmarks', { userId, postId }, error);
-      appLogger.logPerformance('Bookmark.create', duration, { error: true });
-      throw AppError.internal(`Failed to create bookmark: ${error.message}`);
-    }
+    const existing = await this.findByUserAndPost(userId, postId);
+    if (existing) throw AppError.badRequest('Post is already bookmarked');
+    const bookmark = await prisma.bookmark.create({ data: { id: crypto.randomUUID(), userId, postId } });
+    return new Bookmark(bookmark);
   }
 
-  static async getUserBookmarks(userId: string, limit: number = 50, offset: number = 0): Promise<{ bookmarks: Bookmark[]; total: number }> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Getting user bookmarks', { userId, limit, offset });
-
-      const queries = [
-        Query.equal('userId', userId),
-        Query.orderDesc('$createdAt'),
-        Query.limit(limit),
-        Query.offset(offset)
-      ];
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        BOOKMARKS_COLLECTION_ID,
-        queries
-      );
-
-      const bookmarks = documents.documents.map(doc => new Bookmark(doc));
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Bookmark.getUserBookmarks', duration, {
-        userId,
-        count: bookmarks.length,
-        total: documents.total
-      });
-
-      return {
-        bookmarks,
-        total: documents.total
-      };
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('getUserBookmarks', 'bookmarks', { userId }, error);
-      appLogger.logPerformance('Bookmark.getUserBookmarks', duration, { error: true });
-      throw AppError.internal(`Failed to get bookmarks: ${error.message}`);
-    }
+  static async getUserBookmarks(userId: string, limit = 50, offset = 0): Promise<{ bookmarks: Bookmark[]; total: number }> {
+    const [bookmarks, total] = await prisma.$transaction([
+      prisma.bookmark.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: limit, skip: offset }),
+      prisma.bookmark.count({ where: { userId } }),
+    ]);
+    return { bookmarks: bookmarks.map(item => new Bookmark(item)), total };
   }
 
   static async findByUserAndPost(userId: string, postId: string): Promise<Bookmark | null> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Finding bookmark by user and post', { userId, postId });
-
-      const queries = [
-        Query.equal('userId', userId),
-        Query.equal('postId', postId),
-        Query.limit(1)
-      ];
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        BOOKMARKS_COLLECTION_ID,
-        queries
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Bookmark.findByUserAndPost', duration, { userId, postId });
-
-      if (documents.documents.length === 0) {
-        return null;
-      }
-
-      return new Bookmark(documents.documents[0]);
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('findByUserAndPost', 'bookmarks', { userId, postId }, error);
-      appLogger.logPerformance('Bookmark.findByUserAndPost', duration, { error: true });
-      throw AppError.internal(`Failed to find bookmark: ${error.message}`);
-    }
+    const bookmark = await prisma.bookmark.findUnique({ where: { userId_postId: { userId, postId } } });
+    return bookmark ? new Bookmark(bookmark) : null;
   }
 
   static async deleteByUserAndPost(userId: string, postId: string): Promise<boolean> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Deleting bookmark by user and post', { userId, postId });
-
-      const bookmark = await this.findByUserAndPost(userId, postId);
-      if (!bookmark) {
-        return false; 
-      }
-
-      await databases.deleteDocument(
-        DATABASE_ID,
-        BOOKMARKS_COLLECTION_ID,
-        bookmark.id
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Bookmark.delete', duration, { bookmarkId: bookmark.id });
-      appLogger.info('Bookmark deleted successfully', {
-        bookmarkId: bookmark.id,
-        userId,
-        postId
-      });
-
-      return true;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('delete', 'bookmarks', { userId, postId }, error);
-      appLogger.logPerformance('Bookmark.delete', duration, { error: true });
-      throw AppError.internal(`Failed to delete bookmark: ${error.message}`);
-    }
+    const existing = await this.findByUserAndPost(userId, postId);
+    if (!existing) return false;
+    await prisma.bookmark.delete({ where: { userId_postId: { userId, postId } } });
+    return true;
   }
 
   static async getPostBookmarkCount(postId: string): Promise<number> {
-    const startTime = Date.now();
-
-    try {
-      appLogger.debug('Getting bookmark count for post', { postId });
-
-      const queries = [
-        Query.equal('postId', postId),
-        Query.limit(1) 
-      ];
-
-      const documents = await databases.listDocuments(
-        DATABASE_ID,
-        BOOKMARKS_COLLECTION_ID,
-        queries
-      );
-
-      const duration = Date.now() - startTime;
-      appLogger.logPerformance('Bookmark.getPostBookmarkCount', duration, { postId });
-
-      return documents.total;
-    } catch (error: any) {
-      const duration = Date.now() - startTime;
-      appLogger.logDatabase('getPostBookmarkCount', 'bookmarks', { postId }, error);
-      appLogger.logPerformance('Bookmark.getPostBookmarkCount', duration, { error: true });
-      throw AppError.internal(`Failed to get bookmark count: ${error.message}`);
-    }
+    return prisma.bookmark.count({ where: { postId } });
   }
 
   static async isBookmarkedByUser(userId: string, postId: string): Promise<boolean> {
-    const bookmark = await this.findByUserAndPost(userId, postId);
-    return !!bookmark;
+    return !!(await this.findByUserAndPost(userId, postId));
   }
 
   toJSON(): IBookmark {
-    return {
-      id: this.id,
-      userId: this.userId,
-      postId: this.postId,
-      createdAt: this.createdAt
-    };
+    return { id: this.id, userId: this.userId, postId: this.postId, createdAt: this.createdAt };
   }
 }
 

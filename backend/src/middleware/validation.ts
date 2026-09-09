@@ -40,6 +40,18 @@ export const sanitizeHTML = (value: any): string => {
   });
 };
 
+const isAllowedImageReference = (value: unknown): boolean => {
+  if (value === '' || value === null || value === undefined) {
+    return true;
+  }
+
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return value.startsWith('/uploads/') || /^https?:\/\/.+/.test(value);
+};
+
 export const handleValidationErrors = (
   req: Request,
   res: Response,
@@ -140,8 +152,8 @@ export const validateRegistration: ValidationChain[] = [
 
   body('profileImage')
     .optional()
-    .isURL({ protocols: ['http', 'https'], require_protocol: true })
-    .withMessage('Profile image must be a valid URL')
+    .custom(isAllowedImageReference)
+    .withMessage('Profile image must be a valid URL, local upload path, or empty')
     .isLength({ max: 2048 })
     .withMessage('Profile image URL too long')
 ];
@@ -196,16 +208,8 @@ export const validateProfileUpdate: ValidationChain[] = [
 
   body('profileImage')
     .optional()
-    .custom((value) => {
-      if (value === '' || value === null || value === undefined) {
-        return true;
-      }
-      const urlRegex = /^https?:\/\/.+/;
-      if (!urlRegex.test(value)) {
-        throw new Error('Profile image must be a valid URL or empty');
-      }
-      return true;
-    })
+    .custom(isAllowedImageReference)
+    .withMessage('Profile image must be a valid URL, local upload path, or empty')
     .isLength({ max: 2048 })
     .withMessage('Profile image URL too long')
 ];
@@ -404,16 +408,8 @@ export const validateCreatePost: ValidationChain[] = [
 
   body('featuredImage')
     .optional()
-    .custom((value) => {
-      if (value === '' || value === null || value === undefined) {
-        return true;
-      }
-      const urlRegex = /^https?:\/\/.+/;
-      if (!urlRegex.test(value)) {
-        throw new Error('Featured image must be a valid URL or empty');
-      }
-      return true;
-    })
+    .custom(isAllowedImageReference)
+    .withMessage('Featured image must be a valid URL, local upload path, or empty')
     .isLength({ max: 2048 })
     .withMessage('Featured image URL cannot exceed 2048 characters')
 ];
@@ -469,16 +465,8 @@ export const validateUpdatePost: ValidationChain[] = [
 
   body('featuredImage')
     .optional()
-    .custom((value) => {
-      if (value === '' || value === null || value === undefined) {
-        return true;
-      }
-      const urlRegex = /^https?:\/\/.+/;
-      if (!urlRegex.test(value)) {
-        throw new Error('Featured image must be a valid URL or empty');
-      }
-      return true;
-    })
+    .custom(isAllowedImageReference)
+    .withMessage('Featured image must be a valid URL, local upload path, or empty')
     .isLength({ max: 2048 })
     .withMessage('Featured image URL cannot exceed 2048 characters')
 ];

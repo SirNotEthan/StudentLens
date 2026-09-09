@@ -342,11 +342,14 @@ export interface JWTPayload {
 export interface EnvironmentVariables {
   PORT: string;
   NODE_ENV: 'development' | 'production' | 'test';
-  APPWRITE_ENDPOINT: string;
-  APPWRITE_PROJECT_ID: string;
-  APPWRITE_API_KEY: string;
-  APPWRITE_DATABASE_ID: string;
-  APPWRITE_USERS_COLLECTION_ID: string;
+  DATABASE_PROVIDER: 'postgres' | 'appwrite';
+  DATABASE_URL: string;
+  UPLOAD_DIR?: string;
+  APPWRITE_ENDPOINT?: string;
+  APPWRITE_PROJECT_ID?: string;
+  APPWRITE_API_KEY?: string;
+  APPWRITE_DATABASE_ID?: string;
+  APPWRITE_USERS_COLLECTION_ID?: string;
   JWT_SECRET: string;
   JWT_EXPIRE: string;
   GOOGLE_CLIENT_ID: string;

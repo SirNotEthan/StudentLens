@@ -68,7 +68,7 @@ USER nodejs
 EXPOSE 5000
 ENV PORT=5000
 
-# Health check - increased timeouts for external service connections (Redis, Appwrite)
+# Health check - allows time for local Postgres and Redis connections
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:${PORT}/api/health || exit 1
 

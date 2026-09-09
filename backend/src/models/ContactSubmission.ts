@@ -1,9 +1,8 @@
-import { databases, DATABASE_ID, ID, Query } from '@/config/appwrite';
+import crypto from 'crypto';
+import { prisma } from '@/config/database';
 import { IContactSubmission, ContactSubmissionStatus } from '@/types';
-import { AppError } from '@/utils/AppError';
-import { appLogger } from '@/services/logger';
 
-const COLLECTION_ID = process.env.APPWRITE_CONTACT_SUBMISSIONS_COLLECTION_ID || 'contact_submissions';
+const toIso = (value?: Date | string | null): string => value ? (value instanceof Date ? value.toISOString() : new Date(value).toISOString()) : new Date().toISOString();
 
 export class ContactSubmission implements IContactSubmission {
   id: string;
@@ -23,97 +22,48 @@ export class ContactSubmission implements IContactSubmission {
     this.subject = data.subject;
     this.message = data.message;
     this.status = data.status || 'new';
-    this.ipAddress = data.ipAddress;
-    this.createdAt = data.$createdAt || data.createdAt || new Date().toISOString();
-    this.updatedAt = data.$updatedAt || data.updatedAt || new Date().toISOString();
+    this.ipAddress = data.ipAddress || undefined;
+    this.createdAt = data.$createdAt || toIso(data.createdAt);
+    this.updatedAt = data.$updatedAt || toIso(data.updatedAt);
   }
 
-  static async create(data: {
-    name: string;
-    email: string;
-    subject: string;
-    message: string;
-    ipAddress?: string;
-  }): Promise<ContactSubmission> {
-    try {
-      const document = await databases.createDocument(
-        DATABASE_ID,
-        COLLECTION_ID,
-        ID.unique(),
-        {
-          name: data.name,
-          email: data.email,
-          subject: data.subject,
-          message: data.message,
-          status: 'new' as ContactSubmissionStatus,
-          ipAddress: data.ipAddress || ''
-        }
-      );
-      appLogger.logDatabase('create', 'contact_submissions', { email: data.email }, null);
-      return new ContactSubmission(document);
-    } catch (error: any) {
-      appLogger.logDatabase('create', 'contact_submissions', { email: data.email }, error);
-      throw AppError.internal(`Failed to save contact submission: ${error.message}`);
-    }
+  static async create(data: { name: string; email: string; subject: string; message: string; ipAddress?: string }): Promise<ContactSubmission> {
+    const submission = await prisma.contactSubmission.create({
+      data: {
+        id: crypto.randomUUID(),
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        ipAddress: data.ipAddress,
+      },
+    });
+    return new ContactSubmission(submission);
   }
 
-  static async findMany(options: {
-    status?: ContactSubmissionStatus;
-    limit?: number;
-    offset?: number;
-  } = {}): Promise<{ submissions: ContactSubmission[]; total: number }> {
-    try {
-      const queries: string[] = [Query.orderDesc('$createdAt')];
-
-      if (options.status) {
-        queries.push(Query.equal('status', options.status));
-      }
-      if (options.limit) {
-        queries.push(Query.limit(options.limit));
-      }
-      if (options.offset) {
-        queries.push(Query.offset(options.offset));
-      }
-
-      const documents = await databases.listDocuments(DATABASE_ID, COLLECTION_ID, queries);
-      return {
-        submissions: documents.documents.map(doc => new ContactSubmission(doc)),
-        total: documents.total
-      };
-    } catch (error: any) {
-      appLogger.logDatabase('findMany', 'contact_submissions', options, error);
-      throw AppError.internal(`Failed to fetch contact submissions: ${error.message}`);
-    }
+  static async findMany(options: { status?: ContactSubmissionStatus; limit?: number; offset?: number } = {}): Promise<{ submissions: ContactSubmission[]; total: number }> {
+    const where: any = {};
+    if (options.status) where.status = options.status;
+    const [submissions, total] = await prisma.$transaction([
+      prisma.contactSubmission.findMany({ where, orderBy: { createdAt: 'desc' }, take: options.limit, skip: options.offset }),
+      prisma.contactSubmission.count({ where }),
+    ]);
+    return { submissions: submissions.map(item => new ContactSubmission(item)), total };
   }
 
   static async findById(id: string): Promise<ContactSubmission | null> {
-    try {
-      const document = await databases.getDocument(DATABASE_ID, COLLECTION_ID, id);
-      return new ContactSubmission(document);
-    } catch (error: any) {
-      if (error.code === 404) return null;
-      throw AppError.internal(`Failed to find contact submission: ${error.message}`);
-    }
+    const submission = await prisma.contactSubmission.findUnique({ where: { id } });
+    return submission ? new ContactSubmission(submission) : null;
   }
 
   async updateStatus(status: ContactSubmissionStatus): Promise<ContactSubmission> {
-    try {
-      const document = await databases.updateDocument(DATABASE_ID, COLLECTION_ID, this.id, { status });
-      Object.assign(this, new ContactSubmission(document));
-      return this;
-    } catch (error: any) {
-      throw AppError.internal(`Failed to update contact submission: ${error.message}`);
-    }
+    const updated = await prisma.contactSubmission.update({ where: { id: this.id }, data: { status: status as any } });
+    Object.assign(this, new ContactSubmission(updated));
+    return this;
   }
 
   async delete(): Promise<void> {
-    try {
-      await databases.deleteDocument(DATABASE_ID, COLLECTION_ID, this.id);
-      appLogger.logDatabase('delete', 'contact_submissions', { id: this.id }, null);
-    } catch (error: any) {
-      appLogger.logDatabase('delete', 'contact_submissions', { id: this.id }, error);
-      throw AppError.internal(`Failed to delete contact submission: ${error.message}`);
-    }
+    await prisma.contactSubmission.delete({ where: { id: this.id } });
   }
 
   toJSON(): IContactSubmission {

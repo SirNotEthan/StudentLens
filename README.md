@@ -15,7 +15,8 @@ This repository demonstrates experience with:
 - Component-based architecture
 - Frontend build tooling
 - Full-stack project organization
-- Deployment workflows
+- Local-first database and file storage
+- Homelab deployment workflows
 
 ---
 
@@ -24,9 +25,12 @@ This repository demonstrates experience with:
 - ⚛️ **React SPA** with component-based UI
 - ⚡ **Vite** for fast development and optimized builds
 - 🌐 Backend API integration
+- 🗄️ Local PostgreSQL persistence with Prisma
+- ⚡ Redis-backed sessions/cache support
+- 📦 Local persistent uploads storage
 - 📁 Clean project structure separating frontend and backend concerns
 - 🐳 Docker support for deployment
-- 🚀 Scripts for building and deploying to a VPS
+- 🚀 Kubernetes-ready deployment for homelab hosting
 
 ---
 
@@ -60,26 +64,33 @@ This repository demonstrates experience with:
 **Backend**
 - Node.js
 - Typescript
-- Appwrite
-- Google Cloud API for Login Functions
+- Express
+- Prisma
+- PostgreSQL
+- Redis
+- Google OAuth login support
+
+**Legacy migration**
+- Appwrite export tooling is retained only to move old hosted data into the local database.
 
 **DevOps / Tooling**
 - Docker
 - Shell scripts
-- VPS deployment (DigitalOcean)
+- Kubernetes / K3s
+- Cloudflare Tunnel public access
 
 ---
 
 ## 📦 Deployment
 
-This project includes Docker and shell scripts for production deployment:
+This project includes Docker and Kubernetes-compatible production deployment support:
 
 - Dockerfile – builds the application container
-- docker-compose.yml – service orchestration
+- docker-compose.yml – local service orchestration
 - build.sh – build automation
 - deploy.sh – deployment automation
 
-These were used to deploy the app to a VPS environment.
+The current production target is a self-hosted homelab stack with local PostgreSQL, Redis, persistent uploads, Kubernetes ingress, and Cloudflare Tunnel routing.
 
 ---
 
@@ -88,6 +99,7 @@ These were used to deploy the app to a VPS environment.
 - Building and structuring a real React application
 - Using modern frontend tooling (Vite)
 - Separating frontend and backend logic
+- Migrating from hosted BaaS storage to local infrastructure
 - Automating builds and deployments
 - Working with production-like environments
 
@@ -95,8 +107,8 @@ These were used to deploy the app to a VPS environment.
 
 ## 🔮 Potential Improvements
 
-- Authentication and user accounts
-- Persistent database integration
+- Complete local data migration from legacy Appwrite exports
+- Expand admin tooling for local account recovery and data management
 - Improved accessibility and UI polish
 - Testing (unit / integration)
 - Expanded feature set for students or educators

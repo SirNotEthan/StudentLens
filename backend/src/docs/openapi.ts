@@ -110,8 +110,9 @@ const spec = {
             content: { 'application/json': { schema: { type: 'object', properties: {
               status: { type: 'string', example: 'OK' },
               uptime: { type: 'number' },
+              databaseProvider: { type: 'string', example: 'postgres' },
               services: { type: 'object', properties: {
-                appwrite: { type: 'string', enum: ['connected', 'disconnected'] },
+                postgres: { type: 'string', enum: ['connected', 'disconnected'] },
                 redis:    { type: 'string', enum: ['connected', 'not configured'] }
               }}
             }}}}
