@@ -80,7 +80,6 @@ async function importUsers() {
         provider: (prefs.provider || (prefs.googleId ? 'google' : 'email')) as AuthProvider,
         googleId: prefs.googleId || undefined,
         profileVisibility: prefs.profileVisibility ?? true,
-        passwordHash: user.hash === 'bcrypt' ? user.password : undefined,
         appwritePrefs: prefs,
       },
       create: {
@@ -99,13 +98,20 @@ async function importUsers() {
         provider: (prefs.provider || (prefs.googleId ? 'google' : 'email')) as AuthProvider,
         googleId: prefs.googleId || undefined,
         profileVisibility: prefs.profileVisibility ?? true,
-        passwordHash: user.hash === 'bcrypt' ? user.password : undefined,
+        passwordHash: user.password || undefined,
         prefs,
         appwritePrefs: prefs,
         createdAt: toDate(user.$createdAt),
         updatedAt: toDate(user.$updatedAt),
       },
     });
+
+    if (user.password) {
+      await prisma.user.updateMany({
+        where: { id: user.$id, passwordHash: null },
+        data: { passwordHash: user.password },
+      });
+    }
   }
 
   console.log(`imported ${users.length} users`);

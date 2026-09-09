@@ -78,8 +78,8 @@ This repository demonstrates experience with:
   Appwrite Storage URLs to `/uploads/...`, and registers the local files.
 - Copy `backend/exports/appwrite/storage/*` into the persistent uploads volume
   at `/app/uploads/appwrite/` before retiring Appwrite.
-- Appwrite bcrypt hashes are retained where compatible. Accounts using another
-  hash algorithm must use the local password-reset flow after migration.
+- Appwrite Argon2/bcrypt password hashes are retained. A successful login with
+  an imported Argon2 hash transparently upgrades it to the native bcrypt format.
 
 **DevOps / Tooling**
 - Docker

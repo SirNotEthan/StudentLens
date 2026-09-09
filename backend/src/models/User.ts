@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { verify as verifyArgon2 } from '@node-rs/argon2';
 import { prisma } from '@/config/database';
 import {
   IUser,
@@ -231,7 +232,19 @@ export class User implements IUser {
   }
 
   async verifyPassword(password: string): Promise<boolean> {
-    return this.passwordHash ? bcrypt.compare(password, this.passwordHash) : false;
+    if (!this.passwordHash) return false;
+
+    if (this.passwordHash.startsWith('$argon2')) {
+      const verified = await verifyArgon2(this.passwordHash, password);
+      if (verified) {
+        // Transparently replace the imported Appwrite hash with the native
+        // bcrypt format after the first successful local login.
+        await this.setPassword(password);
+      }
+      return verified;
+    }
+
+    return bcrypt.compare(password, this.passwordHash);
   }
 
   async setPassword(password: string): Promise<void> {
