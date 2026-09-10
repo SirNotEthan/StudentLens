@@ -82,7 +82,9 @@ const helmetConfig: any = {
       fontSrc: ["'self'"],
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
-      frameAncestors: ["'none'"]
+      frameAncestors: ["'none'"],
+      blockAllMixedContent: [],
+      upgradeInsecureRequests: []
     }
   },
   crossOriginEmbedderPolicy: false,
