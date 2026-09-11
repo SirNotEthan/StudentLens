@@ -1,8 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/NotFound.css';
 
 const NotFound = () => {
+  useDocumentMeta('Page Not Found', 'The page you were looking for could not be found.');
   const navigate = useNavigate();
 
   return (

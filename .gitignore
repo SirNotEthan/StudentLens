@@ -38,6 +38,7 @@ backend/exports/
 
 # SSL certificates
 ssl/
+certbot-www/
 *.pem
 *.key
 *.crt

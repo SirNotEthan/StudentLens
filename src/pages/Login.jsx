@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { AlertModal } from '../components/Modal';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/Login.css';
 
 const Login = () => {
+  useDocumentMeta('Log In', 'Sign in to StudentLens to read and publish student journalism.');
   const { user, loading, error, clearError, googleSignup, googleLogin } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showErrorModal, setShowErrorModal] = useState(false);
@@ -18,7 +20,7 @@ const Login = () => {
 
       if (message.includes('inactive') || message.includes('deactivated')) {
         setErrorTitle('Account Deactivated');
-        setErrorMessage('Your account has been deactivated. Please contact support at support@studentlens.com for assistance.');
+        setErrorMessage('Your account has been deactivated. Please contact support at icsnewsubmissions@icsz.ch for assistance.');
       } else if (message === 'auth_failed') {
         setErrorTitle('Authentication Failed');
         setErrorMessage('We could not authenticate your account. Please try again or contact support.');

@@ -6,9 +6,11 @@ import PostCreator from '../components/PostCreator';
 import AuthorLink from '../components/AuthorLink';
 import Footer from '../components/Footer';
 import axios from 'axios';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/MainPage.css';
 
 const MainPage = () => {
+  useDocumentMeta('Home', 'Read the latest student-written articles, opinion pieces, and school news on StudentLens.');
   const { user, logout, hasPermission, hasRole, getUserDisplayName } = useAuth();
   const { settings } = useSettings();
   const navigate = useNavigate();
@@ -179,10 +181,10 @@ const MainPage = () => {
 
   const getRoleBadgeColor = (role) => {
     const colors = {
-      Student: '#4a90e2',
+      Student: '#2f5fa8',
       Writer: '#dc3545',
       Editor: '#fd7e14',
-      Teacher: '#28a745',
+      Teacher: '#1e7e34',
       Owner: '#6f42c1'
     };
     return colors[role] || '#6c757d';
@@ -204,10 +206,10 @@ const MainPage = () => {
     const styles = {
       ALL: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
       ICS: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
-      WORLD: { backgroundColor: '#17a2b8', color: 'white', backgroundImage: 'none' },
-      ACADEMIC: { backgroundColor: '#4a90e2', color: 'white', backgroundImage: 'none' },
-      SCIENCE_TECH: { backgroundColor: '#20c997', color: 'white', backgroundImage: 'none' },
-      STUDENT_LIFE: { backgroundColor: '#e83e8c', color: 'white', backgroundImage: 'none' },
+      WORLD: { backgroundColor: '#0f6674', color: 'white', backgroundImage: 'none' },
+      ACADEMIC: { backgroundColor: '#2f5fa8', color: 'white', backgroundImage: 'none' },
+      SCIENCE_TECH: { backgroundColor: '#0f7a5c', color: 'white', backgroundImage: 'none' },
+      STUDENT_LIFE: { backgroundColor: '#a3236a', color: 'white', backgroundImage: 'none' },
       CULTURE: { backgroundColor: '#563d7c', color: 'white', backgroundImage: 'none' },
     };
     return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };

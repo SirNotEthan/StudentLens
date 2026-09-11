@@ -157,8 +157,8 @@ const Profile = () => {
 
   const getRoleColor = (role) => {
     const colors = {
-      Student: '#4a90e2',
-      Teacher: '#28a745',
+      Student: '#2f5fa8',
+      Teacher: '#1e7e34',
       Editor: '#fd7e14',
       Publisher: '#dc3545',
       Owner: '#6f42c1'

@@ -210,7 +210,7 @@
 }
 
 .draft-category {
-  background-color: #4a90e2;
+  background-color: #2f5fa8;
   color: white;
   padding: 0.25rem 0.6rem;
   font-size: 0.65rem;
@@ -237,7 +237,7 @@
 }
 
 .status-published {
-  background-color: #28a745;
+  background-color: #1e7e34;
   color: white;
 }
 

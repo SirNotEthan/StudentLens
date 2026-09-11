@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
 import Footer from '../components/Footer';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/InfoPage.css';
 
 const AboutUs = () => {
+  useDocumentMeta('About Us', 'Learn about StudentLens, our mission, and the values behind our student journalism platform.');
   const navigate = useNavigate();
   const { settings } = useSettings();
   const [selectedLegacy, setSelectedLegacy] = useState(null);
@@ -158,8 +160,8 @@ const AboutUs = () => {
         <section className="info-section">
           <h2>Contact Information</h2>
           <p>
-            <strong>Location:</strong> {settings?.contact?.roomFullName || 'DOC 21'}<br />
-            <strong>Email:</strong> {settings?.contact?.email || 'contact@studentlens.com'}<br />
+            <strong>Location:</strong> {settings?.contact?.roomFullName || 'Room S-21'}<br />
+            <strong>Email:</strong> {settings?.contact?.email || 'icsnewsubmissions@icsz.ch'}<br />
             <strong>Office Hours:</strong> {settings?.contact?.officeHours || 'Monday-Friday 9AM-5PM'}
           </p>
           <p>
@@ -167,7 +169,7 @@ const AboutUs = () => {
             <a href="/contact" onClick={(e) => { e.preventDefault(); navigate('/contact'); }}>
               Contact Us
             </a>{' '}
-            page or stop by our office in {settings?.contact?.roomFullName || 'DOC 21'}.
+            page or stop by our office in {settings?.contact?.roomFullName || 'Room S-21'}.
           </p>
         </section>
       </div>

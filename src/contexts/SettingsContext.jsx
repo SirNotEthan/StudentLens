@@ -33,7 +33,7 @@ export const SettingsProvider = ({ children }) => {
         siteName: 'STUDENT LENS',
         tagline: 'Your Student News Hub',
         contact: {
-          email: 'contact@studentlens.com',
+          email: 'icsnewsubmissions@icsz.ch',
           room: 'S-21',
           roomFullName: 'Room S-21',
           officeHours: 'Monday-Friday 9AM-5PM',

@@ -116,16 +116,16 @@ const handleSubmitForReview = async (articleId, articleTitle) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      ACADEMIC: '#4a90e2',
-      SPORTS: '#28a745',
+      ACADEMIC: '#2f5fa8',
+      SPORTS: '#1e7e34',
       EVENTS: '#fd7e14',
       CLUBS: '#6f42c1',
       ANNOUNCEMENTS: '#dc3545',
       NEWS: '#6c757d',
-      STUDENT_LIFE: '#e83e8c',
-      TECHNOLOGY: '#17a2b8',
+      STUDENT_LIFE: '#a3236a',
+      TECHNOLOGY: '#0f6674',
       ARTS: '#563d7c',
-      SCIENCE: '#20c997'
+      SCIENCE: '#0f7a5c'
     };
     return colors[category] || '#6c757d';
   };

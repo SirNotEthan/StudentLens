@@ -69,6 +69,15 @@ if (missingVars.length > 0) {
 const app: Application = express();
 app.set('trust proxy', 1);
 
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.path === '/api/health' || req.secure || req.get('x-forwarded-proto') === 'https') {
+      return next();
+    }
+    res.redirect(301, `https://${req.get('host')}${req.originalUrl}`);
+  });
+}
+
 app.use(securityHeaders);
 
 

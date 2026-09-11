@@ -27,6 +27,7 @@ import SudokuPage from './pages/SudokuPage'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import NotFound from './pages/NotFound'
+import CookieConsent from './components/CookieConsent'
 
 function App() {
   return (
@@ -182,6 +183,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
           </Router>
+          <CookieConsent />
         </AnalyticsProvider>
       </SettingsProvider>
     </AuthProvider>

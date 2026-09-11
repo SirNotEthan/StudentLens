@@ -52,10 +52,10 @@ const Dashboard = () => {
 
   const getRoleBadgeColor = (role) => {
     const colors = {
-      Student: '#4a90e2',
-      Writer: '#17a2b8',
+      Student: '#2f5fa8',
+      Writer: '#0f6674',
       Editor: '#fd7e14',
-      Teacher: '#28a745',
+      Teacher: '#1e7e34',
       Owner: '#6f42c1'
     };
     return colors[role] || '#6c757d';

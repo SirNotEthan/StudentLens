@@ -799,7 +799,7 @@
 }
 
 .application-card.approved {
-  border-left: 4px solid #28a745;
+  border-left: 4px solid #1e7e34;
   background-color: #f8fff8;
 }
 
@@ -898,7 +898,7 @@
 }
 
 .writing-sample {
-  border-left-color: #4a90e2;
+  border-left-color: #2f5fa8;
 }
 
 .application-meta {

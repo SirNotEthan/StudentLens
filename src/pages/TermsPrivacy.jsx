@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/InfoPage.css';
 
 const TermsPrivacy = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
   const [activeTab, setActiveTab] = useState('terms');
+  useDocumentMeta(
+    'Terms & Privacy',
+    'Read the StudentLens Terms of Service and Privacy Policy.'
+  );
 
   return (
     <div className="info-page terms-privacy-page">
@@ -208,14 +213,23 @@ const TermsPrivacy = () => {
                 <li>Request a copy of your data</li>
                 <li>Request deletion of your personal information</li>
               </ul>
-              <p>To exercise these rights, please contact us at privacy@studentlens.com</p>
+              <p>
+                To exercise these rights, please{' '}
+                <a href="/contact">contact us</a> or email{' '}
+                {settings?.contact?.email || 'icsnewsubmissions@icsz.ch'}.
+              </p>
             </section>
 
             <section className="info-section">
               <h2>6. Cookies and Tracking</h2>
               <p>
-                We use cookies and similar tracking technologies to collect information about your
-                browsing activities. You can control cookies through your browser settings.
+                We use only one type of cookie: a strictly necessary session cookie that keeps you
+                signed in and protects your account. This cookie is required for the service to
+                function and cannot be disabled while remaining logged in.
+              </p>
+              <p>
+                We do not use advertising, analytics, or third-party tracking cookies. We do not sell
+                or share your data with advertisers.
               </p>
             </section>
 
@@ -242,9 +256,9 @@ const TermsPrivacy = () => {
               <p>
                 If you have any questions about this Privacy Policy, please contact us at:
                 <br />
-                Email: privacy@studentlens.com
+                Email: {settings?.contact?.email || 'icsnewsubmissions@icsz.ch'}
                 <br />
-                Location: DOC 21
+                Location: {settings?.contact?.roomFullName || 'Room S-21'}
               </p>
             </section>
           </>

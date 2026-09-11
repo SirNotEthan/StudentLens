@@ -48,9 +48,9 @@ const UserProfile = () => {
   const getRoleBadgeColor = (role) => {
     const colors = {
       Owner: '#2d5a4d',
-      Teacher: '#4a90e2',
+      Teacher: '#2f5fa8',
       Editor: '#fd7e14',
-      Writer: '#28a745',
+      Writer: '#1e7e34',
       Student: '#6c757d'
     };
     return colors[role] || '#6c757d';
@@ -338,9 +338,9 @@ const getCategoryColor = (category) => {
   const colors = {
     ACADEMIC: '#dc3545',
     SPORTS: '#ffc107',
-    EVENTS: '#4a90e2',
+    EVENTS: '#2f5fa8',
     CLUBS: '#fd7e14',
-    ANNOUNCEMENTS: '#28a745'
+    ANNOUNCEMENTS: '#1e7e34'
   };
   return colors[category] || '#6c757d';
 };

@@ -252,7 +252,7 @@
 .strength-1 .strength-fill { width: 25%; background: #dc3545; }
 .strength-2 .strength-fill { width: 50%; background: #ffc107; }
 .strength-3 .strength-fill { width: 75%; background: #fd7e14; }
-.strength-4 .strength-fill { width: 100%; background: #28a745; }
+.strength-4 .strength-fill { width: 100%; background: #1e7e34; }
 
 .strength-label {
   font-size: 0.85rem;
@@ -263,7 +263,7 @@
 .strength-label.strength-1 { color: #dc3545; }
 .strength-label.strength-2 { color: #ffc107; }
 .strength-label.strength-3 { color: #fd7e14; }
-.strength-label.strength-4 { color: #28a745; }
+.strength-label.strength-4 { color: #1e7e34; }
 
 .error-text {
   color: #dc3545;
@@ -344,7 +344,7 @@
 }
 
 .oauth-status {
-  color: #28a745;
+  color: #1e7e34;
   font-weight: 600;
   font-size: 0.9rem;
   background: #d1edff;
@@ -385,7 +385,7 @@
 }
 
 .session-status {
-  color: #28a745;
+  color: #1e7e34;
   font-weight: 600;
   font-size: 0.9rem;
 }

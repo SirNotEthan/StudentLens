@@ -176,8 +176,8 @@
 
 .comment-like-btn:hover:not(:disabled) {
   background-color: #e6f3ff;
-  border-color: #4a90e2;
-  color: #4a90e2;
+  border-color: #2f5fa8;
+  color: #2f5fa8;
 }
 
 .comment-like-btn.liked {
@@ -188,8 +188,8 @@
 
 .comment-reply-btn:hover:not(:disabled) {
   background-color: #e6ffe6;
-  border-color: #28a745;
-  color: #28a745;
+  border-color: #1e7e34;
+  color: #1e7e34;
 }
 
 .comment-delete-btn:hover {

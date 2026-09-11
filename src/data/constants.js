@@ -78,8 +78,8 @@ export const ROLE_DISPLAY_NAMES = {
 };
 
 export const ROLE_COLORS = {
-  [ROLES.STUDENT]: "#4a90e2",
-  [ROLES.WRITER]: "#28a745",
+  [ROLES.STUDENT]: "#2f5fa8",
+  [ROLES.WRITER]: "#1e7e34",
   [ROLES.EDITOR]: "#fd7e14",
   [ROLES.ADMIN]: "#dc3545",
   [ROLES.SUPER_ADMIN]: "#6f42c1"

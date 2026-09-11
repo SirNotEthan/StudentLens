@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
 import axios from 'axios';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/ApplyWriter.css';
 
 const ApplyWriter = () => {
+  useDocumentMeta('Apply to Write', 'Apply to become a writer for StudentLens and get your work published.');
   const navigate = useNavigate();
   useAuth();
   const { settings } = useSettings();

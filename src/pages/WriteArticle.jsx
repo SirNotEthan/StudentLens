@@ -249,10 +249,10 @@ const WriteArticle = () => {
   const getCategoryColor = (category) => {
     const colors = {
       ICS: '#6f42c1',
-      WORLD: '#17a2b8',
-      ACADEMIC: '#4a90e2',
-      SCIENCE_TECH: '#20c997',
-      STUDENT_LIFE: '#e83e8c',
+      WORLD: '#0f6674',
+      ACADEMIC: '#2f5fa8',
+      SCIENCE_TECH: '#0f7a5c',
+      STUDENT_LIFE: '#a3236a',
       CULTURE: '#563d7c'
     };
     return colors[category] || '#6c757d';

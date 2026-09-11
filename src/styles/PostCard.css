@@ -86,16 +86,16 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.category-tag.blue { background: linear-gradient(135deg, #4a90e2, #357abd); }
-.category-tag.green { background: linear-gradient(135deg, #28a745, #20853a); }
+.category-tag.blue { background: linear-gradient(135deg, #2f5fa8, #357abd); }
+.category-tag.green { background: linear-gradient(135deg, #1e7e34, #20853a); }
 .category-tag.orange { background: linear-gradient(135deg, #fd7e14, #e8590c); }
 .category-tag.purple { background: linear-gradient(135deg, #6f42c1, #59359a); }
 .category-tag.red { background: linear-gradient(135deg, #dc3545, #c82333); }
 .category-tag.gray { background: linear-gradient(135deg, #6c757d, #545b62); }
-.category-tag.pink { background: linear-gradient(135deg, #e83e8c, #d91a72); }
-.category-tag.teal { background: linear-gradient(135deg, #17a2b8, #138496); }
+.category-tag.pink { background: linear-gradient(135deg, #a3236a, #d91a72); }
+.category-tag.teal { background: linear-gradient(135deg, #0f6674, #138496); }
 .category-tag.indigo { background: linear-gradient(135deg, #563d7c, #4a2c5c); }
-.category-tag.cyan { background: linear-gradient(135deg, #20c997, #1ea080); }
+.category-tag.cyan { background: linear-gradient(135deg, #0f7a5c, #1ea080); }
 
 .status-badge {
   display: inline-block;

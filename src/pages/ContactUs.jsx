@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../contexts/SettingsContext';
 import Footer from '../components/Footer';
 import axios from 'axios';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/InfoPage.css';
 
 const ContactUs = () => {
+  useDocumentMeta('Contact Us', 'Get in touch with the StudentLens team — questions, feedback, and general inquiries.');
   const navigate = useNavigate();
   const { settings } = useSettings();
   const [formData, setFormData] = useState({

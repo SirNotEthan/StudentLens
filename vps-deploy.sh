@@ -133,7 +133,35 @@ else
     print_info "Node.js not found, skipping secret generation (will be done in Docker)"
 fi
 
-print_info "Step 7: Building and starting application..."
+print_info "Step 7: Setting up HTTPS certificate..."
+mkdir -p ssl certbot-www
+if [ "$PROTOCOL" = "https" ]; then
+    if [ ! -f "ssl/fullchain.pem" ]; then
+        print_info "Requesting a Let's Encrypt certificate for $DOMAIN..."
+        sudo docker-compose stop nginx 2>/dev/null || true
+        if ! command -v certbot &> /dev/null; then
+            sudo apt update && sudo apt install certbot -y
+        fi
+        sudo certbot certonly --standalone -d "$DOMAIN" --non-interactive --agree-tos -m "admin@$DOMAIN" --no-eff-email
+        sudo cp "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ssl/
+        sudo cp "/etc/letsencrypt/live/$DOMAIN/privkey.pem" ssl/
+        sudo chmod 644 ssl/*.pem
+        print_success "Let's Encrypt certificate installed"
+    else
+        print_info "Existing certificate found in ssl/, skipping certbot"
+    fi
+else
+    if [ ! -f "ssl/fullchain.pem" ]; then
+        print_info "No domain provided — generating a self-signed certificate for $DOMAIN"
+        print_info "Browsers will warn about this until you re-run with a real domain name."
+        openssl req -x509 -nodes -days 825 -newkey rsa:2048 \
+            -keyout ssl/privkey.pem -out ssl/fullchain.pem \
+            -subj "/CN=$DOMAIN"
+        print_success "Self-signed certificate generated"
+    fi
+fi
+
+print_info "Step 8: Building and starting application..."
 echo ""
 echo "This may take several minutes on first run..."
 docker-compose --profile production up -d --build
@@ -162,16 +190,8 @@ echo "     - GOOGLE_CLIENT_ID"
 echo "     - GOOGLE_CLIENT_SECRET"
 echo ""
 if [ "$PROTOCOL" = "https" ]; then
-    echo "  3. Setup SSL certificate:"
-    echo "     docker-compose stop nginx"
-    echo "     sudo apt install certbot -y"
-    echo "     sudo certbot certonly --standalone -d $DOMAIN"
-    echo "     mkdir -p ssl"
-    echo "     sudo cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem ssl/"
-    echo "     sudo cp /etc/letsencrypt/live/$DOMAIN/privkey.pem ssl/"
-    echo "     sudo chmod 644 ssl/*.pem"
-    echo "     # Then update nginx.conf to enable HTTPS"
-    echo "     docker-compose --profile production up -d"
+    echo "  3. HTTPS is enabled with a Let's Encrypt certificate (auto-renews via certbot on your OS,"
+    echo "     or re-run: sudo certbot renew && sudo cp /etc/letsencrypt/live/$DOMAIN/*.pem ssl/ && docker-compose restart nginx)"
     echo ""
 fi
 echo "  4. Restart application after configuration changes:"

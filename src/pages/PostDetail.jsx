@@ -5,6 +5,7 @@ import axios from 'axios';
 import PostInteractions from '../components/PostInteractions';
 import { formatInlineText as formatInlineTextUtil, formatMathExpression as formatMathExpressionUtil } from '../utils/textFormatters';
 import { formatContent as formatContentUtil } from '../utils/contentFormatters.jsx';
+import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import '../styles/PostDetail.css';
 
 const PostDetail = () => {
@@ -14,6 +15,11 @@ const PostDetail = () => {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useDocumentMeta(
+    post?.title || 'Article',
+    post?.excerpt || 'Read this article on StudentLens.'
+  );
 
   useEffect(() => {
     fetchPost();
@@ -56,16 +62,16 @@ const PostDetail = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      ACADEMIC: '#4a90e2',
-      SPORTS: '#28a745',
+      ACADEMIC: '#2f5fa8',
+      SPORTS: '#1e7e34',
       EVENTS: '#fd7e14',
       CLUBS: '#6f42c1',
       ANNOUNCEMENTS: '#dc3545',
       NEWS: '#6c757d',
-      STUDENT_LIFE: '#e83e8c',
-      TECHNOLOGY: '#17a2b8',
+      STUDENT_LIFE: '#a3236a',
+      TECHNOLOGY: '#0f6674',
       ARTS: '#563d7c',
-      SCIENCE: '#20c997'
+      SCIENCE: '#0f7a5c'
     };
     return colors[category] || '#6c757d';
   };

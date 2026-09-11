@@ -192,7 +192,7 @@
 }
 
 .modal-btn-confirm.modal-btn-success {
-  background-color: #28a745;
+  background-color: #1e7e34;
 }
 
 .modal-btn-confirm.modal-btn-success:hover {
@@ -200,7 +200,7 @@
 }
 
 .modal-btn-confirm.modal-btn-info {
-  background-color: #17a2b8;
+  background-color: #0f6674;
 }
 
 .modal-btn-confirm.modal-btn-info:hover {
@@ -208,7 +208,7 @@
 }
 
 .modal-btn-info {
-  background-color: #17a2b8;
+  background-color: #0f6674;
   color: white;
 }
 
@@ -217,7 +217,7 @@
 }
 
 .modal-btn-success {
-  background-color: #28a745;
+  background-color: #1e7e34;
   color: white;
 }
 
