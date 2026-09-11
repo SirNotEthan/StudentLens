@@ -6,6 +6,7 @@ import PostInteractions from '../components/PostInteractions';
 import { formatInlineText as formatInlineTextUtil, formatMathExpression as formatMathExpressionUtil } from '../utils/textFormatters';
 import { formatContent as formatContentUtil } from '../utils/contentFormatters.jsx';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { getCategoryColor } from '../utils/categoryColors';
 import '../styles/PostDetail.css';
 
 const PostDetail = () => {
@@ -58,22 +59,6 @@ const PostDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      ACADEMIC: '#2f5fa8',
-      SPORTS: '#1e7e34',
-      EVENTS: '#fd7e14',
-      CLUBS: '#6f42c1',
-      ANNOUNCEMENTS: '#dc3545',
-      NEWS: '#6c757d',
-      STUDENT_LIFE: '#a3236a',
-      TECHNOLOGY: '#0f6674',
-      ARTS: '#563d7c',
-      SCIENCE: '#0f7a5c'
-    };
-    return colors[category] || '#6c757d';
   };
 
   const formatDate = (dateString) => {

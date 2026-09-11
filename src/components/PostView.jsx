@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getCategoryColor, getCategoryLabel } from '../utils/categoryColors';
 
 const PostView = () => {
   const { id } = useParams();
@@ -99,22 +100,6 @@ const PostView = () => {
     });
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      ACADEMIC: 'blue',
-      SPORTS: 'green',
-      EVENTS: 'orange',
-      CLUBS: 'purple',
-      ANNOUNCEMENTS: 'red',
-      NEWS: 'gray',
-      STUDENT_LIFE: 'pink',
-      TECHNOLOGY: 'teal',
-      ARTS: 'indigo',
-      SCIENCE: 'cyan'
-    };
-    return colors[category] || 'gray';
-  };
-
   if (loading) {
     return (
       <div className="post-view-loading">
@@ -163,8 +148,8 @@ const PostView = () => {
 
       <header className="post-header">
         <div className="post-meta">
-          <span className={`category-tag ${getCategoryColor(post.category)}`}>
-            {post.category.replace(/_/g, ' ')}
+          <span className="category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+            {getCategoryLabel(post.category)}
           </span>
           {post.featured && (
             <span className="featured-badge">

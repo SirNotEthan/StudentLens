@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
+import { getCategoryColor } from '../utils/categoryColors';
 import '../styles/UserProfile.css';
 
 const UserProfile = () => {
@@ -332,17 +333,6 @@ const UserProfile = () => {
       )}
     </div>
   );
-};
-
-const getCategoryColor = (category) => {
-  const colors = {
-    ACADEMIC: '#dc3545',
-    SPORTS: '#ffc107',
-    EVENTS: '#2f5fa8',
-    CLUBS: '#fd7e14',
-    ANNOUNCEMENTS: '#1e7e34'
-  };
-  return colors[category] || '#6c757d';
 };
 
 export default UserProfile;

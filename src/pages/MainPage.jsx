@@ -7,6 +7,7 @@ import AuthorLink from '../components/AuthorLink';
 import Footer from '../components/Footer';
 import axios from 'axios';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { getCategoryColor, getCategoryLabel } from '../utils/categoryColors';
 import '../styles/MainPage.css';
 
 const MainPage = () => {
@@ -190,30 +191,11 @@ const MainPage = () => {
     return colors[role] || '#6c757d';
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      ICS: 'ics',
-      WORLD: 'world',
-      ACADEMIC: 'academic',
-      SCIENCE_TECH: 'science-tech',
-      STUDENT_LIFE: 'student-life',
-      CULTURE: 'culture'
-    };
-    return colors[category] || 'gray';
-  };
-
-  const getCategoryButtonStyle = (category) => {
-    const styles = {
-      ALL: { backgroundColor: '#dc3545', color: 'white', backgroundImage: 'none' },
-      ICS: { backgroundColor: '#6f42c1', color: 'white', backgroundImage: 'none' },
-      WORLD: { backgroundColor: '#0f6674', color: 'white', backgroundImage: 'none' },
-      ACADEMIC: { backgroundColor: '#2f5fa8', color: 'white', backgroundImage: 'none' },
-      SCIENCE_TECH: { backgroundColor: '#0f7a5c', color: 'white', backgroundImage: 'none' },
-      STUDENT_LIFE: { backgroundColor: '#a3236a', color: 'white', backgroundImage: 'none' },
-      CULTURE: { backgroundColor: '#563d7c', color: 'white', backgroundImage: 'none' },
-    };
-    return styles[category] || { backgroundColor: '#6c757d', color: 'white', backgroundImage: 'none' };
-  };
+  const getCategoryButtonStyle = (category) => ({
+    backgroundColor: category === 'ALL' ? '#dc3545' : getCategoryColor(category),
+    color: 'white',
+    backgroundImage: 'none'
+  });
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -447,8 +429,8 @@ const MainPage = () => {
                                   )}
                                 </div>
                                 <div className="article-card-content">
-                                  <span className={`category-tag ${getCategoryColor(mainPost.category)}`}>
-                                    {mainPost.category?.replace(/_/g, ' ') || 'CATEGORY'}
+                                  <span className="category-tag" style={{ backgroundColor: getCategoryColor(mainPost.category), color: 'white' }}>
+                                    {mainPost.category ? getCategoryLabel(mainPost.category) : 'CATEGORY'}
                                   </span>
                                   <h3 className="article-card-title">{mainPost.title}</h3>
                                   {mainPost.excerpt && (
@@ -475,8 +457,8 @@ const MainPage = () => {
                                     )}
                                   </div>
                                   <div className="article-card-content">
-                                    <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                                      {post.category?.replace(/_/g, ' ') || 'CATEGORY'}
+                                    <span className="category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+                                      {post.category ? getCategoryLabel(post.category) : 'CATEGORY'}
                                     </span>
                                     <h3 className="article-card-title">{post.title}</h3>
                                     <p className="article-card-author">
@@ -650,8 +632,8 @@ const MainPage = () => {
                 {searchResults.map(post => (
                   <article key={post.id} className="search-result-item" onClick={() => navigate(`/post/${post.id}`)}>
                     <div className="search-result-content">
-                      <span className={`category-tag ${getCategoryColor(post.category)}`}>
-                        {post.category?.replace(/_/g, ' ') || 'NEWS'}
+                      <span className="category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+                        {post.category ? getCategoryLabel(post.category) : 'NEWS'}
                       </span>
                       <h3 className="search-result-title">{post.title}</h3>
                       <p className="search-result-excerpt">{post.excerpt || post.content?.substring(0, 150) + '...' || 'No preview available'}</p>
@@ -687,8 +669,8 @@ const MainPage = () => {
                   )}
                 </div>
                 <div className="news-card-content">
-                  <span className={`news-category-tag ${getCategoryColor(post.category)}`}>
-                    {post.category?.replace(/_/g, ' ') || 'NEWS'}
+                  <span className="news-category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+                    {post.category ? getCategoryLabel(post.category) : 'NEWS'}
                   </span>
                   <h3 className="news-card-title">{post.title}</h3>
                   <p className="news-card-author">

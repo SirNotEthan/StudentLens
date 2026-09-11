@@ -496,13 +496,6 @@
   color: #495057;
 }
 
-.category-tag.ics { background-color: #6f42c1; color: #fff; }
-.category-tag.world { background-color: #0f6674; color: #fff; }
-.category-tag.academic { background-color: #2f5fa8; color: #fff; }
-.category-tag.science_tech { background-color: #0f7a5c; color: #fff; }
-.category-tag.student_life { background-color: #a3236a; color: #fff; }
-.category-tag.culture { background-color: #563d7c; color: #fff; }
-
 .post-actions {
   display: flex;
   gap: 0.5rem;

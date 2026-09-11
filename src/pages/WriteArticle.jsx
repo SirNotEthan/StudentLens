@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { getCategoryColor, getCategoryLabel, CURRENT_CATEGORIES } from '../utils/categoryColors';
 import '../styles/WriteArticle.css';
 
 const WriteArticle = () => {
@@ -27,14 +28,7 @@ const WriteArticle = () => {
   const [imageMode, setImageMode] = useState('url');
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  const categories = [
-    'ICS',
-    'WORLD',
-    'ACADEMIC',
-    'SCIENCE_TECH',
-    'STUDENT_LIFE',
-    'CULTURE'
-  ];
+  const categories = CURRENT_CATEGORIES;
 
   useEffect(() => {
     if (!hasPermission('write_articles')) {
@@ -244,18 +238,6 @@ const WriteArticle = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      ICS: '#6f42c1',
-      WORLD: '#0f6674',
-      ACADEMIC: '#2f5fa8',
-      SCIENCE_TECH: '#0f7a5c',
-      STUDENT_LIFE: '#a3236a',
-      CULTURE: '#563d7c'
-    };
-    return colors[category] || '#6c757d';
   };
 
   const formatTextWithMarkup = (text) => {
@@ -486,7 +468,7 @@ const WriteArticle = () => {
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>
-                      {cat === 'SCIENCE_TECH' ? 'Science/Tech' : cat.replace(/_/g, ' ')}
+                      {getCategoryLabel(cat)}
                     </option>
                   ))}
                 </select>
@@ -494,7 +476,7 @@ const WriteArticle = () => {
                   className="category-preview"
                   style={{ backgroundColor: getCategoryColor(article.category) }}
                 >
-                  {article.category === 'SCIENCE_TECH' ? 'Science/Tech' : article.category.replace(/_/g, ' ')}
+                  {getCategoryLabel(article.category)}
                 </span>
               </div>
 
@@ -641,7 +623,7 @@ const WriteArticle = () => {
                   className="preview-category"
                   style={{ backgroundColor: getCategoryColor(article.category) }}
                 >
-                  {article.category.replace(/_/g, ' ')}
+                  {getCategoryLabel(article.category)}
                 </span>
                 {article.tags && (
                   <div className="preview-tags">
@@ -758,7 +740,7 @@ const WriteArticle = () => {
               className="category-display"
               style={{ backgroundColor: getCategoryColor(article.category) }}
             >
-              {article.category.replace(/_/g, ' ')}
+              {getCategoryLabel(article.category)}
             </div>
           </div>
 

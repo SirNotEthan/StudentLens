@@ -743,18 +743,6 @@ body {
   width: fit-content;
 }
 
-.category-tag.academic { background-color: #2f5fa8; color: white; }
-.category-tag.sports { background-color: #1e7e34; color: white; }
-.category-tag.events { background-color: #fd7e14; color: white; }
-.category-tag.clubs { background-color: #6f42c1; color: white; }
-.category-tag.announcements { background-color: #dc3545; color: white; }
-.category-tag.news { background-color: #6c757d; color: white; }
-.category-tag.student-life { background-color: #a3236a; color: white; }
-.category-tag.technology { background-color: #0f6674; color: white; }
-.category-tag.arts { background-color: #563d7c; color: white; }
-.category-tag.science { background-color: #0f7a5c; color: white; }
-.category-tag.gray { background-color: #6c757d; color: white; }
-
 .article-title {
   font-size: 1rem;
   font-weight: 700;
@@ -1284,17 +1272,6 @@ body {
   font-family: 'Arial', sans-serif;
 }
 
-.news-category-tag.academic { background-color: #2f5fa8; color: white; }
-.news-category-tag.sports { background-color: #1e7e34; color: white; }
-.news-category-tag.events { background-color: #fd7e14; color: white; }
-.news-category-tag.clubs { background-color: #6f42c1; color: white; }
-.news-category-tag.announcements { background-color: #dc3545; color: white; }
-.news-category-tag.news { background-color: #6c757d; color: white; }
-.news-category-tag.student-life { background-color: #a3236a; color: white; }
-.news-category-tag.technology { background-color: #0f6674; color: white; }
-.news-category-tag.arts { background-color: #563d7c; color: white; }
-.news-category-tag.science { background-color: #0f7a5c; color: white; }
-.news-category-tag.gray { background-color: #6c757d; color: white; }
 
 .news-card-title {
   font-size: 0.95rem;

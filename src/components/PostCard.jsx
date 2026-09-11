@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { getCategoryColor, getCategoryLabel } from '../utils/categoryColors';
 import '../styles/PostCard.css';
 
 const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant = 'default' }) => {
@@ -11,22 +12,6 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      ACADEMIC: 'blue',
-      SPORTS: 'green',
-      EVENTS: 'orange',
-      CLUBS: 'purple',
-      ANNOUNCEMENTS: 'red',
-      NEWS: 'gray',
-      STUDENT_LIFE: 'pink',
-      TECHNOLOGY: 'teal',
-      ARTS: 'indigo',
-      SCIENCE: 'cyan'
-    };
-    return colors[category] || 'gray';
   };
 
   const getStatusBadgeClass = (status) => {
@@ -78,8 +63,8 @@ const PostCard = ({ post, onClick, onEdit, onDelete, showActions = true, variant
       <div className="post-content">
         <div className="post-header">
           <div className="post-meta">
-            <span className={`category-tag ${getCategoryColor(post.category)}`}>
-              {post.category.replace(/_/g, ' ')}
+            <span className="category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+              {getCategoryLabel(post.category)}
             </span>
             {user && hasPermission('edit_articles') && (
               <span className={`status-badge ${getStatusBadgeClass(post.status)}`}>

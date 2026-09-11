@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { getCategoryColor } from '../utils/categoryColors';
 import '../styles/MyDrafts.css';
 
 const MyDrafts = () => {
@@ -112,22 +113,6 @@ const handleSubmitForReview = async (articleId, articleTitle) => {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      ACADEMIC: '#2f5fa8',
-      SPORTS: '#1e7e34',
-      EVENTS: '#fd7e14',
-      CLUBS: '#6f42c1',
-      ANNOUNCEMENTS: '#dc3545',
-      NEWS: '#6c757d',
-      STUDENT_LIFE: '#a3236a',
-      TECHNOLOGY: '#0f6674',
-      ARTS: '#563d7c',
-      SCIENCE: '#0f7a5c'
-    };
-    return colors[category] || '#6c757d';
   };
 
   const renderArticleCard = (article, showActions = true) => (

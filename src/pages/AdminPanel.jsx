@@ -4,6 +4,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AlertModal, ConfirmModal } from '../components/Modal';
+import { getCategoryColor, getCategoryLabel } from '../utils/categoryColors';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
@@ -750,8 +751,8 @@ const AdminPanel = () => {
                 .map(post => (
                 <div key={post.id} className="post-card submission-card">
                   <div className="post-header">
-                    <span className={`category-tag ${post.category.toLowerCase()}`}>
-                      {post.category.replace(/_/g, ' ')}
+                    <span className="category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+                      {getCategoryLabel(post.category)}
                     </span>
                     <span className={`status-badge ${post.status}`}>
                       {post.status === 'pending_editor' ? 'Pending Review' :
@@ -985,8 +986,8 @@ const AdminPanel = () => {
                 .map(post => (
                 <div key={post.id} className="post-card">
                   <div className="post-header">
-                    <span className={`category-tag ${post.category.toLowerCase()}`}>
-                      {post.category.replace(/_/g, ' ')}
+                    <span className="category-tag" style={{ backgroundColor: getCategoryColor(post.category), color: 'white' }}>
+                      {getCategoryLabel(post.category)}
                     </span>
                     <div className="post-actions">
                       <button
