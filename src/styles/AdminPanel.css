@@ -459,7 +459,7 @@
 
 .posts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
 }
 
@@ -496,44 +496,35 @@
   color: #495057;
 }
 
-.category-tag.news { background-color: #e3f2fd; color: #1565c0; }
-.category-tag.sports { background-color: #fff3e0; color: #e65100; }
-.category-tag.entertainment { background-color: #fce4ec; color: #c2185b; }
-.category-tag.technology { background-color: #e8f5e9; color: #2e7d32; }
-.category-tag.science { background-color: #f3e5f5; color: #6a1b9a; }
-.category-tag.opinion { background-color: #fff9c4; color: #f57f17; }
-.category-tag.lifestyle { background-color: #ffebee; color: #c62828; }
-.category-tag.education { background-color: #e0f2f1; color: #00695c; }
+.category-tag.ics { background-color: #6f42c1; color: #fff; }
+.category-tag.world { background-color: #0f6674; color: #fff; }
+.category-tag.academic { background-color: #2f5fa8; color: #fff; }
+.category-tag.science_tech { background-color: #0f7a5c; color: #fff; }
+.category-tag.student_life { background-color: #a3236a; color: #fff; }
+.category-tag.culture { background-color: #563d7c; color: #fff; }
 
 .post-actions {
   display: flex;
   gap: 0.5rem;
 }
 
-.edit-post-btn,
 .delete-post-btn {
-  width: 32px;
-  height: 32px;
-  border: 2px solid #d0d0d0;
+  padding: 0.6rem 1rem;
+  border: 2px solid #c0392b;
   border-radius: 2px;
   background-color: #fff;
+  color: #c0392b;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: 'Arial', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   transition: all 0.2s ease;
-  font-size: 0.85rem;
-}
-
-.edit-post-btn:hover {
-  background-color: #1a1a1a;
-  border-color: #1a1a1a;
-  color: white;
 }
 
 .delete-post-btn:hover {
   background-color: #c0392b;
-  border-color: #c0392b;
   color: white;
 }
 
@@ -585,7 +576,7 @@
 }
 
 .post-dates small {
-  color: #adb5bd;
+  color: #6c757d;
   font-size: 0.75rem;
 }
 
@@ -776,7 +767,7 @@
 
 .applications-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
   gap: 1.5rem;
 }
 
@@ -863,6 +854,21 @@
 .status-badge.rejected {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+.status-badge.new {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.read {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-badge.archived {
+  background-color: #e2e3e5;
+  color: #383d41;
 }
 
 .application-content {

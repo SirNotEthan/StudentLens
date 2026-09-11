@@ -60,9 +60,14 @@ const AdminPanel = () => {
     if (hasRole('Editor')) {
       setActiveTab('submissions');
     }
-
-    fetchData();
   }, [hasRole, navigate]);
+
+  // Separate from the permission guard above: hasRole/navigate get new references
+  // on every AuthContext render, which would otherwise refetch all admin data
+  // repeatedly. This should only run once, on mount.
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -307,7 +312,7 @@ const AdminPanel = () => {
           <button className="back-button" onClick={() => navigate('/main')}>
             ← Back to Main
           </button>
-          <h1>🛠️ Admin Panel</h1>
+          <h1>Admin Panel</h1>
         </div>
         <div className="admin-stats">
           <div className="stat-card">
@@ -336,7 +341,7 @@ const AdminPanel = () => {
             className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
             onClick={() => setActiveTab('users')}
           >
-            👥 User Management
+            User Management
           </button>
         )}
 
@@ -346,7 +351,7 @@ const AdminPanel = () => {
             className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
             onClick={() => setActiveTab('applications')}
           >
-            ✍️ Writer Applications
+            Writer Applications
             {applications.filter(a => a.status === 'pending').length > 0 && (
               <span className="notification-badge">
                 {applications.filter(a => a.status === 'pending').length}
@@ -361,7 +366,7 @@ const AdminPanel = () => {
             className={`tab-button ${activeTab === 'submissions' ? 'active' : ''}`}
             onClick={() => setActiveTab('submissions')}
           >
-            📝 Writer Submissions
+            Writer Submissions
             {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length > 0 && (
               <span className="notification-badge">
                 {posts.filter(p => p.status === 'pending_editor' || p.status === 'pending_reviewer').length}
@@ -375,7 +380,7 @@ const AdminPanel = () => {
             className={`tab-button ${activeTab === 'contact' ? 'active' : ''}`}
             onClick={() => setActiveTab('contact')}
           >
-            📬 Contact Submissions
+            Contact Submissions
             {contactSubmissions.filter(s => s.status === 'new').length > 0 && (
               <span className="notification-badge">
                 {contactSubmissions.filter(s => s.status === 'new').length}
@@ -390,7 +395,7 @@ const AdminPanel = () => {
             className={`tab-button ${activeTab === 'posts' ? 'active' : ''}`}
             onClick={() => setActiveTab('posts')}
           >
-            📄 Content Management
+            Content Management
           </button>
         )}
 
@@ -400,7 +405,7 @@ const AdminPanel = () => {
             className={`tab-button ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
-            ⚙️ Site Settings
+            Site Settings
           </button>
         )}
       </div>
@@ -701,13 +706,13 @@ const AdminPanel = () => {
                           className="approve-btn"
                           onClick={() => handleReviewApplication(app.id, 'approved')}
                         >
-                          ✓ Approve
+                          Approve
                         </button>
                         <button
                           className="reject-btn"
                           onClick={() => handleReviewApplication(app.id, 'rejected')}
                         >
-                          ✗ Reject
+                          Reject
                         </button>
                       </div>
                     )}
@@ -760,11 +765,11 @@ const AdminPanel = () => {
 
                   <div className="post-meta">
                     <div className="post-author">
-                      <span>👤 {post.authorName}</span>
+                      <span>{post.authorName}</span>
                     </div>
                     <div className="post-stats">
-                      <span>👁️ {post.viewCount || 0}</span>
-                      <span>❤️ {post.likes || 0}</span>
+                      <span>{post.viewCount || 0} views</span>
+                      <span>{post.likes || 0} likes</span>
                     </div>
                   </div>
 
@@ -777,25 +782,25 @@ const AdminPanel = () => {
                       className="view-post-btn"
                       onClick={() => navigate(`/post/${post.id}`)}
                     >
-                      👁️ View
+                      View
                     </button>
                     <button
                       className="edit-post-btn"
                       onClick={() => navigate(`/write/${post.id}`)}
                     >
-                      ✏️ Edit
+                      Edit
                     </button>
                     <button
                       className="approve-btn"
                       onClick={() => handleApproveSubmission(post.id)}
                     >
-                      ✅ Approve & Publish
+                      Approve & Publish
                     </button>
                     <button
                       className="reject-btn"
                       onClick={() => handleRejectSubmission(post.id)}
                     >
-                      ❌ Reject
+                      Reject
                     </button>
                   </div>
                 </div>
@@ -900,7 +905,7 @@ const AdminPanel = () => {
                           className="approve-btn"
                           onClick={() => handleUpdateSubmissionStatus(s.id, 'read')}
                         >
-                          ✓ Mark Read
+                          Mark Read
                         </button>
                       )}
                       {s.status !== 'archived' && (
@@ -908,7 +913,7 @@ const AdminPanel = () => {
                           className="edit-post-btn"
                           onClick={() => handleUpdateSubmissionStatus(s.id, 'archived')}
                         >
-                          📁 Archive
+                          Archive
                         </button>
                       )}
                       {s.status === 'archived' && (
@@ -916,20 +921,20 @@ const AdminPanel = () => {
                           className="approve-btn"
                           onClick={() => handleUpdateSubmissionStatus(s.id, 'new')}
                         >
-                          ↩ Restore
+                          Restore
                         </button>
                       )}
                       <a
                         className="view-post-btn"
-                        href={`mailto:${s.email}?subject=Re: ${encodeURIComponent(s.subject)}`}
+                        href={`mailto:${s.email}?subject=${encodeURIComponent('Re: ' + s.subject)}`}
                       >
-                        ✉ Reply
+                        Reply
                       </a>
                       <button
                         className="reject-btn"
                         onClick={() => handleDeleteSubmission(s.id)}
                       >
-                        🗑 Delete
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -987,14 +992,16 @@ const AdminPanel = () => {
                       <button
                         className="edit-post-btn"
                         onClick={() => navigate(`/write/${post.id}`)}
+                        aria-label={`Edit ${post.title}`}
                       >
-                        ✏️
+                        Edit
                       </button>
                       <button
                         className="delete-post-btn"
                         onClick={() => handleDeletePost(post.id)}
+                        aria-label={`Delete ${post.title}`}
                       >
-                        🗑️
+                        Delete
                       </button>
                     </div>
                   </div>
@@ -1004,11 +1011,11 @@ const AdminPanel = () => {
 
                   <div className="post-meta">
                     <div className="post-author">
-                      <span>👤 {post.authorName}</span>
+                      <span>{post.authorName}</span>
                     </div>
                     <div className="post-stats">
-                      <span>👁️ {post.viewCount || 0}</span>
-                      <span>❤️ {post.likes || 0}</span>
+                      <span>{post.viewCount || 0} views</span>
+                      <span>{post.likes || 0} likes</span>
                     </div>
                   </div>
 
@@ -1282,7 +1289,7 @@ const AdminPanel = () => {
                                   {item.imageUrl ? (
                                     <img src={item.imageUrl} alt={item.years} />
                                   ) : (
-                                    <div className="legacy-editor-placeholder">📸</div>
+                                    <div className="legacy-editor-placeholder">No image</div>
                                   )}
                                 </div>
                                 <div className="legacy-editor-fields">
